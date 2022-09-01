@@ -219,8 +219,6 @@ In each single file there is a major change inspire from base code by my friend 
 
 **The code is design for big groups**
 
-### FAQ
-
 ### Limits
 - `STORAGE_THRESHOLD`: To leave specific storage free and any download will lead to leave free storage less than this value will be cancelled. Don't add unit, the default unit is `GB`.
   - Q. Why STORAGE_THRESHOLD only.
