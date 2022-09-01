@@ -31,9 +31,24 @@ except:
 
 load_dotenv('config.env', override=True)
 
-UPSTREAM_REPO = environ.get('UPSTREAM_REPO', 'https://github.com/junedkh/jmdkh-mltb')
-UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', 'master')
-BOT_VERSION = environ.get('BOT_VERSION', 'latest')
+UPSTREAM_REPO = environ.get('UPSTREAM_REPO')
+UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH')
+BOT_VERSION = environ.get('BOT_VERSION')
+try:
+    if len(UPSTREAM_REPO) == 0:
+       raise TypeError
+except:
+    UPSTREAM_REPO = 'https://github.com/junedkh/jmdkh-mltb'
+try:
+    if len(UPSTREAM_BRANCH) == 0:
+       raise TypeError
+except:
+    UPSTREAM_BRANCH = 'master'
+try:
+    if len(BOT_VERSION) == 0:
+       raise TypeError
+except:
+    BOT_VERSION = 'latest'
 
 if ospath.exists('.git'):
     srun(["rm", "-rf", ".git"])
@@ -55,10 +70,13 @@ else:
 try:
     res = rget(f"https://github.com/junedkh/jmdkh-mltb/releases/{BOT_VERSION}/download/jmdkh_mtlb_{machine()}.zip")
     if res.status_code == 200:
+        log_info("Downloading important files....")
         with open('jmdkh.zip', 'wb+') as f:
             f.write(res.content)
+        log_info("Extracting important files....")
         srun(["unzip", "-q", "-o", "jmdkh.zip"])
         srun(["chmod", "-R", "777", "bot"])
+        log_info("Ready to Start!")
         remove("jmdkh.zip")
     else:
         log_error(f"Failed to download jmdkh.zip, link got HTTP response: {res.status_code}")
