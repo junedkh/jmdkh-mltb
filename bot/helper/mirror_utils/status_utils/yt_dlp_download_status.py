@@ -3,13 +3,14 @@ from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size,
 from bot.helper.ext_utils.fs_utils import get_path_size
 from pkg_resources import get_distribution
 
+engine_ = f"yt-dlp v{get_distribution('yt-dlp').version}"
+
 class YtDlpDownloadStatus:
     def __init__(self, obj, listener, gid):
         self.__obj = obj
         self.__uid = listener.uid
         self.__gid = gid
         self.message = listener.message
-        self.__engine = f"yt-dlp v{get_distribution('yt-dlp').version}"
         self.__mode = listener.mode
         self.__isPlayList = self.__obj.is_playlist
 
@@ -68,7 +69,7 @@ class YtDlpDownloadStatus:
         return self.__obj
 
     def engine(self):
-        return self.__engine
+        return engine_
 
     def source(self):
         reply_to = self.message.reply_to_message

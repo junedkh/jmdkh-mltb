@@ -9,6 +9,7 @@ def get_download(gid):
     except Exception as e:
         LOGGER.error(f'{e}: while getting torrent info')
 
+engine_ = f"Aria2c v{aria2.client.get_version()['version']}"
 
 class AriaDownloadStatus:
 
@@ -18,7 +19,6 @@ class AriaDownloadStatus:
         self.__listener = listener
         self.start_time = 0
         self.message = self.__listener.message
-        self.__engine = f"Aria2c v{aria2.client.get_version()['version']}"
         self.__mode = self.__listener.mode
 
     def __update(self):
@@ -114,7 +114,7 @@ class AriaDownloadStatus:
         aria2.remove([self.__download], force=True, files=True)
     
     def engine(self):
-        return self.__engine
+        return engine_
 
     def source(self):
         reply_to = self.message.reply_to_message

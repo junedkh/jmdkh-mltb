@@ -8,7 +8,6 @@ class ConvertStatus:
         self.__size = size
         self.__listener = listener
         self.message = self.__listener.message
-        self.__engine = "ffmpeg"
         self.__mode = self.__listener.mode
 
     def gid(self):
@@ -39,7 +38,7 @@ class ConvertStatus:
         return self
 
     def engine(self):
-        return self.__engine
+        return "ffmpeg"
 
     def source(self):
         reply_to = self.message.reply_to_message

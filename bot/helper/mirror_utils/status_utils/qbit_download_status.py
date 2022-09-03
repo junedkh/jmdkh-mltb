@@ -1,4 +1,4 @@
-from bot import LOGGER
+from bot import LOGGER, get_client
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 def get_download(client, hash_):
     try:
@@ -6,6 +6,7 @@ def get_download(client, hash_):
     except Exception as e:
         LOGGER.error(f'{e}: while getting torrent info')
 
+engine_ = f"qBittorrent {get_client().app.version}"
 
 class QbDownloadStatus:
 
@@ -14,7 +15,6 @@ class QbDownloadStatus:
         self.__listener = listener
         self.__info = get_download(obj.client, obj.ext_hash)
         self.message = self.__listener.message
-        self.__engine = f"qBittorrent {self.__obj.client.app.version}"
         self.__mode = self.__listener.mode
 
     def __update(self):
@@ -98,7 +98,7 @@ class QbDownloadStatus:
         return self.__listener
 
     def engine(self):
-        return self.__engine
+        return engine_
 
     def source(self):
         reply_to = self.message.reply_to_message

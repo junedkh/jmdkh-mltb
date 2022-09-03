@@ -8,7 +8,6 @@ class SplitStatus:
         self.__size = size
         self.__listener = listener
         self.message = self.__listener.message
-        self.__engine = "ffmpeg/split"
         self.__mode = self.__listener.mode
 
     def gid(self):
@@ -45,7 +44,7 @@ class SplitStatus:
         self.__listener.onUploadError('splitting stopped by user!')
 
     def engine(self):
-        return self.__engine
+        return "ffmpeg/split"
 
     def source(self):
         reply_to = self.message.reply_to_message

@@ -14,7 +14,6 @@ class ZipStatus:
         self.__uid = listener.uid
         self.__start_time = time()
         self.message = listener.message
-        self.__engine = "7z"
         self.__mode = self.__listener.mode
 
     def gid(self):
@@ -70,7 +69,7 @@ class ZipStatus:
         self.__listener.onUploadError('Archiving stopped by user!')
 
     def engine(self):
-        return self.__engine
+        return "7z"
 
     def source(self):
         reply_to = self.message.reply_to_message

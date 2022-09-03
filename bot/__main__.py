@@ -119,7 +119,7 @@ def main():
         (f'{BotCommands.CloneCommand}','Copy File/folder To GDrive'),
         (f'{BotCommands.StatusCommand[0]}','Get Mirror Status Message'),
         (f'{BotCommands.BtSelectCommand}','Select files to download using qb'),
-        (f'{BotCommands.ListCommand}','Searches Files in Drive'),
+        (f'{BotCommands.ListCommand[0]}','Searches Files in Drive'),
         (f'{BotCommands.CancelMirror}','Cancel a Task'),
         (f'{BotCommands.CancelAllCommand}','Cancel all tasks which added by you'),
         (f'{BotCommands.StatsCommand}','Bot Usage Stats'),

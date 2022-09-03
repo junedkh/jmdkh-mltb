@@ -1,12 +1,14 @@
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus, get_readable_time
 from mega import MegaApi
+
+engine_ = f"MegaSDK v{MegaApi('test').getVersion()}"
+
 class MegaDownloadStatus:
 
     def __init__(self, obj, listener):
         self.__listener = listener
         self.__obj = obj
         self.message = self.__listener.message
-        self.__engine = f"MegaSDK v{MegaApi('test').getVersion()}"
         self.__mode = self.__listener.mode
 
     def name(self) -> str:
@@ -57,7 +59,7 @@ class MegaDownloadStatus:
         return self.__obj
 
     def engine(self):
-        return self.__engine
+        return engine_
 
     def source(self):
         reply_to = self.message.reply_to_message

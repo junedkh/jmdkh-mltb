@@ -1,6 +1,7 @@
-from time import time
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 from pkg_resources import get_distribution
+
+engine_ = f"pyrogram v{get_distribution('pyrogram').version}"
 
 class TgUploadStatus:
     def __init__(self, obj, size, gid, listener):
@@ -8,7 +9,6 @@ class TgUploadStatus:
         self.__size = size
         self.__gid = gid
         self.message = listener.message
-        self.__engine = f"pyrogram v{get_distribution('pyrogram').version}"
         self.__mode = listener.mode
 
     def processed_bytes(self):
@@ -58,7 +58,7 @@ class TgUploadStatus:
         return self.__obj
 
     def engine(self):
-        return self.__engine
+        return engine_
 
     def source(self):
         reply_to = self.message.reply_to_message

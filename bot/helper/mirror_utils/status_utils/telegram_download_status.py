@@ -1,11 +1,12 @@
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 from pkg_resources import get_distribution
+
+engine_ = f"pyrogram v{get_distribution('pyrogram').version}"
 class TelegramDownloadStatus:
     def __init__(self, obj, listener, gid):
         self.__obj = obj
         self.__gid = gid
         self.message = listener.message
-        self.__engine = f"pyrogram v{get_distribution('pyrogram').version}"
         self.__mode = listener.mode
 
     def gid(self):
@@ -52,7 +53,7 @@ class TelegramDownloadStatus:
         return self.__obj
     
     def engine(self):
-        return self.__engine
+        return engine_
 
     def source(self):
         reply_to = self.message.reply_to_message

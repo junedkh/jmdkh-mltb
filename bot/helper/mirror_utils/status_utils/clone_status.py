@@ -1,12 +1,14 @@
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 from pkg_resources import get_distribution
+
+engine_ = f"Google Api v{get_distribution('google-api-python-client').version}"
+
 class CloneStatus:
     def __init__(self, obj, size, message, gid, mode):
         self.__obj = obj
         self.__size = size
         self.__gid = gid
         self.message = message
-        self.__engine = f"Google Api v{get_distribution('google-api-python-client').version}"
         self.__mode = mode
 
     def processed_bytes(self):
@@ -56,7 +58,7 @@ class CloneStatus:
         return self.__obj
 
     def engine(self):
-        return self.__engine
+        return engine_
 
     def source(self):
         reply_to = self.message.reply_to_message
