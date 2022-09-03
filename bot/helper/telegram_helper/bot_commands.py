@@ -31,6 +31,11 @@ class _BotCommands:
         self.LeechSetCommand = f'leechset{CMD_INDEX}'
         self.SetThumbCommand = f'setthumb{CMD_INDEX}'
         self.BtSelectCommand = f'btsel{CMD_INDEX}'
+        self.RssListCommand = (f'rsslist{CMD_INDEX}', f'rl{CMD_INDEX}')
+        self.RssGetCommand = (f'rssget{CMD_INDEX}', f'rg{CMD_INDEX}')
+        self.RssSubCommand = (f'rsssub{CMD_INDEX}', f'rs{CMD_INDEX}')
+        self.RssUnSubCommand = (f'rssunsub{CMD_INDEX}', f'rus{CMD_INDEX}')
+        self.RssSettingsCommand = (f'rssset{CMD_INDEX}', f'rst{CMD_INDEX}')
         self.RmdbCommand = f'rmdb{CMD_INDEX}'
 
 BotCommands = _BotCommands()
