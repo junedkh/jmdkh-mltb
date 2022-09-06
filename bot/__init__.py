@@ -102,6 +102,9 @@ download_dict = {}
 # key: rss_title
 # value: [rss_feed, last_link, last_title, filter]
 rss_dict = {}
+# key: msg_id
+# value: [listener, extras, isNeedEngine, time_out]
+btn_listener = {}
 
 AUTHORIZED_CHATS = set()
 SUDO_USERS = set()
