@@ -14,7 +14,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, sendLogFile
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.modules import authorize, drive_list, cancel_mirror, mirror_status, mirror_leech, clone, ytdlp, shell, eval, delete, count, leech_settings, search, rss, bt_select, rmdb
+from bot.modules import authorize, drive_list, cancel_mirror, mirror_status, mirror_leech, clone, ytdlp, shell, eval, delete, count, leech_settings, search, rss, bt_select, rmdb, bot_updater
 from bot.helper.ext_utils.jmdkh_utils import send_changelog
 from telegram.utils.helpers import mention_html
 from bot.version import __version__

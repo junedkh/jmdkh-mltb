@@ -38,22 +38,28 @@ def mirror_status(update, context):
 
 def status_pages(update, context):
     query = update.callback_query
-    if len(download_dict) != 0:
-        with status_reply_dict_lock:
-            if not status_reply_dict or not Interval or time() - list(status_reply_dict.values())[0][1] < 2:
-                query.answer(text="Wait One More Second!\n\nI am not your girlfriend", show_alert=True)
-                return
+    with download_dict_lock:
+        if len(download_dict) != 0:
+            with status_reply_dict_lock:
+                if not status_reply_dict or not Interval or time() - list(status_reply_dict.values())[0][1] < 2:
+                    query.answer(text="Wait One More Second!\n\nI am not your girlfriend", show_alert=True)
+                    return
     data = query.data
     data = data.split()
-    done = turn(data)
-    if done =='stats':
+    if data[1] == "ref":
+        query.answer()
+        update_all_messages(True)
+        return
+    elif data[1] =='stats':
         stat = bot_sys_stats()
         if stat:
             query.answer(text=stat, show_alert=True)
         else:
             query.answer(text="This status is old now.\n\nI am deleting it.", show_alert=True)
             query.message.delete()
-    elif done:
+        return
+    done = turn(data)
+    if done:
         query.answer()
         update_all_messages(True)
     else:
@@ -61,36 +67,37 @@ def status_pages(update, context):
         query.message.delete()
 
 def bot_sys_stats():
-    if len(download_dict) == 0:
-        return False
-    active = upload = extract = archive = split = dsize = 0
-    for stats in list(download_dict.values()):
-        if stats.status() == MirrorStatus.STATUS_DOWNLOADING:
-            active += 1
-            dsize += stats.processed_bytes()
-        if stats.status() == MirrorStatus.STATUS_UPLOADING:
-            upload += 1
-        if stats.status() == MirrorStatus.STATUS_EXTRACTING:
-            extract += 1
-        if stats.status() == MirrorStatus.STATUS_ARCHIVING:
-            archive += 1
-        if stats.status() == MirrorStatus.STATUS_SPLITTING:
-            split += 1
-    status_ls = f"ZIP: {archive} | UZIP: {extract} | SPLIT: {split}\n" \
-                f"DL: {active} | UP: {upload} | Done: {get_readable_file_size(dsize)}"
-    mem = virtual_memory().percent
-    recv = get_readable_file_size(net_io_counters().bytes_recv)
-    sent = get_readable_file_size(net_io_counters().bytes_sent)
-    free = disk_usage(DOWNLOAD_DIR).free
-    if STORAGE_THRESHOLD:
-        free -= STORAGE_THRESHOLD * 1024**3
-    TDlimits = get_readable_file_size(free)
-    ZUlimits = get_readable_file_size(free / 2)
-    return f"Powered By: JMDKH_Team\n" \
-        f"Send: {sent} | Recv: {recv}\n" \
-        f"CPU: {cpu_percent()}% | RAM: {mem}%\n\n" \
-        f"{status_ls}\n" \
-        f"\nLimits: T/D: {TDlimits} | Z/U: {ZUlimits}"
+    with download_dict_lock:
+        if len(download_dict) == 0:
+            return
+        active = upload = extract = archive = split = dsize = 0
+        for stats in list(download_dict.values()):
+            if stats.status() == MirrorStatus.STATUS_DOWNLOADING:
+                active += 1
+                dsize += stats.processed_bytes()
+            if stats.status() == MirrorStatus.STATUS_UPLOADING:
+                upload += 1
+            if stats.status() == MirrorStatus.STATUS_EXTRACTING:
+                extract += 1
+            if stats.status() == MirrorStatus.STATUS_ARCHIVING:
+                archive += 1
+            if stats.status() == MirrorStatus.STATUS_SPLITTING:
+                split += 1
+        status_ls = f"ZIP: {archive} | UZIP: {extract} | SPLIT: {split}\n" \
+                    f"DL: {active} | UP: {upload} | Done: {get_readable_file_size(dsize)}"
+        mem = virtual_memory().percent
+        recv = get_readable_file_size(net_io_counters().bytes_recv)
+        sent = get_readable_file_size(net_io_counters().bytes_sent)
+        free = disk_usage(DOWNLOAD_DIR).free
+        if STORAGE_THRESHOLD:
+            free -= STORAGE_THRESHOLD * 1024**3
+        TDlimits = get_readable_file_size(free)
+        ZUlimits = get_readable_file_size(free / 2)
+        return f"Powered By: JMDKH_Team\n" \
+            f"Send: {sent} | Recv: {recv}\n" \
+            f"CPU: {cpu_percent()}% | RAM: {mem}%\n\n" \
+            f"{status_ls}\n" \
+            f"\nLimits: T/D: {TDlimits} | Z/U: {ZUlimits}"
 
 mirror_status_handler = CommandHandler(BotCommands.StatusCommand, mirror_status,
                                        filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)

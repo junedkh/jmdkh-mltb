@@ -124,7 +124,6 @@ def get_readable_message():
         msg = ""
         if STATUS_LIMIT is not None:
             tasks = len(download_dict)
-            global pages
             pages = ceil(tasks/STATUS_LIMIT)
             if PAGE_NO > pages and pages != 0:
                 globals()['COUNT'] -= STATUS_LIMIT
@@ -190,19 +189,21 @@ def get_readable_message():
         bmsg = f"<b>Free</b>: {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)} | <b>Uptime</b>: {get_readable_time(time() - botStartTime)}" \
                 f"\n<b>DL</b>: {get_readable_file_size(dl_speed)}/s | <b>UL</b>: {get_readable_file_size(up_speed)}/s"
         buttons = ButtonMaker()
-        buttons.sbutton("Statistics", "status stats")
-        button = buttons.build_menu(1)
         if STATUS_LIMIT is not None and tasks > STATUS_LIMIT:
-            buttons = ButtonMaker()
-            buttons.sbutton("Previous", "status pre")
-            buttons.sbutton(f"{PAGE_NO}/{pages}", "status stats")
-            buttons.sbutton("Next", "status nex")
-            button = buttons.build_menu(3)
+            buttons.sbutton("<<", "status pre")
+            buttons.sbutton(f"{PAGE_NO}/{pages} ♻️", "status ref")
+            buttons.sbutton(">>", "status nex")
+        buttons.sbutton("Statistics", "status stats", footer=True)
+        button = buttons.build_menu(3)
         return msg + bmsg, button
 
 def turn(data):
     try:
         with download_dict_lock:
+            tasks = len(download_dict)
+            if tasks == 0:
+                raise ValueError
+            pages = ceil(tasks/STATUS_LIMIT)
             global COUNT, PAGE_NO
             if data[1] == "nex":
                 if PAGE_NO == pages:
@@ -218,8 +219,6 @@ def turn(data):
                 else:
                     COUNT -= STATUS_LIMIT
                     PAGE_NO -= 1
-            elif data[1] == "stats":
-                return "stats"
         return True
     except:
         return False
