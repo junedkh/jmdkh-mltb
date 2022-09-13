@@ -33,7 +33,7 @@ load_dotenv('config.env', override=True)
 
 UPSTREAM_REPO = environ.get('UPSTREAM_REPO')
 UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH')
-BOT_VERSION = environ.get('BOT_VERSION')
+
 try:
     if len(UPSTREAM_REPO) == 0:
        raise TypeError
@@ -44,11 +44,6 @@ try:
        raise TypeError
 except:
     UPSTREAM_BRANCH = 'master'
-try:
-    if len(BOT_VERSION) == 0:
-       raise TypeError
-except:
-    BOT_VERSION = 'latest'
 
 if ospath.exists('.git'):
     srun(["rm", "-rf", ".git"])
@@ -68,7 +63,7 @@ else:
     log_error('Something went wrong while updating, check UPSTREAM_REPO if valid or not!')
 
 try:
-    res = rget(f"https://github.com/junedkh/jmdkh-mltb/releases/{BOT_VERSION}/download/jmdkh_mtlb_{machine()}.zip")
+    res = rget(f"https://github.com/junedkh/jmdkh-mltb/releases/latest/download/jmdkh_mtlb_{machine()}.zip")
     if res.status_code == 200:
         log_info("Downloading important files....")
         with open('jmdkh.zip', 'wb+') as f:

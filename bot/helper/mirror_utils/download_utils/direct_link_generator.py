@@ -107,12 +107,15 @@ def uptobox(url: str) -> str:
         dl_url = link
     else:
         try:
-            link = re_findall(r'\bhttp?://.*uptobox\.com/dl\S+', url)[0]
+            link = re_findall(r'\bhttps?://.*\.uptobox\.com/dl\S+', url)[0]
             dl_url = link
         except:
             file_id = re_findall(r'\bhttps?://.*uptobox\.com/(\w+)', url)[0]
             file_link = f'https://uptobox.com/api/link?token={UPTOBOX_TOKEN}&file_code={file_id}'
-            req = rget(file_link)
+            try:
+                req = rget(file_link)
+            except Exception as e:
+                raise DirectDownloadLinkException(f"ERROR: {e}")
             result = req.json()
             if result['message'].lower() == 'success':
                 dl_url = result['data']['dlLink']
@@ -137,9 +140,12 @@ def mediafire(url: str) -> str:
         link = re_findall(r'\bhttps?://.*mediafire\.com\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No MediaFire links found")
-    page = BeautifulSoup(rget(link).content, 'lxml')
-    info = page.find('a', {'aria-label': 'Download file'})
-    return info.get('href')
+    try:
+        page = BeautifulSoup(rget(link).content, 'lxml')
+        info = page.find('a', {'aria-label': 'Download file'})
+        return info.get('href')
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
 
 def osdn(url: str) -> str:
     """ OSDN direct link generator """
@@ -148,8 +154,10 @@ def osdn(url: str) -> str:
         link = re_findall(r'\bhttps?://.*osdn\.net\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No OSDN links found")
-    page = BeautifulSoup(
-        rget(link, allow_redirects=True).content, 'lxml')
+    try:
+        page = BeautifulSoup(rget(link, allow_redirects=True).content, 'lxml')
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
     info = page.find('a', {'class': 'mirror_link'})
     link = unquote(osdn_link + info['href'])
     mirrors = page.find('form', {'id': 'mirror-select-form'}).findAll('tr')
@@ -175,13 +183,19 @@ def hxfile(url: str) -> str:
     """ Hxfile direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    return Bypass().bypass_filesIm(url)
+    try:
+        return Bypass().bypass_filesIm(url)
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
 
 def anonfiles(url: str) -> str:
     """ Anonfiles direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    return Bypass().bypass_anonfiles(url)
+    try:
+        return Bypass().bypass_anonfiles(url)
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
 
 def letsupload(url: str) -> str:
     """ Letsupload direct link generator
@@ -191,25 +205,34 @@ def letsupload(url: str) -> str:
         link = re_findall(r'\bhttps?://.*letsupload\.io\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No Letsupload links found\n")
-    return Bypass().bypass_url(link)
+    try:
+        return Bypass().bypass_url(link)
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
 
 def fembed(link: str) -> str:
     """ Fembed direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    dl_url= Bypass().bypass_fembed(link)
-    count = len(dl_url)
-    lst_link = [dl_url[i] for i in dl_url]
-    return lst_link[count-1]
+    try:
+        dl_url= Bypass().bypass_fembed(link)
+        count = len(dl_url)
+        lst_link = [dl_url[i] for i in dl_url]
+        return lst_link[count-1]
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
 
 def sbembed(link: str) -> str:
     """ Sbembed direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    dl_url= Bypass().bypass_sbembed(link)
-    count = len(dl_url)
-    lst_link = [dl_url[i] for i in dl_url]
-    return lst_link[count-1]
+    try:
+        dl_url= Bypass().bypass_sbembed(link)
+        count = len(dl_url)
+        lst_link = [dl_url[i] for i in dl_url]
+        return lst_link[count-1]
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
 
 def onedrive(link: str) -> str:
     """ Onedrive direct link generator
@@ -217,7 +240,10 @@ def onedrive(link: str) -> str:
     link_without_query = urlparse(link)._replace(query=None).geturl()
     direct_link_encoded = str(standard_b64encode(bytes(link_without_query, "utf-8")), "utf-8")
     direct_link1 = f"https://api.onedrive.com/v1.0/shares/u!{direct_link_encoded}/root/content"
-    resp = rhead(direct_link1)
+    try:
+        resp = rhead(direct_link1)
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
     if resp.status_code != 302:
         raise DirectDownloadLinkException("ERROR: Unauthorized link, the link may be private")
     return resp.next.url
@@ -232,7 +258,10 @@ def pixeldrain(url: str) -> str:
     else:
         info_link = f"https://pixeldrain.com/api/file/{file_id}/info"
         dl_link = f"https://pixeldrain.com/api/file/{file_id}"
-    resp = rget(info_link).json()
+    try:
+        resp = rget(info_link).json()
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
     if resp["success"]:
         return dl_link
     else:
@@ -242,13 +271,19 @@ def antfiles(url: str) -> str:
     """ Antfiles direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    return Bypass().bypass_antfiles(url)
+    try:
+        return Bypass().bypass_antfiles(url)
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
 
 def streamtape(url: str) -> str:
     """ Streamtape direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    return Bypass().bypass_streamtape(url)
+    try:
+        return Bypass().bypass_streamtape(url)
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
 
 def racaty(url: str) -> str:
     """ Racaty direct link generator
@@ -258,15 +293,18 @@ def racaty(url: str) -> str:
         re_findall(r'\bhttps?://.*racaty\.net\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No Racaty links found")
-    scraper = create_scraper()
-    r = scraper.get(url)
-    soup = BeautifulSoup(r.text, "lxml")
-    op = soup.find("input", {"name": "op"})["value"]
-    ids = soup.find("input", {"name": "id"})["value"]
-    rapost = scraper.post(url, data = {"op": op, "id": ids})
-    rsoup = BeautifulSoup(rapost.text, "lxml")
-    dl_url = rsoup.find("a", {"id": "uniqueExpirylink"})["href"].replace(" ", "%20")
-    return dl_url
+    try:
+        scraper = create_scraper()
+        r = scraper.get(url)
+        soup = BeautifulSoup(r.text, "lxml")
+        op = soup.find("input", {"name": "op"})["value"]
+        ids = soup.find("input", {"name": "id"})["value"]
+        rapost = scraper.post(url, data = {"op": op, "id": ids})
+        rsoup = BeautifulSoup(rapost.text, "lxml")
+        dl_url = rsoup.find("a", {"id": "uniqueExpirylink"})["href"].replace(" ", "%20")
+        return dl_url
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
 
 def fichier(link: str) -> str:
     """ 1Fichier direct link generator
@@ -331,18 +369,25 @@ def solidfiles(url: str) -> str:
     """ Solidfiles direct link generator
     Based on https://github.com/Xonshiz/SolidFiles-Downloader
     By https://github.com/Jusidama18 """
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36'
-    }
-    pageSource = rget(url, headers = headers).text
-    mainOptions = str(re_search(r'viewerOptions\'\,\ (.*?)\)\;', pageSource).group(1))
-    return jsonloads(mainOptions)["downloadUrl"]
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36'
+        }
+        pageSource = rget(url, headers = headers).text
+        mainOptions = str(re_search(r'viewerOptions\'\,\ (.*?)\)\;', pageSource).group(1))
+        return jsonloads(mainOptions)["downloadUrl"]
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
 
 def krakenfiles(page_link: str) -> str:
     """ krakenfiles direct link generator
     Based on https://github.com/tha23rd/py-kraken
     By https://github.com/junedkh """
-    page_resp = rsession().get(page_link)
+    client = rsession()
+    try:
+        page_resp = client.get(page_link)
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
     soup = BeautifulSoup(page_resp.text, "lxml")
     try:
         token = soup.find("input", id="dl-token")["value"]
@@ -361,8 +406,7 @@ def krakenfiles(page_link: str) -> str:
         "cache-control": "no-cache",
         "hash": dl_hash,
     }
-    dl_link_resp = rsession().post(
-        f"https://krakenfiles.com/download/{hash}", data=payload, headers=headers)
+    dl_link_resp = client.post(f"https://krakenfiles.com/download/{hash}", data=payload, headers=headers)
     dl_link_json = dl_link_resp.json()
     if "url" in dl_link_json:
         return dl_link_json["url"]
@@ -386,7 +430,10 @@ def drive_sharer(url: str) -> str:
         raise DirectDownloadLinkException("ERROR: SHARER_EMAIL not provided")
     temp = urlparse(url)
     client = rsession()
-    client.post(f'{temp.scheme}://{temp.netloc}/login', data={'email': SHARER_EMAIL, 'password': SHARER_PASS})
+    try:
+        client.post(f'{temp.scheme}://{temp.netloc}/login', data={'email': SHARER_EMAIL, 'password': SHARER_PASS})
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
     try:
         client.cookies.get_dict()['MD']
     except:
@@ -420,17 +467,20 @@ def drive_sharer(url: str) -> str:
 def gdtot(url: str) -> str:
     """ Gdtot google drive link generator
     By https://github.com/xcscxr """
+    if not GDTOT_CRYPT:
+        raise DirectDownloadLinkException("ERROR: GDTOT_CRYPT not provided")
+    parsed_url = urlparse(url)
+    client = rsession()
     try:
-        if not GDTOT_CRYPT:
-            raise DirectDownloadLinkException("ERROR: GDTOT_CRYPT not provided")
-        temp = urlparse(url)
-        with rsession() as client:
-            client.cookies.set(name='crypt', value=GDTOT_CRYPT, domain=temp.netloc)
-            res = client.get(url)
-            res = client.get(f"{temp.scheme}://{temp.netloc}/dld?id={url.split('/')[-1]}")
-            matches = re_findall('gd=(.*?)&', res.text)
-            decoded_id = b64decode(str(matches[0])).decode('utf-8')
-            return f'https://drive.google.com/open?id={decoded_id}'
+        client.cookies.set(name='crypt', value=GDTOT_CRYPT, domain=parsed_url.netloc)
+        res = client.get(url)
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
+    try:
+        res = client.get(f"{parsed_url.scheme}://{parsed_url.netloc}/dld?id={url.split('/')[-1]}")
+        matches = re_findall('gd=(.*?)&', res.text)
+        decoded_id = b64decode(str(matches[0])).decode('utf-8')
+        return f'https://drive.google.com/open?id={decoded_id}'
     except:
         raise DirectDownloadLinkException("ERROR: Try in your browser, mostly file not found or user limit exceeded!")
 
@@ -439,18 +489,21 @@ def hubdrive(url: str) -> str:
     By https://github.com/xcscxr """
     if not SHARER_EMAIL:
         raise DirectDownloadLinkException("ERROR: SHARER_EMAIL not provided")
-    temp = urlparse(url)
+    parsed_url = urlparse(url)
     client = rsession()
-    client.post(f'{temp.scheme}://{temp.netloc}/sign', data={'email': SHARER_EMAIL, 'pass': SHARER_PASS})
+    try:
+        client.post(f'{parsed_url.scheme}://{parsed_url.netloc}/sign', data={'email': SHARER_EMAIL, 'pass': SHARER_PASS})
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
     try:
         client.cookies.get_dict()['crypt']
     except:
         raise DirectDownloadLinkException("ERROR: invalid SHARER_EMAIL")
     try:
         res = client.get(url)
-        req_url = f"{temp.scheme}://{temp.netloc}/ajax.php?ajax=download"
+        req_url = f"{parsed_url.scheme}://{parsed_url.netloc}/ajax.php?ajax=download"
         res = client.post(req_url, headers={'x-requested-with': 'XMLHttpRequest'}, data={'id': url.split('/')[-1]}).json()['file']
-        client.get(f'{temp.scheme}://{temp.netloc}/login.php?action=logout')
+        client.get(f'{parsed_url.scheme}://{parsed_url.netloc}/login.php?action=logout')
         return f'https://drive.google.com/open?id={res.split("gd=")[-1]}'
     except:
         raise DirectDownloadLinkException("ERROR: Try in your browser, mostly file not found or user limit exceeded!")
