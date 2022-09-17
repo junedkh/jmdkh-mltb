@@ -13,13 +13,14 @@ engine_ = f"Aria2c v{aria2.client.get_version()['version']}"
 
 class AriaDownloadStatus:
 
-    def __init__(self, gid, listener):
+    def __init__(self, gid, listener, seeding=False):
         self.__gid = gid
         self.__download = get_download(gid)
         self.__listener = listener
         self.start_time = 0
-        self.message = self.__listener.message
-        self.__mode = self.__listener.mode
+        self.seeding = seeding
+        self.message = listener.message
+        self.__mode = listener.mode
 
     def __update(self):
         self.__download = self.__download.live
@@ -64,7 +65,7 @@ class AriaDownloadStatus:
             return MirrorStatus.STATUS_WAITING
         elif download.is_paused:
             return MirrorStatus.STATUS_PAUSED
-        elif download.seeder and hasattr(self.__listener, 'uploaded'):
+        elif download.seeder and self.seeding:
             return MirrorStatus.STATUS_SEEDING
         else:
             return MirrorStatus.STATUS_DOWNLOADING

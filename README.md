@@ -44,7 +44,7 @@ In each single file there is a major change from base code, it's almost totaly d
 ### Yt-dlp
 - Switch from youtube-dl to yt-dlp and fix all conflicts
 - Yt-dlp quality buttons
-- Ability to use specific yt-dlp arg for each task
+- Ability to use specific yt-dlp option for each task
 - Fix download progress
 ### Database
 - SQL Database support
@@ -194,7 +194,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `ACCOUNTS_ZIP_URL`: Only if you want to load your Service Account externally from an Index Link or by any direct download link NOT webpage link. Archive the accounts folder to ZIP file. Fill this with the direct download link of zip file. `Str`. If index need authentication so add direct download as shown below:
   - `https://username:password@example.workers.dev/...`
 - `TOKEN_PICKLE_URL`: Only if you want to load your **token.pickle** externally from an Index Link. Fill this with the direct link of that file. `Str`
-- `MULTI_SEARCH_URL`: Check `drive_folder` setup [here](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#multi-search-ids). Write **drive_folder** file [here](https://gist.github.com/). Open the raw file of that gist, it's URL will be your required variable. Should be in this form after removing commit id: https://gist.githubusercontent.com/username/gist-id/raw/drive_folder. `Str`
+- `MULTI_SEARCH_URL`: Check `drive_folder` setup [here](#multi-search-ids). Write **drive_folder** file [here](https://gist.github.com/). Open the raw file of that gist, it's URL will be your required variable. Should be in this form after removing commit id: https://gist.githubusercontent.com/username/gist-id/raw/drive_folder. `Str`
 - `YT_COOKIES_URL`: Youtube authentication cookies. Check setup [Here](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl). Use gist raw link and remove commit id from the link, so you can edit it from gists only. `Str`
 - `NETRC_URL`: To create .netrc file contains authentication for aria2c and yt-dlp. Use gist raw link and remove commit id from the link, so you can edit it from gists only. **NOTE**: After editing .nterc you need to restart the docker or if deployed on heroku so restart dyno in case your edits related to aria2c authentication. `Str`
   - **NOTE**: All above url variables used incase you want edit them in future easily without deploying again or if you want to deploy from public fork. If deploying using cli or private fork you can leave these variables empty add token.pickle, accounts folder, drive_folder, .netrc and cookies.txt directly to root but you can't update them without rebuild OR simply leave all above variables and use private UPSTREAM_REPO.
@@ -219,6 +219,12 @@ In each single file there is a major change inspire from base code by my friend 
 
 **The code is design for big groups**
 
+### Shortenner
+- `SHORTENER_API`: Fill your Shortener API key. `Str`
+- `SHORTENER`: Shortener URL. `Str`
+  - Supported URL Shorteners:
+  >exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io, adfoc.us, cutt.ly
+
 ### Limits
 - `STORAGE_THRESHOLD`: To leave specific storage free and any download will lead to leave free storage less than this value will be cancelled. Don't add unit, the default unit is `GB`.
   - Q. Why STORAGE_THRESHOLD only.
@@ -236,11 +242,10 @@ In each single file there is a major change inspire from base code by my friend 
     > appdrive, driveapp, hubdrive
   - Will add more in future on public demand.
   - **Note**: Must change account password from supported sharer [account](https://appdrive.info/account) settings. same email and same password.
-- `ENABLE_GDFLIX`: To enable [gdflix](https://gdflix.pro) upload link. Default is `False`. `Bool` 
-  - Q. Why gdflix only?
-  - A. I can add more but it will not make sense but i can add ability to handle mutiple Sharer drive upload support but only one can be useable.
-- `ENABLE_GDFLIX_LIST`: To enable gdflix upload link while using `/list_drive` cmd. Default is `False`. `Bool`
-  - **Note**: it will make slower your /list_drive command. or may gdflix account suspend due to mess link genrating.
+- `SHARER_DRIVE_SITE`: To enable upload sharer drive just add website like `https://appdrive.info`. `Str`
+  - **Note**: Must added `SHARER_EMAIL` and `SHARER_PASS`
+- `ENABLE_SHARER_LIST`: To enable gdflix upload link while using `/list_drive` cmd. Default is `False`. `Bool`
+  - **Note**: it will make slower your /list_drive command. or may sharer drive account suspend due to mess link genrating.
 
 ### Group Features
 - `FSUB_IDS`: Fill chat_id of groups/channel you want to force subscribe. Separate them by space. `Str`
@@ -254,7 +259,7 @@ In each single file there is a major change inspire from base code by my friend 
 - `DISABLE_DRIVE_LINK`: To disable google drive link button in case you need it.
 
 ### Extra Buttons
-- Four buttons are already added including GdFlix, Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
+- Four buttons are already added including Sharer, Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
   - `BUTTON_FIVE_NAME`:
   - `BUTTON_FIVE_URL`:
   - `BUTTON_SIX_NAME`:
@@ -327,7 +332,7 @@ sudo docker stop id
 
 ### Deploying on VPS Using docker-compose
 
-**NOTE**: If you want to use port other than 80, change it in [docker-compose.yml](https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/docker-compose.yml) also.
+**NOTE**: If you want to use port other than 80, change it in [docker-compose.yml](docker-compose.yml) also.
 
 ```
 sudo apt install docker-compose
@@ -354,7 +359,7 @@ sudo docker-compose start
 ------
 
 ## Deploying on Heroku
-<p><a href="https://github.com/anasty17/mirror-leech-telegram-bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
+<p><a href="https://github.com/junedkh/jmdkh-mltb/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
 
 ------
 
