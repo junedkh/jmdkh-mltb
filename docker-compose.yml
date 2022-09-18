@@ -2,8 +2,13 @@ version: "3.3"
 
 services:
   app:
-    build: .
+    container_name: jmdkh-mltb
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - CONFIG_FILE_URL=$CONFIG_FILE_URL
     command: bash start.sh
     restart: on-failure
     ports:
-      - "80:80"
+      - "$MIRROR_PORT:80"
