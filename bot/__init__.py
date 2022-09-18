@@ -386,15 +386,7 @@ SHORTENER_API = environ.get('SHORTENER_API', '')
 if len(SHORTENER) == 0 or len(SHORTENER_API) == 0:
     SHORTENER = None
     SHORTENER_API = None
-FSUB_IDS = set()
-fsubid = environ.get('FSUB_IDS', '')
-for f_id in fsubid.split():
-    if not f_id.startswith('-100'):
-        continue
-    try:
-        FSUB_IDS.add(int(f_id))
-    except:
-        pass
+
 updater = tgUpdater(token=BOT_TOKEN, request_kwargs={'read_timeout': 20, 'connect_timeout': 15})
 bot = updater.bot
 dispatcher = updater.dispatcher
