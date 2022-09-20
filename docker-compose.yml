@@ -11,4 +11,4 @@ services:
     command: bash start.sh
     restart: on-failure
     ports:
-      - "$MIRROR_PORT:80"
+      - $MIRROR_PORT:80
