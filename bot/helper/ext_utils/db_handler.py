@@ -100,6 +100,7 @@ class DbManger:
                     usr_dict = {row['tag']: [row['_id']]}
                     notifier_dict[row['cid']] = usr_dict
         self.__db.tasks[botname].drop()
+        self.clear_download_links()
         return notifier_dict # return a dict ==> {cid: {tag: [_id, _id, ...]}}
 
     def trunc_table(self, name):
