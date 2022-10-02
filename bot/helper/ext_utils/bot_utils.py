@@ -8,7 +8,7 @@ from requests import head as rhead
 from urllib.request import urlopen
 from urllib.parse import urlparse
 
-from bot import download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR, BASE_URL, WEB_PINCODE, STATUS_LIMIT
+from bot import download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR, BASE_URL, WEB_PINCODE, STATUS_LIMIT, user_data
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
@@ -47,8 +47,8 @@ class setInterval:
     def __setInterval(self):
         nextTime = time() + self.interval
         while not self.stopEvent.wait(nextTime - time()):
-            nextTime += self.interval
             self.action()
+            nextTime = time() + self.interval
 
     def cancel(self):
         self.stopEvent.set()
@@ -292,3 +292,9 @@ def get_content_type(link: str) -> str:
         except:
             content_type = None
     return content_type
+
+def update_user_ldata(id_: str, key, value):
+    if id_ in user_data:
+        user_data[id_][key] = value
+    else:
+        user_data[id_] = {key: value}

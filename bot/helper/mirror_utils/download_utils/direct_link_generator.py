@@ -15,6 +15,7 @@ from json import loads as jsonloads
 from lk21 import Bypass
 from cfscrape import create_scraper
 from bs4 import BeautifulSoup
+from lxml.etree import HTML as etree_html
 from base64 import standard_b64encode, b64decode
 from time import sleep
 
@@ -431,6 +432,8 @@ def drive_sharer(url: str) -> str:
     temp = urlparse(url)
     client = rsession()
     try:
+        client.headers.update(
+            {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36"})
         client.post(f'{temp.scheme}://{temp.netloc}/login', data={'email': SHARER_EMAIL, 'password': SHARER_PASS})
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e}")
@@ -441,7 +444,18 @@ def drive_sharer(url: str) -> str:
     try:
         res = client.get(url)
         key = re_findall('"key",\s+"(.*?)"', res.text)[0]
+        ddl_btn = etree_html(res.content).xpath("//button[@id='drc']")
         data = {'type': 1, 'key': key, 'action': 'original'}
+        info = re_findall(r'>(.*?)<\/li>', res.text)
+        info_parsed = {}
+        for item in info:
+            kv = [s.strip() for s in item.split(':', maxsplit=1)]
+            info_parsed[kv[0].lower()] = kv[1]
+        info_parsed['error'] = False
+        info_parsed['link_type'] = 'login'
+        if ddl_btn:
+            info_parsed['link_type'] = 'direct'
+            data['action'] = 'direct'
         while data['type'] <= 3:
             try:
                 data_string = ''
@@ -449,20 +463,24 @@ def drive_sharer(url: str) -> str:
                     data_string += f'------_\r\n'
                     data_string += f'Content-Disposition: form-data; name="{item}"\r\n\r\n{data[item]}\r\n'
                 data_string += f'------_--\r\n'
-                resp = client.post(
-                    url,
-                    data=data_string,
-                    headers={
-                        "Content-Type":
-                        "multipart/form-data; boundary=----_",
-                    }).json()
+                resp = client.post(url, data=data_string, headers={"Content-Type": "multipart/form-data; boundary=----_"}).json()
                 break
             except:
                 data['type'] += 1
+        drive_link = None
+        if 'url' in resp:
+            drive_link = resp['url']
+        elif 'error' in resp:
+            info_parsed["error"] = True
+        if drive_link and not info_parsed['error'] and 'driveapp' in temp.netloc:
+            res = client.get(drive_link)
+            drive_link = etree_html(res.content).xpath("//a[contains(@class,'btn')]/@href")[0]
         client.get(f'{temp.scheme}://{temp.netloc}/logout')
-        return resp['url']
-    except:
-        raise DirectDownloadLinkException("ERROR: Try in your browser, mostly file not found or user limit exceeded!")
+        if drive_link:
+            return drive_link
+        raise DirectDownloadLinkException(resp['message'])
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e}")
 
 def gdtot(url: str) -> str:
     """ Gdtot google drive link generator

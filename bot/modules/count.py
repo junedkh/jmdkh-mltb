@@ -32,7 +32,10 @@ def countNode(update, context):
         cc = f'\n\n<b>#cc</b>: {tag} | <b>Elapsed</b>: {get_readable_time(time() - update.message.date.timestamp())}'
         sendMessage(result + cc, context.bot, update.message)
     else:
-        sendMessage('Send Gdrive link along with command or by replying to the link by command', context.bot, update.message)
+        msg = 'Send Gdrive link along with command or by replying to the link by command'
+        sendMessage(msg, context.bot, update.message)
 
-count_handler = CommandHandler(BotCommands.CountCommand, countNode, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+
+count_handler = CommandHandler(BotCommands.CountCommand, countNode,
+                               filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 dispatcher.add_handler(count_handler)

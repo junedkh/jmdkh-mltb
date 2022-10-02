@@ -6,7 +6,8 @@ from time import time
 from sys import executable
 from telegram.ext import CommandHandler
 
-from bot import bot, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, LOGGER, Interval, DB_URI, AUTHORIZED_CHATS, INCOMPLETE_TASK_NOTIFIER, app, main_loop, QbInterval
+from bot import bot, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, LOGGER, Interval, \
+                DB_URI, INCOMPLETE_TASK_NOTIFIER, app, main_loop, QbInterval, SET_COMMANDS
 from bot.helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
 from bot.helper.ext_utils.db_handler import DbManger
@@ -14,7 +15,8 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, sendLogFile
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.modules import authorize, drive_list, cancel_mirror, mirror_status, mirror_leech, clone, ytdlp, shell, eval, delete, count, leech_settings, search, rss, bt_select, rmdb, bot_updater
+from bot.modules import authorize, drive_list, cancel_mirror, mirror_status, mirror_leech, clone, users_settings, ytdlp, \
+                        shell, eval, delete, count, search, rss, bt_select, rmdb, bot_updater
 from bot.helper.ext_utils.jmdkh_utils import send_changelog
 from telegram.utils.helpers import mention_html
 from bot.version import __version__
@@ -88,19 +90,19 @@ NOTE: Try each command without any perfix to see more detalis.
 /{BotCommands.CloneCommand} [drive_url]: Copy file/folder to Google Drive.
 /{BotCommands.CountCommand} [drive_url]: Count file/folder of Google Drive.
 /{BotCommands.DeleteCommand} [drive_url]: Delete file/folder from Google Drive (Only Owner & Sudo).
-/{BotCommands.LeechSetCommand} [query]: Leech settings.
+/{BotCommands.UserSetCommand} : Users settings.
 /{BotCommands.SetThumbCommand}: Reply photo to set it as Thumbnail.
 /{BotCommands.BtSelectCommand}: Select files from torrents by gid or reply.
 /{BotCommands.CancelMirror}: Cancel task by gid or reply.
-/{BotCommands.CancelAllCommand} [query]: Cancel all tasks which added by you.
-/{BotCommands.ListCommand} [query]: Search in Google Drive(s).
+/{BotCommands.CancelAllCommand} : Cancel all tasks which added by you.
+/{BotCommands.ListCommand[0]} [query]: Search in Google Drive(s).
 /{BotCommands.SearchCommand} [query]: Search for torrents with API.
 /{BotCommands.StatusCommand[0]} or /{BotCommands.StatusCommand[1]}: Shows a status of all the downloads.
 /{BotCommands.StatsCommand}: Show stats of the machine where the bot is hosted in.
 /{BotCommands.PingCommand[0]} or /{BotCommands.PingCommand[1]}: Check how long it takes to Ping the Bot (Only Owner & Sudo).
 /{BotCommands.AuthorizeCommand}: Authorize a chat or a user to use the bot (Only Owner & Sudo).
 /{BotCommands.UnAuthorizeCommand}: Unauthorize a chat or a user to use the bot (Only Owner & Sudo).
-/{BotCommands.AuthorizedUsersCommand}: Show authorized users (Only Owner & Sudo).
+/{BotCommands.UsersCommand}: show users settings (Only Owner & Sudo).
 /{BotCommands.AddSudoCommand}: Add sudo user (Only Owner).
 /{BotCommands.RmSudoCommand}: Remove sudo users (Only Owner).
 /{BotCommands.RestartCommand}: Restart and update the bot (Only Owner & Sudo).
@@ -115,19 +117,22 @@ def bot_help(update, context):
     sendMessage(help_string, context.bot, update.message)
 
 def main():
-    bot.set_my_commands([
-        (f'{BotCommands.HelpCommand}','Get Detailed Help'),
-        (f'{BotCommands.MirrorCommand[0]}', 'Start Mirroring/Leech'),
-        (f'{BotCommands.YtdlCommand[0]}','Mirror/Leech yt-dlp Support Links'),
-        (f'{BotCommands.CloneCommand}','Copy File/folder To GDrive'),
-        (f'{BotCommands.StatusCommand[0]}','Get Mirror Status Message'),
-        (f'{BotCommands.BtSelectCommand}','Select files to download using qb'),
-        (f'{BotCommands.ListCommand[0]}','Searches Files in Drive'),
-        (f'{BotCommands.CancelMirror}','Cancel a Task'),
-        (f'{BotCommands.CancelAllCommand}','Cancel all tasks which added by you'),
-        (f'{BotCommands.StatsCommand}','Bot Usage Stats'),
-        (f'{BotCommands.SearchCommand}','For Torrents With Installed (Qbittorrent) Search Plugins')
-        ])
+    if SET_COMMANDS:
+        bot.set_my_commands([
+            (f'{BotCommands.HelpCommand}','Get Detailed Help'),
+            (f'{BotCommands.MirrorCommand[0]}', 'Start Mirroring/Leech'),
+            (f'{BotCommands.YtdlCommand[0]}','Mirror/Leech yt-dlp Support Links'),
+            (f'{BotCommands.CloneCommand}','Copy File/folder To GDrive'),
+            (f'{BotCommands.StatusCommand[0]}','Get Mirror Status Message'),
+            (f'{BotCommands.BtSelectCommand}','Select files to download using qb'),
+            (f'{BotCommands.ListCommand[0]}','Searches Files in Drive'),
+            (f'{BotCommands.CancelMirror}','Cancel a Task'),
+            (f'{BotCommands.CancelAllCommand}','Cancel all tasks which added by you'),
+            (f'{BotCommands.UserSetCommand}','Users settings.'),
+            (f'{BotCommands.SetThumbCommand}', 'Reply photo to set it as Thumbnail.'),
+            (f'{BotCommands.StatsCommand}','Bot Usage Stats'),
+            (f'{BotCommands.SearchCommand}','For Torrents With Installed (Qbittorrent) Search Plugins')
+            ])
     start_cleanup()
     if INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
         notifier_dict = DbManger().get_incomplete_tasks()
@@ -140,19 +145,19 @@ def main():
                 else:
                     msg = 'Bot Restarted!'
                 for tag, links in data.items():
-                     msg += f"\n\n{tag}: "
-                     for index, link in enumerate(links, start=1):
-                         msg += f" <a href='{link}'>{index}</a> |"
-                         if len(msg.encode()) > 4000:
-                             if 'Restarted Successfully!' in msg and cid == chat_id:
-                                 bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
-                                 osremove(".restartmsg")
-                             else:
+                    msg += f"\n\n{tag}: "
+                    for index, link in enumerate(links, start=1):
+                        msg += f" <a href='{link}'>{index}</a> |"
+                        if len(msg.encode()) > 4000:
+                            if 'Restarted Successfully!' in msg and cid == chat_id:
+                                bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
+                                osremove(".restartmsg")
+                            else:
                                 try:
                                     bot.sendMessage(cid, msg, 'HTML', disable_web_page_preview=True)
                                 except Exception as e:
                                     LOGGER.error(e)
-                             msg = ''
+                            msg = ''
                 if 'Restarted Successfully!' in msg and cid == chat_id:
                     bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
                     osremove(".restartmsg")
@@ -168,25 +173,27 @@ def main():
         bot.editMessageText("Restarted Successfully!", chat_id, msg_id, parse_mode='HTML')
         osremove(".restartmsg")
 
-    if AUTHORIZED_CHATS and ospath.exists('.git'):
-        send_changelog(bot, AUTHORIZED_CHATS, __version__)
+    send_changelog(bot, __version__)
 
     start_handler = CommandHandler(BotCommands.StartCommand, start, run_async=True)
-    ping_handler = CommandHandler(BotCommands.PingCommand, ping,
-                                  filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+    log_handler = CommandHandler(BotCommands.LogCommand, log,
+                                        filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     restart_handler = CommandHandler(BotCommands.RestartCommand, restart,
-                                     filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
-    help_handler = CommandHandler(BotCommands.HelpCommand,
-                                  bot_help, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-    stats_handler = CommandHandler(BotCommands.StatsCommand,
-                                   stats, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-    log_handler = CommandHandler(BotCommands.LogCommand, log, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+                                        filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+    ping_handler = CommandHandler(BotCommands.PingCommand, ping,
+                               filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+    help_handler = CommandHandler(BotCommands.HelpCommand, bot_help,
+                               filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+    stats_handler = CommandHandler(BotCommands.StatsCommand, stats,
+                               filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(ping_handler)
     dispatcher.add_handler(restart_handler)
     dispatcher.add_handler(help_handler)
     dispatcher.add_handler(stats_handler)
     dispatcher.add_handler(log_handler)
+
     updater.start_polling(drop_pending_updates=IGNORE_PENDING_REQUESTS)
     LOGGER.info("Bot Started!")
     signal(SIGINT, exit_clean_up)

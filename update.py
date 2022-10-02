@@ -48,6 +48,7 @@ update = srun([f"git init -q \
                     && git reset --hard origin/{UPSTREAM_BRANCH} -q"], shell=True)
 
 if update.returncode == 0:
+    srun(["pip3","install","-r","requirements.txt"])
     log_info('Successfully updated with latest commit from UPSTREAM_REPO')
 else:
     log_error('Something went wrong while updating, check UPSTREAM_REPO if valid or not!')

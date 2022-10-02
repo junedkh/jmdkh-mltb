@@ -1,14 +1,12 @@
-from telegram.ext import CommandHandler
 from bot import DB_URI, dispatcher
 from bot.helper.ext_utils.bot_utils import is_magnet, is_url, new_thread
-from bot.helper.telegram_helper.message_utils import sendMessage
-from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
-from re import match
+from bot.helper.ext_utils.jmdkh_utils import extract_link
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.message_utils import sendMessage
+from telegram.ext import CommandHandler
 
-def is_uid4(uuid):
-    return bool(match(r'[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}', uuid))
 
 def _rmdb(message, bot):
     mesg = message.text.split('\n')
@@ -30,9 +28,9 @@ def _rmdb(message, bot):
             else:
                 tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
 
-        if not is_url(link) and not is_magnet(link) and not is_uid4(link) and not link:
+        if not is_url(link) and not is_magnet(link) and not link:
             if file is None:
-                if is_url(reply_to.text) or is_magnet(reply_to.text) or is_uid4(reply_to.text):
+                if is_url(reply_to.text) or is_magnet(reply_to.text):
                     link = reply_to.text.strip()
                 else:
                     mesg = message.text.split('\n')
@@ -41,35 +39,31 @@ def _rmdb(message, bot):
                         link = message_args[1]
                     except IndexError:
                         pass
-            elif file.mime_type == "application/x-bittorrent":
-                tfile = True
-                link = file.get_file().download_url
-            else:
-                link = file.file_name
-                exist = DbManger().check_download(link)
+            elif file.mime_type != "application/x-bittorrent":
+                exist = DbManger().check_download(file.file_unique_id)
                 if exist:
-                    DbManger().remove_download(exist[0])
+                    DbManger().remove_download(exist['_id'])
                     msg = 'Download is removed from database successfully'
-                    msg += f'\n{exist[2]} Your download is removed.'
+                    msg += f'\n{exist["tag"]} Your download is removed.'
                     if tag:
                         msg += f'\n{tag} Now you can download this link'
                 else:
                     msg = 'This file is not exists in database'
                 return sendMessage(msg, bot, message)
+            else:
+                link = file.get_file().download_url
+                tfile = True
 
-    if is_url(link) or is_magnet(link) or is_uid4(link):
-        rawlink = DbManger().extract_link(tfile, link)
-        exist = DbManger().check_download(rawlink)
-        if exist:
-            DbManger().remove_download(exist[0])
-            msg = 'Download is removed from database successfully'
-            msg += f'\n{exist[2]} Your download is removed.'
-            if tag:
-                msg += f'\n{tag} Now you can download this link'
-        else:
-            msg = 'This download is not exists in database'
+    rawlink = extract_link(tfile, link)
+    exist = DbManger().check_download(rawlink)
+    if exist:
+        DbManger().remove_download(exist['_id'])
+        msg = 'Download is removed from database successfully'
+        msg += f'\n{exist["tag"]} Your download is removed.'
+        if tag:
+            msg += f'\n{tag} Now you can download this link'
     else:
-        msg = "Please send a valid magnet link / url / uuid"
+        msg = 'This download is not exists in database'
     return sendMessage(msg, bot, message)
 
 @new_thread

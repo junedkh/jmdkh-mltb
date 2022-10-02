@@ -24,12 +24,12 @@ In each single file there is a major change from base code, it's almost totaly d
 - Upload all files to specific superGroup/channel.
 ### Google
 - Stop duplicates for all tasks except yt-dlp tasks
-- Download G-Drive links
-- Counting files/folders from Google Drive link
+- Download from Google Drive
+- Counting Google Drive files/folders
 - Search in multiple Drive folder/TeamDrive
 - Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method)
 - Use Token.pickle if file not found with Service Account, for all Gdrive functions
-- List result in html file instead of telegraph or telegram message to avoid limits by @junedkh
+- List result in html file instead of telegraph or telegram message to avoid limits by [junedkh](https://github.com/junedkh)
 - Random Service Account for each task
 ### Status
 - Clone Status
@@ -135,26 +135,27 @@ cp config_sample.env config.env
 ```
 _____REMOVE_THIS_LINE_____=True
 ```
-Fill up rest of the fields. Meaning of each field is discussed below:
+Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: All values must be filled between quotes, even if `Int` or `Bool`.
 
 **1. Required Fields**
 
 - `BOT_TOKEN`: The Telegram Bot Token that you got from [@BotFather](https://t.me/BotFather). `Str`
-- `GDRIVE_FOLDER_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to upload all the mirrors. `Str`
 - `OWNER_ID`: The Telegram User ID (not username) of the Owner of the bot. `Int`
-- `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to. `Str`
-- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least. `Int`
-- `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly. **NOTE**: Set to `-1` to disable auto message deletion. `Int`
 - `TELEGRAM_API`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org. `Int`
 - `TELEGRAM_HASH`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org. `Str`
 
 **2. Optional Fields**
+
+- `GDRIVE_FOLDER_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to upload all the mirrors. Required for `Google Drive` upload. `Str`
 - `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive. Default is `False`. `Bool`
-- `DATABASE_URL`: Your SQL Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, leech settings including thumbnails for each user, rss data and incomplete tasks. **NOTE**: If deploying on heroku and using heroku postgresql delete this variable from **config.env** file. **DATABASE_URL** will be grabbed from heroku variables. `Str`
+- `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to. `Str`
+- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least. `Int`
+- `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly. **NOTE**: Set to `-1` to disable auto message deletion. `Int`
+- `DATABASE_URL`: Your Mongo Database URL (Connection string). Follow this [Generate Database](#generate-database) to generate database. Data will be saved in Database: auth and sudo users, users settings including thumbnails for each user, rss data and incomplete tasks. `Str`
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. Separate them by space. `Str`
 - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space. `Str`
 - `IGNORE_PENDING_REQUESTS`: Ignore pending requests after restart. Default is `False`. `Bool`
-- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
+- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not. For this to work see [Using Service Accounts](#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
 - `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index. `Str`
 - `STATUS_LIMIT`: Limit the no. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Str`
 - `STOP_DUPLICATE`: Bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**NOTE**: File will be checked using filename not file hash, so this feature is not perfect yet). Default is `False`. `Bool`
@@ -233,6 +234,9 @@ In each single file there is a major change inspire from base code by my friend 
 - `PLAYLIST_LIMIT`: To limit the ytdlp playlist in leech mode. `Str`
 - `CLONE_LIMIT`: To limit the size of Google Drive folder/file which you can clone. Don't add unit, the default unit is `GB`.
 - `MEGA_LIMIT`: To limit the size of Mega download. Don't add unit, the default unit is `GB`.
+- `TORRENT_LIMIT`: To limit the size of torrent download. Don't add unit, the default unit is `GB`.
+- `DIRECT_LIMIT`: To limit the size of direct link download. Don't add unit, the default unit is `GB`.
+- `GDRIVE_LIMIT`: To limit the size of Google Drive folder/file which you can use for leech etc. Don't add unit, the default unit is `GB`.
 
 ### Sharer Drive
 - `GDTOT_CRYPT`: To download/clone gdtot link. `Str`
@@ -257,6 +261,12 @@ In each single file there is a major change inspire from base code by my friend 
 - `STOP_DUPLICATE_TASKS`: To enable stop duplicate task across multiple bots
   - **Note**: all bot have added same database link.
 - `DISABLE_DRIVE_LINK`: To disable google drive link button in case you need it.
+
+### Extra Features
+- `SET_COMMANDS`: To set bot commands automatically on every startup. Default is `False`. `Bool`
+  - **Note**: or you can set it manually according to your needs few commands are available [here](#bot-commands-to-be-set-in-botfatherhttpstmebotfather)
+- `MIRROR_LOG`: It will send the message when upload to drive is finished
+  - **Note**: it will not support any shortnner
 
 ### Extra Buttons
 - Four buttons are already added including Sharer, Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
@@ -302,8 +312,6 @@ sudo docker container prune
 sudo docker image prune -a
 ```
 4. Check the number of processing units of your machine with `nproc` cmd and times it by 4, then edit `AsyncIOThreadsCount` in qBittorrent.conf.
-5. You can add `CONFIG_FILE_URL` variable using docker and docker-compose, google it.
-
 ------
 
 ### Deploying on VPS Using Docker
@@ -335,15 +343,15 @@ sudo docker stop id
 **NOTE**: If you want to use port other than 80, change it in [docker-compose.yml](docker-compose.yml) also.
 
 ```
-sudo apt install docker-compose
+sudo apt install -y docker-compose
+```
+- Set CONFIG_FILE_URL:
+```
+export CONFIG_FILE_URL=http://any-direct.link/config.env
 ```
 - Build and run Docker image:
 ```
-sudo docker-compose up
-```
-- After editing files with nano for example (nano start.sh):
-```
-sudo docker-compose up --build
+sudo docker-compose up -d --build
 ```
 - To stop the image:
 ```
@@ -463,30 +471,17 @@ Then add emails from emails.txt to Google Group, after that add this Google Grou
 ```
 python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 ```
+
 ------
 
 ### Generate Database
 
-**1. Using Railway**
-- Go to [railway](https://railway.app) and create account
-- Start new project
-- Press on `Provision PostgreSQL`
-- After creating database press on `PostgresSQL`
-- Go to `Connect` column
-- Copy `Postgres Connection URL` and fill `DATABASE_URL` variable with it
-
-**2. Using Heroku PostgreSQL**
-<p><a href="https://dev.to/prisma/how-to-setup-a-free-postgresql-database-on-heroku-1dc1"> <img src="https://img.shields.io/badge/See%20Dev.to-black?style=for-the-badge&logo=dev.to" width="160""/></a></p>
-
-**3. Using ElephantSQL**
-- Go to [elephantsql](https://elephantsql.com) and create account
-- Hit `Create New Instance`
-- Follow the further instructions in the screen
-- Hit `Select Region`
-- Hit `Review`
-- Hit `Create instance`
-- Select your database name
-- Copy your database url, and fill `DATABASE_URL` variable with it
+1. Go to `https://mongodb.com/` and sign-up.
+2. Create Shared Cluster.
+3. Press on `Database` under `Deployment` Header, your created cluster will be there.
+5. Press on connect, choose `Allow Acces From Anywhere` and press on `Add IP Address` without editing the ip, then create user.
+6. After creating user press on `Choose a connection`, then press on `Connect your application`. Choose `Driver` **python** and `version` **3.6 or later**.
+7. Copy your `connection string` and replace `<password>` with the password of your user, then press close.
 
 ------
 
@@ -522,6 +517,36 @@ machine example.workers.dev password index_password
 Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts of different hosts can be added each separated by a new line.
 
 -----
+
+## Bot commands to be set in [@BotFather](https://t.me/BotFather)
+
+```
+dl - or /m it will ask you to where you want to upload.
+clone - Copy file/folder to Drive
+count - Count file/folder of Drive
+ytdl - or /y yt-dlp supported link it will ask you to where you want to upload.
+usetting - users settings
+setthumb - Set thumbnail
+status - Get Mirror Status message
+btsel - select files from torrent
+rsslist - or /rl List all subscribed rss feed info
+rssget - or /rg Get specific No. of links from specific rss feed
+rsssub - or /rs Subscribe new rss feed
+rssunsub - or /rus Unsubscribe rss feed by title
+rssset - or /rst Rss Settings
+list - Search files in Drive
+search - Search for torrents with API
+cancel - Cancel a task
+cancelall - Cancel all tasks
+del - Delete file/folder from Drive
+log - Get the Bot Log
+shell - Run commands in Shell
+restart - Restart the Bot
+stats - Bot Usage Stats
+ping - Ping the Bot
+help - All cmds with description
+```
+------
 
 ## Donations
 

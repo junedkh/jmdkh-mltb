@@ -1,6 +1,7 @@
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from os import remove, path as ospath
-from bot import aria2, download_dict, dispatcher, download_dict_lock, SUDO_USERS, OWNER_ID
+
+from bot import aria2, download_dict, dispatcher, download_dict_lock, LOGGER
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
@@ -31,7 +32,7 @@ def select(update, context):
         sendMessage(msg.format_map({'cmd': BotCommands.BtSelectCommand,'mir': BotCommands.MirrorCommand[0]}), context.bot, update.message)
         return
 
-    if OWNER_ID != user_id and dl.message.from_user.id != user_id and user_id not in SUDO_USERS:
+    if not CustomFilters._owner_query(user_id) and dl.message.from_user.id != user_id:
         sendMessage("This task is not for you!", context.bot, update.message)
         return
     if dl.status() not in [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_PAUSED, MirrorStatus.STATUS_WAITING]:
@@ -49,10 +50,13 @@ def select(update, context):
             client.torrents_pause(torrent_hashes=id_)
         else:
             id_ = dl.gid()
-            aria2.client.force_pause(id_)
+            try:
+                aria2.client.force_pause(id_)
+            except Exception as e:
+                LOGGER.error(f"{e} Error in pause, this mostly happens after abuse aria2")
         listener.select = True
     except:
-        sendMessage("This task not Torrent", context.bot, update.message)
+        sendMessage("This is not a bittorrent task!", context.bot, update.message)
         return
     SBUTTONS = bt_selection_buttons(id_, False)
     msg = f"<b>Name</b>: <code>{dl.name()}</code>\n\nYour download paused. Choose files then press Done Selecting button to resume downloading." \
@@ -65,7 +69,6 @@ def get_confirm(update, context):
     data = query.data
     data = data.split()
     dl = getDownloadByGid(data[2])
-    listener = dl.listener()
     if not dl:
         query.answer(text="This task has been cancelled!", show_alert=True)
         query.message.delete()
@@ -82,7 +85,7 @@ def get_confirm(update, context):
     elif data[1] == "done":
         query.answer()
         id_ = data[3]
-        if listener.isQbit:
+        if len(id_) > 20:
             client = dl.client()
             tor_info = client.torrents_info(torrent_hash=id_)[0]
             path = tor_info.content_path.rsplit('/', 1)[0]
@@ -105,9 +108,13 @@ def get_confirm(update, context):
                         remove(f['path'])
                     except:
                         pass
-            aria2.client.unpause(id_)
+            try:
+                aria2.client.unpause(id_)
+            except Exception as e:
+                LOGGER.error(f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
         sendStatusMessage(listener.message, listener.bot)
         query.message.delete()
+        query.message.reply_to_message.delete()
     elif data[1] == "rm":
         query.answer()
         dl.download().cancel_download()
@@ -117,5 +124,6 @@ def get_confirm(update, context):
 select_handler = CommandHandler(BotCommands.BtSelectCommand, select,
                                 filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user), run_async=True)
 bts_handler = CallbackQueryHandler(get_confirm, pattern="btsel", run_async=True)
+
 dispatcher.add_handler(select_handler)
 dispatcher.add_handler(bts_handler)

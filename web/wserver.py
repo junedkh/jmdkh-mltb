@@ -1,4 +1,5 @@
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
+
 from time import sleep, time
 from psutil import boot_time, disk_usage, net_io_counters
 from subprocess import check_output
@@ -63,18 +64,21 @@ def re_verfiy(paused, resumed, client, hash_id):
         paused = paused.split("|")
     if resumed:
         resumed = resumed.split("|")
-
     k = 0
     while True:
+
         res = client.torrents_files(torrent_hash=hash_id)
         verify = True
+
         for i in res:
             if str(i.id) in paused and i.priority != 0:
                 verify = False
                 break
+
             if str(i.id) in resumed and i.priority == 0:
                 verify = False
                 break
+
         if verify:
             break
         LOGGER.info("Reverification Failed! Correcting stuff...")
@@ -122,6 +126,7 @@ def list_torrent_contents(id_):
         cont = make_tree(res)
         client.auth_log_out()
     else:
+        aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
         res = aria2.client.get_files(id_)
         cont = make_tree(res, True)
     return rawindexpage.replace("/* style2 */", stlye2).replace("<!-- files_list -->", files_list) \
@@ -173,6 +178,7 @@ def set_priority(id_):
 
         resume = resume.strip(",")
 
+        aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
         res = aria2.client.change_option(id_, {'select-file': resume})
         if res == "OK":
             LOGGER.info(f"Verified! Gid: {id_}")
