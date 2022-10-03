@@ -345,13 +345,9 @@ sudo docker stop id
 ```
 sudo apt install -y docker-compose
 ```
-- Set CONFIG_FILE_URL:
-```
-export CONFIG_FILE_URL=http://any-direct.link/config.env
-```
 - Build and run Docker image:
 ```
-sudo docker-compose up -d --build
+sudo CONFIG_FILE_URL=http://any-direct.link/config.env docker-compose up -d --build
 ```
 - To stop the image:
 ```
@@ -363,11 +359,6 @@ sudo docker-compose start
 ```
 - Tutorial video from Tortoolkit repo for docker-compose and checking ports
 <p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
-
-------
-
-## Deploying on Heroku
-<p><a href="https://github.com/junedkh/jmdkh-mltb/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
 
 ------
 
