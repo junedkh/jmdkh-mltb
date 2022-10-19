@@ -218,13 +218,17 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 ## By [Junedkh](https://github.com/junedkh)
 In each single file there is a major change inspire from base code by my friend [Anasty17](https://github.com/anasty17/mirror-leech-telegram-bot) ❤️, it's almost not totaly different but. Here some of features which i hide it in .so files.
 
-**The code is design for big groups**
+# Repo is design for big groups
 
 ### Shortenner
 - `SHORTENER_API`: Fill your Shortener API key. `Str`
 - `SHORTENER`: Shortener URL. `Str`
   - Supported URL Shorteners:
   >exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io, adfoc.us, cutt.ly
+  - To use random shorteners:
+  >SHORTENER = "exe.io,gplinks.in, urlshortx.com"
+
+  >SHORTENER_API = "abcd123, efg456,hijk789"
 
 ### Limits
 - `STORAGE_THRESHOLD`: To leave specific storage free and any download will lead to leave free storage less than this value will be cancelled. Don't add unit, the default unit is `GB`.
@@ -236,8 +240,8 @@ In each single file there is a major change inspire from base code by my friend 
 - `MEGA_LIMIT`: To limit the size of Mega download. Don't add unit, the default unit is `GB`.
 - `TORRENT_LIMIT`: To limit the size of torrent download. Don't add unit, the default unit is `GB`.
 - `DIRECT_LIMIT`: To limit the size of direct link download. Don't add unit, the default unit is `GB`.
+- `YTDLP_LIMIT`: To limit the size of ytdlp download. Don't add unit, the default unit is `GB`.
 - `GDRIVE_LIMIT`: To limit the size of Google Drive folder/file which you can use for leech etc. Don't add unit, the default unit is `GB`.
-
 ### Sharer Drive
 - `GDTOT_CRYPT`: To download/clone gdtot link. `Str`
 - `SHARER_EMAIL`: youremail@gmail.com `Str`
@@ -267,7 +271,6 @@ In each single file there is a major change inspire from base code by my friend 
   - **Note**: or you can set it manually according to your needs few commands are available [here](#bot-commands-to-be-set-in-botfatherhttpstmebotfather)
 - `MIRROR_LOG`: It will send the message when upload to drive is finished
   - **Note**: it will not support any shortnner
-
 ### Extra Buttons
 - Four buttons are already added including Sharer, Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
   - `BUTTON_FIVE_NAME`:

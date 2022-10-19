@@ -159,8 +159,8 @@ def get_readable_message():
                 except:
                     pass
             msg += f"\n<b>Engine</b>: {download.engine()}"
-            msg += f"\n<b>Mode</b>: {download.mode()}"
-            msg += f"\n<code>/{BotCommands.CancelMirror} {download.gid()}</code>"
+            msg += f"\n<b>Upload</b>: {download.mode()}"
+            msg += f"\n/{BotCommands.CancelMirror}_{download.gid()}"
             msg += "\n\n"
             if STATUS_LIMIT is not None and index == STATUS_LIMIT:
                 break
@@ -194,7 +194,7 @@ def get_readable_message():
             buttons.sbutton("<<", "status pre")
             buttons.sbutton(f"{PAGE_NO}/{PAGES} ♻️", "status ref")
             buttons.sbutton(">>", "status nex")
-        buttons.sbutton("Statistics", "status stats", footer=True)
+        buttons.sbutton("Statistics", "status stats", 'footer')
         button = buttons.build_menu(3)
         return msg + bmsg, button
 
@@ -245,15 +245,21 @@ def is_url(url: str):
         return False
 
 def is_gdrive_link(url: str):
-    return "drive.google.com" in urlparse(url).netloc
+    url_ = urlparse(url)
+    if url_.scheme in ['http','https']:
+        return "drive.google.com" in url_.netloc
+    return False
 
 def is_sharer_link(url: str):
-    domain = urlparse(url).netloc
-    return any(x in domain for x in ['gdtot', 'appdrive', 'driveapp', 'hubdrive'])
+    url_ = urlparse(url)
+    if url_.scheme in ['http','https']:
+        return any(x in url_.netloc for x in ['gdtot', 'appdrive', 'driveapp', 'hubdrive'])
+    return False
 
 def is_mega_link(url: str):
-    domain = urlparse(url).netloc
-    return any(x in domain for x in ['mega.nz', 'mega.co.nz'])
+    url_ = urlparse(url)
+    if url_.scheme in ['http','https']:
+        return any(x in url_.netloc for x in ['mega.nz', 'mega.co.nz'])
 
 def get_mega_link_type(url: str):
     if "folder" in url:
@@ -293,7 +299,7 @@ def get_content_type(link: str) -> str:
             content_type = None
     return content_type
 
-def update_user_ldata(id_: str, key, value):
+def update_user_ldata(id_: int, key, value):
     if id_ in user_data:
         user_data[id_][key] = value
     else:

@@ -114,7 +114,6 @@ def get_confirm(update, context):
                 LOGGER.error(f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
         sendStatusMessage(listener.message, listener.bot)
         query.message.delete()
-        query.message.reply_to_message.delete()
     elif data[1] == "rm":
         query.answer()
         dl.download().cancel_download()

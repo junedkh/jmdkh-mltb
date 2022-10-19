@@ -7,7 +7,7 @@ from bot import user_data, dispatcher, AS_DOCUMENT, DB_URI
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, auto_delete_message
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.telegram_helper import button_build
+from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.bot_utils import update_user_ldata
 
@@ -15,7 +15,7 @@ from bot.helper.ext_utils.bot_utils import update_user_ldata
 def getleechinfo(from_user):
     user_id = from_user.id
     name = from_user.full_name
-    buttons = button_build.ButtonMaker()
+    buttons = ButtonMaker()
     thumbpath = f"Thumbnails/{user_id}.jpg"
     if user_id in user_data and (user_data[user_id].get('as_doc') or (not user_data[user_id].get('as_media') \
        and AS_DOCUMENT)):
@@ -103,6 +103,7 @@ def setThumb(update, context):
             DbManger().update_thumb(user_id, des_dir)
         msg = f"Custom thumbnail saved for {update.message.from_user.mention_html(update.message.from_user.first_name)}."
         sendMessage(msg, context.bot, update.message)
+        reply_to.delete()
     else:
         sendMessage("Reply to a photo to save custom thumbnail.", context.bot, update.message)
 

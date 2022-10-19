@@ -130,7 +130,7 @@ DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
 if len(DOWNLOAD_DIR) == 0:
     DOWNLOAD_DIR = '/usr/src/app/downloads/'
 elif not DOWNLOAD_DIR.endswith("/"):
-    DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
+    DOWNLOAD_DIR = f'{DOWNLOAD_DIR}/'
 
 DOWNLOAD_STATUS_UPDATE_INTERVAL = environ.get('DOWNLOAD_STATUS_UPDATE_INTERVAL', '')
 if len(DOWNLOAD_STATUS_UPDATE_INTERVAL) == 0:
@@ -370,6 +370,9 @@ TORRENT_LIMIT = None if len(TORRENT_LIMIT) == 0 else float(TORRENT_LIMIT)
 DIRECT_LIMIT = environ.get('DIRECT_LIMIT', '')
 DIRECT_LIMIT = None if len(DIRECT_LIMIT) == 0 else float(DIRECT_LIMIT)
 
+YTDLP_LIMIT = environ.get('YTDLP_LIMIT', '')
+YTDLP_LIMIT = None if len(YTDLP_LIMIT) == 0 else float(YTDLP_LIMIT)
+
 GDRIVE_LIMIT = environ.get('GDRIVE_LIMIT', '')
 GDRIVE_LIMIT = None if len(GDRIVE_LIMIT) == 0 else float(GDRIVE_LIMIT)
 
@@ -434,6 +437,12 @@ SHORTENER_API = environ.get('SHORTENER_API', '')
 if len(SHORTENER) == 0 or len(SHORTENER_API) == 0:
     SHORTENER = None
     SHORTENER_API = None
+elif ',' in SHORTENER and ',' in SHORTENER_API:
+    SHORTENER = SHORTENER.split(',')
+    SHORTENER_API = SHORTENER_API.split(',')
+else:
+    SHORTENER = [SHORTENER]
+    SHORTENER_API = [SHORTENER_API]
 
 MIRROR_LOG = environ.get('MIRROR_LOG', '')
 if len(MIRROR_LOG) != 0 and not MIRROR_LOG.startswith('-100') or len(MIRROR_LOG) == 0:

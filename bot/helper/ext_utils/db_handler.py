@@ -45,6 +45,7 @@ class DbManger:
                 del row['_id']
                 rss_dict[title] = row
             LOGGER.info("Rss data has been imported from Database.")
+        self.__conn.close()
 
     def update_user_data(self, user_id):
         if self.__err:
@@ -53,6 +54,7 @@ class DbManger:
         if data.get('thumb'):
             del data['thumb']
         self.__db.users.update_one({'_id': user_id}, {'$set': data}, upsert=True)
+        self.__conn.close()
 
     def update_thumb(self, user_id, path=None):
         if self.__err:
@@ -63,26 +65,31 @@ class DbManger:
         else:
             image_bin = False
         self.__db.users.update_one({'_id': user_id}, {'$set': {'thumb': image_bin}}, upsert=True)
+        self.__conn.close()
 
     def rss_update(self, title):
         if self.__err:
             return
         self.__db.rss.update_one({'_id': title}, {'$set': rss_dict[title]}, upsert=True)
+        self.__conn.close()
 
     def rss_delete(self, title):
         if self.__err:
             return
         self.__db.rss.delete_one({'_id': title})
+        self.__conn.close()
 
     def add_incomplete_task(self, cid, link, tag):
         if self.__err:
             return
         self.__db.tasks[botname].insert_one({'_id': link, 'cid': cid, 'tag': tag})
+        self.__conn.close()
 
     def rm_complete_task(self, link):
         if self.__err:
             return
         self.__db.tasks[botname].delete_one({'_id': link})
+        self.__conn.close()
 
     def get_incomplete_tasks(self):
         notifier_dict = {}
@@ -101,39 +108,40 @@ class DbManger:
                     notifier_dict[row['cid']] = usr_dict
         self.__db.tasks[botname].drop()
         self.clear_download_links()
+        self.__conn.close()
         return notifier_dict # return a dict ==> {cid: {tag: [_id, _id, ...]}}
 
     def trunc_table(self, name):
         if self.__err:
             return
         self.__db[name].drop()
+        self.__conn.close()
 
     def add_download_url(self, url: str, tag: str):
         if self.__err:
             return
         download = {'_id': url, 'tag': tag, 'botname': botname}
         self.__db.download_links.update_one({'_id': url}, {'$set': download}, upsert=True)
+        self.__conn.close()
 
     def check_download(self, url:str):
         if self.__err:
             return
-        return self.__db.download_links.find_one({'_id': url})
+        exist = self.__db.download_links.find_one({'_id': url})
+        self.__conn.close()
+        return exist
 
     def clear_download_links(self):
         if self.__err:
             return
         self.__db.download_links.delete_many({'botname': botname})
+        self.__conn.close()
 
     def remove_download(self, url: str):
         if self.__err:
             return
         self.__db.download_links.delete_one({'_id': url})
-
-    def __exit__(self):
-        try:
-            self.__conn.close()
-        except:
-            pass
+        self.__conn.close()
 
 if DB_URI is not None:
     DbManger().db_load()

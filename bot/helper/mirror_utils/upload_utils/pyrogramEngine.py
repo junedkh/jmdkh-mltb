@@ -52,9 +52,8 @@ class TgUploader:
                     except Exception as e:
                         if self.__is_cancelled:
                             return
-                        else:
-                            LOGGER.error(e)
-                            continue
+                        LOGGER.error(e)
+                        continue
                     self.__upload_file(up_path, file_, dirpath)
                     if self.__is_cancelled:
                         return
@@ -177,10 +176,11 @@ class TgUploader:
 
     def __user_settings(self):
         user_id = self.__listener.message.from_user.id
-        if user_id in user_data and user_data[user_id].get('as_doc'):
-            self.__as_doc = True
-        elif user_id in user_data and user_data[user_id].get('as_media'):
-            self.__as_doc = False
+        if user_id in user_data:
+            if user_data[user_id].get('as_doc'):
+                self.__as_doc = True
+            elif user_data[user_id].get('as_media'):
+                self.__as_doc = False
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 
