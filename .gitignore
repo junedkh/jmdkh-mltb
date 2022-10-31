@@ -10,8 +10,10 @@ data*
 log.txt
 accounts/*
 Thumbnails/*
-drive_folder
+list_drives.txt
+categories.txt
 cookies.txt
+downloads
 version.py
 jmdkh_utils.py
 aria2_download.py
@@ -25,6 +27,7 @@ gdriveTools.py
 message_utils.py
 bot_updater.py
 cancel_mirror.py
+bot_settings.py
 clone.py
 drive_list.py
 mirror_leech.py

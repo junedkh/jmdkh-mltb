@@ -3,7 +3,7 @@ from time import time
 from threading import Thread
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
-from bot import dispatcher, status_reply_dict_lock, download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR, Interval, DOWNLOAD_STATUS_UPDATE_INTERVAL, status_reply_dict, STORAGE_THRESHOLD
+from bot import dispatcher, status_reply_dict_lock, download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR, Interval, status_reply_dict, config_dict
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, auto_delete_message, sendStatusMessage, update_all_messages
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time, turn, setInterval, new_thread, MirrorStatus
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -31,7 +31,7 @@ def mirror_status(update, context):
             except:
                 pass
             finally:
-                Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL, update_all_messages))
+                Interval.append(setInterval(config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))
 
 @new_thread
 def status_pages(update, context):
@@ -87,15 +87,17 @@ def bot_sys_stats():
         recv = get_readable_file_size(net_io_counters().bytes_recv)
         sent = get_readable_file_size(net_io_counters().bytes_sent)
         free = disk_usage(DOWNLOAD_DIR).free
-        if STORAGE_THRESHOLD:
-            free -= STORAGE_THRESHOLD * 1024**3
-        TDlimits = get_readable_file_size(free)
-        ZUlimits = get_readable_file_size(free / 2)
-        return f"Powered By: JMDKH_Team\n" \
+        msg = f"Powered By: JMDKH_Team\n" \
             f"Send: {sent} | Recv: {recv}\n" \
             f"CPU: {cpu_percent()}% | RAM: {mem}%\n\n" \
-            f"{status_ls}\n" \
-            f"\nLimits: T/D: {TDlimits} | Z/U: {ZUlimits}"
+            f"{status_ls}\n"
+        STORAGE_THRESHOLD = config_dict['STORAGE_THRESHOLD']
+        if STORAGE_THRESHOLD:
+            free -= STORAGE_THRESHOLD * 1024**3
+            TDlimits = get_readable_file_size(free)
+            ZUlimits = get_readable_file_size(free / 2)
+            msg +=f"\nLimits: T/D: {TDlimits} | Z/U: {ZUlimits}"
+        return msg
 
 mirror_status_handler = CommandHandler(BotCommands.StatusCommand, mirror_status,
                                       filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)

@@ -7,16 +7,16 @@ from sys import executable
 from telegram.ext import CommandHandler
 
 from bot import bot, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, LOGGER, Interval, \
-                DB_URI, INCOMPLETE_TASK_NOTIFIER, app, main_loop, QbInterval, SET_COMMANDS
+                DB_URI, app, main_loop, QbInterval, INCOMPLETE_TASK_NOTIFIER
 from bot.helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time, set_commands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, sendLogFile
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.modules import authorize, drive_list, cancel_mirror, mirror_status, mirror_leech, clone, users_settings, ytdlp, \
-                        shell, eval, delete, count, search, rss, bt_select, rmdb, bot_updater, save_message
+                        shell, eval, delete, count, search, rss, bt_select, rmdb, bot_settings, bot_updater, save_message
 from bot.helper.ext_utils.jmdkh_utils import send_changelog
 from telegram.utils.helpers import mention_html
 from bot.version import __version__
@@ -65,7 +65,7 @@ def restart(update, context):
         QbInterval[0].cancel()
         QbInterval.clear()
     clean_all()
-    srun(["pkill", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg"])
+    srun(["pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg"])
     srun(["python3", "update.py"])
     with open(".restartmsg", "w") as f:
         f.truncate(0)
@@ -117,24 +117,9 @@ def bot_help(update, context):
     sendMessage(help_string, context.bot, update.message)
 
 def main():
-    if SET_COMMANDS:
-        bot.set_my_commands([
-            (f'{BotCommands.HelpCommand}','Get Detailed Help'),
-            (f'{BotCommands.MirrorCommand[0]}', 'Start Mirroring/Leech'),
-            (f'{BotCommands.YtdlCommand[0]}','Mirror/Leech yt-dlp Support Links'),
-            (f'{BotCommands.CloneCommand}','Copy File/folder To GDrive'),
-            (f'{BotCommands.StatusCommand[0]}','Get Mirror Status Message'),
-            (f'{BotCommands.BtSelectCommand}','Select files to download using qb'),
-            (f'{BotCommands.ListCommand[0]}','Searches Files in Drive'),
-            (f'{BotCommands.CancelMirror}','Cancel a Task'),
-            (f'{BotCommands.CancelAllCommand}','Cancel all tasks which added by you'),
-            (f'{BotCommands.UserSetCommand}','Users settings.'),
-            (f'{BotCommands.SetThumbCommand}', 'Reply photo to set it as Thumbnail.'),
-            (f'{BotCommands.StatsCommand}','Bot Usage Stats'),
-            (f'{BotCommands.SearchCommand}','For Torrents With Installed (Qbittorrent) Search Plugins')
-            ])
+    set_commands(bot)
     start_cleanup()
-    if INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
+    if INCOMPLETE_TASK_NOTIFIER and DB_URI:
         notifier_dict = DbManger().get_incomplete_tasks()
         if notifier_dict:
             for cid, data in notifier_dict.items():

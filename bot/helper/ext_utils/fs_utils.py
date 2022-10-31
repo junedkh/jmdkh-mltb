@@ -10,7 +10,7 @@ from math import ceil
 from re import split as re_split, I
 
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
-from bot import aria2, app, LOGGER, DOWNLOAD_DIR, get_client, LEECH_SPLIT_SIZE, EQUAL_SPLITS, MAX_SPLIT_SIZE
+from bot import aria2, app, LOGGER, DOWNLOAD_DIR, get_client, MAX_SPLIT_SIZE, config_dict
 
 ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".tgz", ".lzma2",
             ".zip", ".7z", ".z", ".rar", ".iso", ".wim", ".cab", ".apm", ".arj", ".chm",
@@ -40,6 +40,7 @@ def clean_download(path: str):
             pass
 
 def start_cleanup():
+    get_client().torrents_delete(torrent_hashes="all")
     try:
         rmtree(DOWNLOAD_DIR)
     except:
@@ -88,9 +89,9 @@ def get_path_size(path: str):
 
 def get_base_name(orig_path: str):
     ext = [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]
-    if len(ext) > 0:
+    if ext:
         ext = ext[0]
-        return re_split(ext + '$', orig_path, maxsplit=1, flags=I)[0]
+        return re_split(f'{ext}$', orig_path, maxsplit=1, flags=I)[0]
     else:
         raise NotSupportedExtractionArchive('File format not supported for extraction')
 
@@ -127,15 +128,15 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
         dirpath = f"{dirpath}/splited_files_mltb"
         if not ospath.exists(dirpath):
             mkdir(dirpath)
-    parts = ceil(size/LEECH_SPLIT_SIZE)
-    if EQUAL_SPLITS and not inLoop:
+    parts = ceil(size/config_dict['LEECH_SPLIT_SIZE'])
+    if config_dict['EQUAL_SPLITS'] and not inLoop:
         split_size = ceil(size/parts) + 1000
     if get_media_streams(path)[0]:
         duration = get_media_info(path)[0]
         base_name, extension = ospath.splitext(file_)
         split_size = split_size - 5000000
         while i <= parts:
-            parted_name = "{}.part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
+            parted_name = f"{str(base_name)}.part{str(i).zfill(3)}{str(extension)}"
             out_path = ospath.join(dirpath, parted_name)
             if not noMap:
                 listener.suproc = Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(start_time),
@@ -189,7 +190,7 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
             start_time += lpd - 3
             i = i + 1
     else:
-        out_path = ospath.join(dirpath, file_ + ".")
+        out_path = ospath.join(dirpath, f"{file_}.")
         listener.suproc = Popen(["split", "--numeric-suffixes=1", "--suffix-length=3",
                                 f"--bytes={split_size}", path, out_path])
         listener.suproc.wait()

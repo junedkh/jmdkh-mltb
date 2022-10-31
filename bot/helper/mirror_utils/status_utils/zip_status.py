@@ -64,7 +64,7 @@ class ZipStatus:
 
     def cancel_download(self):
         LOGGER.info(f'Cancelling Archive: {self.__name}')
-        if self.__listener.suproc is not None:
+        if self.__listener.suproc:
             self.__listener.suproc.kill()
         self.__listener.onUploadError('Archiving stopped by user!')
 

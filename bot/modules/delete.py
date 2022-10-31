@@ -13,7 +13,7 @@ def deletefile(update, context):
     reply_to = update.message.reply_to_message
     if len(context.args) == 1:
         link = context.args[0].strip()
-    elif reply_to is not None:
+    elif reply_to:
         link = reply_to.text.split(maxsplit=1)[0].strip()
     else:
         link = ''

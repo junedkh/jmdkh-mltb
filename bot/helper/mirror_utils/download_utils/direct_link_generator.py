@@ -19,7 +19,7 @@ from lxml.etree import HTML as etree_html
 from base64 import standard_b64encode, b64decode
 from time import sleep
 
-from bot import LOGGER, UPTOBOX_TOKEN, SHARER_EMAIL, SHARER_PASS, GDTOT_CRYPT
+from bot import LOGGER, config_dict
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
@@ -103,7 +103,8 @@ def uptobox(url: str) -> str:
         link = re_findall(r'\bhttps?://.*uptobox\.com\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No Uptobox links found")
-    if UPTOBOX_TOKEN is None:
+    UPTOBOX_TOKEN = config_dict['UPTOBOX_TOKEN']
+    if not UPTOBOX_TOKEN:
         LOGGER.error('UPTOBOX_TOKEN not provided!')
         dl_url = link
     else:
@@ -332,7 +333,7 @@ def fichier(link: str) -> str:
     if req.status_code == 404:
       raise DirectDownloadLinkException("ERROR: File not found/The link you entered is wrong!")
     soup = BeautifulSoup(req.content, 'lxml')
-    if soup.find("a", {"class": "ok btn-general btn-orange"}) is not None:
+    if soup.find("a", {"class": "ok btn-general btn-orange"}):
         dl_url = soup.find("a", {"class": "ok btn-general btn-orange"})["href"]
         if dl_url is None:
           raise DirectDownloadLinkException("ERROR: Unable to generate Direct Link 1fichier!")
@@ -427,7 +428,9 @@ def uploadee(url: str) -> str:
 def drive_sharer(url: str) -> str:
     """ Appdrive google drive link generator
         By https://github.com/xcscxr """
-    if not SHARER_EMAIL:
+    SHARER_EMAIL = config_dict['SHARER_EMAIL']
+    SHARER_PASS = config_dict['SHARER_PASS']
+    if not SHARER_EMAIL or not SHARER_PASS:
         raise DirectDownloadLinkException("ERROR: SHARER_EMAIL not provided")
     temp = urlparse(url)
     client = rsession()
@@ -485,12 +488,12 @@ def drive_sharer(url: str) -> str:
 def gdtot(url: str) -> str:
     """ Gdtot google drive link generator
     By https://github.com/xcscxr """
-    if not GDTOT_CRYPT:
+    if not config_dict['GDTOT_CRYPT']:
         raise DirectDownloadLinkException("ERROR: GDTOT_CRYPT not provided")
     parsed_url = urlparse(url)
     client = rsession()
     try:
-        client.cookies.set(name='crypt', value=GDTOT_CRYPT, domain=parsed_url.netloc)
+        client.cookies.set(name='crypt', value=config_dict['GDTOT_CRYPT'], domain=parsed_url.netloc)
         res = client.get(url)
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e}")
@@ -505,7 +508,9 @@ def gdtot(url: str) -> str:
 def hubdrive(url: str) -> str:
     """ Hubdrive google drive link generator
     By https://github.com/xcscxr """
-    if not SHARER_EMAIL:
+    SHARER_EMAIL = config_dict['SHARER_EMAIL']
+    SHARER_PASS = config_dict['SHARER_PASS']
+    if not SHARER_EMAIL or not SHARER_PASS:
         raise DirectDownloadLinkException("ERROR: SHARER_EMAIL not provided")
     parsed_url = urlparse(url)
     client = rsession()

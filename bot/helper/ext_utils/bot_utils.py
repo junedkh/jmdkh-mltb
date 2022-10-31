@@ -8,7 +8,7 @@ from requests import head as rhead
 from urllib.request import urlopen
 from urllib.parse import urlparse
 
-from bot import download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR, BASE_URL, WEB_PINCODE, STATUS_LIMIT, user_data
+from bot import download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR, user_data, config_dict
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
@@ -96,11 +96,11 @@ def bt_selection_buttons(id_: str, isCanCncl: bool = True):
             break
 
     buttons = ButtonMaker()
-    if WEB_PINCODE:
-        buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}")
+    if config_dict['WEB_PINCODE']:
+        buttons.buildbutton("Select Files", f"{config_dict['BASE_URL']}/app/files/{id_}")
         buttons.sbutton("Pincode", f"btsel pin {gid} {pincode}")
     else:
-        buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}")
+        buttons.buildbutton("Select Files", f"{config_dict['BASE_URL']}/app/files/{id_}?pin_code={pincode}")
     buttons.sbutton("Done Selecting", f"btsel done {gid} {id_}")
     if isCanCncl:
         buttons.sbutton("Cancel", f"btsel rm {gid} {id_}")
@@ -123,7 +123,8 @@ def get_progress_bar_string(status):
 def get_readable_message():
     with download_dict_lock:
         msg = ""
-        if STATUS_LIMIT is not None:
+        STATUS_LIMIT = config_dict['STATUS_LIMIT']
+        if STATUS_LIMIT:
             tasks = len(download_dict)
             globals()['PAGES'] = ceil(tasks/STATUS_LIMIT)
             if PAGE_NO > PAGES and PAGES != 0:
@@ -162,7 +163,7 @@ def get_readable_message():
             msg += f"\n<b>Upload</b>: {download.mode()}"
             msg += f"\n/{BotCommands.CancelMirror}_{download.gid()}"
             msg += "\n\n"
-            if STATUS_LIMIT is not None and index == STATUS_LIMIT:
+            if STATUS_LIMIT and index == STATUS_LIMIT:
                 break
         if len(msg) == 0:
             return None, None
@@ -190,7 +191,7 @@ def get_readable_message():
         bmsg = f"<b>Free</b>: {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)} | <b>Uptime</b>: {get_readable_time(time() - botStartTime)}" \
                 f"\n<b>DL</b>: {get_readable_file_size(dl_speed)}/s | <b>UL</b>: {get_readable_file_size(up_speed)}/s"
         buttons = ButtonMaker()
-        if STATUS_LIMIT is not None and tasks > STATUS_LIMIT:
+        if STATUS_LIMIT and tasks > STATUS_LIMIT:
             buttons.sbutton("<<", "status pre")
             buttons.sbutton(f"{PAGE_NO}/{PAGES} ♻️", "status ref")
             buttons.sbutton(">>", "status nex")
@@ -199,6 +200,7 @@ def get_readable_message():
         return msg + bmsg, button
 
 def turn(data):
+    STATUS_LIMIT = config_dict['STATUS_LIMIT']
     try:
         global COUNT, PAGE_NO
         with download_dict_lock:
@@ -299,8 +301,28 @@ def get_content_type(link: str) -> str:
             content_type = None
     return content_type
 
-def update_user_ldata(id_: int, key, value):
+def update_user_ldata(id_, key, value):
     if id_ in user_data:
         user_data[id_][key] = value
     else:
         user_data[id_] = {key: value}
+
+def set_commands(bot):
+    if config_dict['SET_COMMANDS']:
+        bot.set_my_commands([
+            (f'{BotCommands.HelpCommand}','Get Detailed Help'),
+            (f'{BotCommands.MirrorCommand[0]}', 'Start Mirroring/Leech'),
+            (f'{BotCommands.YtdlCommand[0]}','Mirror/Leech yt-dlp Support Links'),
+            (f'{BotCommands.CloneCommand}','Copy File/folder To GDrive'),
+            (f'{BotCommands.StatusCommand[0]}','Get Mirror Status Message'),
+            (f'{BotCommands.BtSelectCommand}','Select files to download using qb'),
+            (f'{BotCommands.ListCommand[0]}','Searches Files in Drive'),
+            (f'{BotCommands.CancelMirror}','Cancel a Task'),
+            (f'{BotCommands.CancelAllCommand}','Cancel all tasks which added by you'),
+            (f'{BotCommands.UserSetCommand}','Users settings.'),
+            (f'{BotCommands.SetThumbCommand}', 'Reply photo to set it as Thumbnail.'),
+            (f'{BotCommands.StatsCommand}','Bot Usage Stats'),
+            (f'{BotCommands.SearchCommand}','For Torrents With Installed (Qbittorrent) Search Plugins')
+            ])
+    else:
+        bot.delete_my_commands()

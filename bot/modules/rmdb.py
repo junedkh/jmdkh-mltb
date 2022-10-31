@@ -19,9 +19,9 @@ def _rmdb(message, bot):
         link = ''
     tag = None
     reply_to = message.reply_to_message
-    if reply_to is not None:
+    if reply_to:
         media_array = [reply_to.document, reply_to.video, reply_to.audio]
-        file = next((i for i in media_array if i is not None), None)
+        file = next((i for i in media_array if i), None)
         if not reply_to.from_user.is_bot:
             if reply_to.from_user.username:
                 tag = f"@{reply_to.from_user.username}"
@@ -70,6 +70,6 @@ def _rmdb(message, bot):
 def rmdbNode(update, context):
     _rmdb(update.message, context.bot)
 
-if DB_URI is not None:
+if DB_URI:
     rmdb_handler = CommandHandler(command=BotCommands.RmdbCommand, callback=rmdbNode, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     dispatcher.add_handler(rmdb_handler)
