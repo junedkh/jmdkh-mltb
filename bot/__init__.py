@@ -380,7 +380,7 @@ else:
     SHORTENER_API = [SHORTENER_API]
 
 fsubid = environ.get('FSUB_IDS', '')
-FSUB_IDS = {int(_id.strip()) for _id in fsubid.split()} if len(aid) != 0 else set()
+FSUB_IDS = {int(_id.strip()) for _id in fsubid.split()} if len(fsubid) != 0 else set()
 
 if not config_dict:
     config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
