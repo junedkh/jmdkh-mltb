@@ -320,7 +320,6 @@ def set_commands(bot):
             (f'{BotCommands.CancelMirror}','Cancel a Task'),
             (f'{BotCommands.CancelAllCommand}','Cancel all tasks which added by you'),
             (f'{BotCommands.UserSetCommand}','Users settings.'),
-            (f'{BotCommands.SetThumbCommand}', 'Reply photo to set it as Thumbnail.'),
             (f'{BotCommands.StatsCommand}','Bot Usage Stats'),
             (f'{BotCommands.SearchCommand}','For Torrents With Installed (Qbittorrent) Search Plugins')
             ])

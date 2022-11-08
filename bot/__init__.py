@@ -36,6 +36,10 @@ DRIVES_IDS = []
 INDEX_URLS = []
 CATEGORY_NAMES = []
 CATEGORY_IDS = []
+SHORTENERES = []
+SHORTENER_APIS = []
+BUTTON_NAMES = []
+BUTTON_URLS = []
 CATEGORY_INDEXS = []
 GLOBAL_EXTENSION_FILTER = ['.aria2']
 user_data = {}
@@ -121,6 +125,7 @@ if len(TELEGRAM_HASH) == 0:
 
 GDRIVE_ID = environ.get('GDRIVE_ID', '')
 if len(GDRIVE_ID) == 0:
+    log_warning('GDRIVE_ID not provided!')
     GDRIVE_ID = ''
 
 DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
@@ -223,6 +228,10 @@ if len(AUTO_DELETE_MESSAGE_DURATION) == 0:
     AUTO_DELETE_MESSAGE_DURATION = 30
 else:
     AUTO_DELETE_MESSAGE_DURATION = int(AUTO_DELETE_MESSAGE_DURATION)
+
+YT_DLP_QUALITY = environ.get('YT_DLP_QUALITY', '')
+if len(YT_DLP_QUALITY) == 0:
+    YT_DLP_QUALITY = ''
 
 SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
 SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
@@ -355,102 +364,80 @@ if len(MIRROR_LOG) != 0 and not MIRROR_LOG.startswith('-100') or len(MIRROR_LOG)
 else:
     MIRROR_LOG = int(MIRROR_LOG)
 
-BUTTON_FIVE_NAME = environ.get('BUTTON_FIVE_NAME', '')
-BUTTON_FIVE_URL = environ.get('BUTTON_FIVE_URL', '')
-if len(BUTTON_FIVE_NAME) == 0 or len(BUTTON_FIVE_URL) == 0:
-    BUTTON_FIVE_NAME = ''
-    BUTTON_FIVE_URL = ''
-
-BUTTON_SIX_NAME = environ.get('BUTTON_SIX_NAME', '')
-BUTTON_SIX_URL = environ.get('BUTTON_SIX_URL', '')
-if len(BUTTON_SIX_NAME) == 0 or len(BUTTON_SIX_URL) == 0:
-    BUTTON_SIX_NAME = ''
-    BUTTON_SIX_URL = ''
-
-SHORTENER = environ.get('SHORTENER', '')
-SHORTENER_API = environ.get('SHORTENER_API', '')
-if len(SHORTENER) == 0 or len(SHORTENER_API) == 0:
-    SHORTENER = None
-    SHORTENER_API = None
-elif ',' in SHORTENER and ',' in SHORTENER_API:
-    SHORTENER = SHORTENER.split(',')
-    SHORTENER_API = SHORTENER_API.split(',')
-else:
-    SHORTENER = [SHORTENER]
-    SHORTENER_API = [SHORTENER_API]
+BUTTON_TIMEOUT = environ.get('BUTTON_TIMEOUT', '')
+BUTTON_TIMEOUT = 30 if len(BUTTON_TIMEOUT) == 0 else int(BUTTON_TIMEOUT)
 
 fsubid = environ.get('FSUB_IDS', '')
 FSUB_IDS = {int(_id.strip()) for _id in fsubid.split()} if len(fsubid) != 0 else set()
 
-if not config_dict:
-    config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
-                   'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
-                   'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
-                   'BASE_URL': BASE_URL,
-                   'CMD_PERFIX': CMD_PERFIX,
-                   'DUMP_CHAT': DUMP_CHAT,
-                   'EQUAL_SPLITS': EQUAL_SPLITS,
-                   'EXTENSION_FILTER': EXTENSION_FILTER,
-                   'GDRIVE_ID': GDRIVE_ID,
-                   'IGNORE_PENDING_REQUESTS': IGNORE_PENDING_REQUESTS,
-                   'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
-                   'INDEX_URL': INDEX_URL,
-                   'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
-                   'LEECH_FILENAME_PERFIX': LEECH_FILENAME_PERFIX,
-                   'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
-                   'MEGA_API_KEY': MEGA_API_KEY,
-                   'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
-                   'MEGA_PASSWORD': MEGA_PASSWORD,
-                   'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
-                   'RSS_CHAT_ID': RSS_CHAT_ID,
-                   'RSS_COMMAND': RSS_COMMAND,
-                   'RSS_DELAY': RSS_DELAY,
-                   'SEARCH_API_LINK': SEARCH_API_LINK,
-                   'SEARCH_LIMIT': SEARCH_LIMIT,
-                   'SEARCH_PLUGINS': SEARCH_PLUGINS,
-                   'SERVER_PORT': SERVER_PORT,
-                   'STATUS_LIMIT': STATUS_LIMIT,
-                   'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
-                   'STOP_DUPLICATE': STOP_DUPLICATE,
-                   'SUDO_USERS': SUDO_USERS,
-                   'TELEGRAM_API': TELEGRAM_API,
-                   'TELEGRAM_HASH': TELEGRAM_HASH,
-                   'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
-                   'UPSTREAM_REPO': UPSTREAM_REPO,
-                   'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
-                   'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
-                   'USER_SESSION_STRING': USER_SESSION_STRING,
-                   'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
-                   'VIEW_LINK': VIEW_LINK,
-                   'WEB_PINCODE': WEB_PINCODE,
-                   'STORAGE_THRESHOLD': STORAGE_THRESHOLD,
-                   'TORRENT_LIMIT': TORRENT_LIMIT,
-                   'DIRECT_LIMIT': DIRECT_LIMIT,
-                   'YTDLP_LIMIT': YTDLP_LIMIT,
-                   'GDRIVE_LIMIT': GDRIVE_LIMIT,
-                   'CLONE_LIMIT': CLONE_LIMIT,
-                   'MEGA_LIMIT': MEGA_LIMIT,
-                   'LEECH_LIMIT': LEECH_LIMIT,
-                   'MAX_PLAYLIST': MAX_PLAYLIST,
-                   'GDTOT_CRYPT': GDTOT_CRYPT,
-                   'ENABLE_CHAT_RESTRICT': ENABLE_CHAT_RESTRICT,
-                   'ENABLE_MESSAGE_FILTER': ENABLE_MESSAGE_FILTER,
-                   'STOP_DUPLICATE_TASKS': STOP_DUPLICATE_TASKS,
-                   'SHARER_DRIVE_SITE': SHARER_DRIVE_SITE,
-                   'ENABLE_SHARER_LIST': ENABLE_SHARER_LIST,
-                   'DISABLE_DRIVE_LINK': DISABLE_DRIVE_LINK,
-                   'SET_COMMANDS': SET_COMMANDS,
-                   'MIRROR_LOG': MIRROR_LOG,
-                   'SHARER_EMAIL': SHARER_EMAIL,
-                   'SHARER_PASS': SHARER_PASS}
+
+config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
+                'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
+                'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
+                'BASE_URL': BASE_URL,
+                'CMD_PERFIX': CMD_PERFIX,
+                'DUMP_CHAT': DUMP_CHAT,
+                'EQUAL_SPLITS': EQUAL_SPLITS,
+                'EXTENSION_FILTER': EXTENSION_FILTER,
+                'GDRIVE_ID': GDRIVE_ID,
+                'IGNORE_PENDING_REQUESTS': IGNORE_PENDING_REQUESTS,
+                'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
+                'INDEX_URL': INDEX_URL,
+                'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
+                'LEECH_FILENAME_PERFIX': LEECH_FILENAME_PERFIX,
+                'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
+                'MEGA_API_KEY': MEGA_API_KEY,
+                'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
+                'MEGA_PASSWORD': MEGA_PASSWORD,
+                'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
+                'RSS_CHAT_ID': RSS_CHAT_ID,
+                'RSS_COMMAND': RSS_COMMAND,
+                'RSS_DELAY': RSS_DELAY,
+                'SEARCH_API_LINK': SEARCH_API_LINK,
+                'SEARCH_LIMIT': SEARCH_LIMIT,
+                'SEARCH_PLUGINS': SEARCH_PLUGINS,
+                'SERVER_PORT': SERVER_PORT,
+                'STATUS_LIMIT': STATUS_LIMIT,
+                'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
+                'STOP_DUPLICATE': STOP_DUPLICATE,
+                'SUDO_USERS': SUDO_USERS,
+                'TELEGRAM_API': TELEGRAM_API,
+                'TELEGRAM_HASH': TELEGRAM_HASH,
+                'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
+                'UPSTREAM_REPO': UPSTREAM_REPO,
+                'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
+                'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
+                'USER_SESSION_STRING': USER_SESSION_STRING,
+                'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
+                'VIEW_LINK': VIEW_LINK,
+                'WEB_PINCODE': WEB_PINCODE,
+                'YT_DLP_QUALITY': YT_DLP_QUALITY,
+                'STORAGE_THRESHOLD': STORAGE_THRESHOLD,
+                'TORRENT_LIMIT': TORRENT_LIMIT,
+                'DIRECT_LIMIT': DIRECT_LIMIT,
+                'YTDLP_LIMIT': YTDLP_LIMIT,
+                'GDRIVE_LIMIT': GDRIVE_LIMIT,
+                'CLONE_LIMIT': CLONE_LIMIT,
+                'MEGA_LIMIT': MEGA_LIMIT,
+                'LEECH_LIMIT': LEECH_LIMIT,
+                'MAX_PLAYLIST': MAX_PLAYLIST,
+                'GDTOT_CRYPT': GDTOT_CRYPT,
+                'ENABLE_CHAT_RESTRICT': ENABLE_CHAT_RESTRICT,
+                'ENABLE_MESSAGE_FILTER': ENABLE_MESSAGE_FILTER,
+                'STOP_DUPLICATE_TASKS': STOP_DUPLICATE_TASKS,
+                'SHARER_DRIVE_SITE': SHARER_DRIVE_SITE,
+                'ENABLE_SHARER_LIST': ENABLE_SHARER_LIST,
+                'DISABLE_DRIVE_LINK': DISABLE_DRIVE_LINK,
+                'SET_COMMANDS': SET_COMMANDS,
+                'MIRROR_LOG': MIRROR_LOG,
+                'SHARER_EMAIL': SHARER_EMAIL,
+                'SHARER_PASS': SHARER_PASS,
+                'BUTTON_TIMEOUT': BUTTON_TIMEOUT}
 
 if GDRIVE_ID:
     DRIVES_NAMES.append("Main")
     DRIVES_IDS.append(GDRIVE_ID)
-    if INDEX_URL:
-        INDEX_URLS.append(INDEX_URL)
-    else:
-        INDEX_URLS.append(None)
+    INDEX_URLS.append(INDEX_URL)
 
 if ospath.exists('list_drives.txt'):
     with open('list_drives.txt', 'r+') as f:
@@ -462,29 +449,44 @@ if ospath.exists('list_drives.txt'):
             if len(temp) > 2:
                 INDEX_URLS.append(temp[2])
             else:
-                INDEX_URLS.append(None)
+                INDEX_URLS.append('')
+
+if ospath.exists('buttons.txt'):
+    with open('buttons.txt', 'r+') as f:
+        lines = f.readlines()
+        for line in lines:
+            temp = line.strip().split()
+            if len(BUTTON_NAMES) == 4:
+                break
+            if len(temp) == 2:
+                BUTTON_NAMES.append(temp[0].replace("_", " "))
+                BUTTON_URLS.append(temp[1])
+
+if ospath.exists('shorteners.txt'):
+    with open('shorteners.txt', 'r+') as f:
+        lines = f.readlines()
+        for line in lines:
+            temp = line.strip().split()
+            if len(temp) == 2:
+                SHORTENERES.append(temp[0])
+                SHORTENER_APIS.append(temp[1])
 
 if GDRIVE_ID:
     CATEGORY_NAMES.append("Root")
     CATEGORY_IDS.append(GDRIVE_ID)
-    if INDEX_URL:
-        CATEGORY_INDEXS.append(INDEX_URL)
-    else:
-        CATEGORY_INDEXS.append(None)
+    CATEGORY_INDEXS.append(INDEX_URL)
 
 if ospath.exists('categories.txt'):
     with open('categories.txt', 'r+') as f:
         lines = f.readlines()
         for line in lines:
             temp = line.strip().split()
-            if len(temp[1]) <= 23:
-                continue
             CATEGORY_IDS.append(temp[1])
             CATEGORY_NAMES.append(temp[0].replace("_", " "))
             if len(temp) > 2:
                 CATEGORY_INDEXS.append(temp[2])
             else:
-                CATEGORY_INDEXS.append(None)
+                CATEGORY_INDEXS.append('')
 
 if BASE_URL:
     Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
@@ -535,6 +537,7 @@ if not aria2_options:
 qb_client = get_client()
 if not qbit_options:
     qbit_options = dict(qb_client.app_preferences())
+    del qbit_options['scan_dirs']
 else:
     qb_client.app_set_preferences(qbit_options)
 

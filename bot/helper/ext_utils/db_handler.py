@@ -22,9 +22,8 @@ class DbManger:
     def db_load(self):
         if self.__err:
             return
-        # Save bot settings if not exists
-        if self.__db.settings.config.find_one({'_id': bot_id}) is None:
-            self.__db.settings.config.update_one({'_id': bot_id}, {'$set': config_dict}, upsert=True)
+        # Save bot settings
+        self.__db.settings.config.update_one({'_id': bot_id}, {'$set': config_dict}, upsert=True)
         # Save Aria2c options
         if self.__db.settings.aria2c.find_one({'_id': bot_id}) is None:
             self.__db.settings.aria2c.update_one({'_id': bot_id}, {'$set': aria2_options}, upsert=True)
@@ -74,13 +73,18 @@ class DbManger:
         self.__db.settings.qbittorrent.update_one({'_id': bot_id}, {'$set': {key: value}}, upsert=True)
         self.__conn.close()
 
-    def update_private_file(self, path):
+    def update_private_file(self, path, delete=False):
         if self.__err:
             return
-        with open(path, 'rb+') as pf:
-            pf_bin = pf.read()
         path = path.replace('.', '__')
-        self.__db.settings.files.update_one({'_id': bot_id}, {'$set': {path: pf_bin}}, upsert=True)
+        if delete:
+            pf_bin = ''
+            key = '$unset'
+        else:
+            with open(path, 'rb+') as pf:
+                pf_bin = pf.read()
+            key = '$set'
+        self.__db.settings.files.update_one({'_id': bot_id}, {key: {path: pf_bin}}, upsert=True)
         self.__conn.close()
 
     def update_user_data(self, user_id):

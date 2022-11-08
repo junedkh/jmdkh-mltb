@@ -32,7 +32,7 @@ def select(update, context):
         sendMessage(msg.format_map({'cmd': BotCommands.BtSelectCommand,'mir': BotCommands.MirrorCommand[0]}), context.bot, update.message)
         return
 
-    if not CustomFilters._owner_query(user_id) and dl.message.from_user.id != user_id:
+    if not CustomFilters.owner_query(user_id) and dl.message.from_user.id != user_id:
         sendMessage("This task is not for you!", context.bot, update.message)
         return
     if dl.status() not in [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_PAUSED, MirrorStatus.STATUS_WAITING]:

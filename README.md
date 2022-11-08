@@ -166,7 +166,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds. `Str`
 - `EXTENSION_FILTER`: File extensions that won't upload/clone. Separate them by space. `Str`
 - `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and superGroup. Default is `False`. `Bool`
-- `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account). `str`
+- `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account). `Str`
+- `YT_DLP_QUALITY`: Default yt-dlp quality. Check all possible formats [HERE](https://github.com/yt-dlp/yt-dlp#filtering-formats). `Str`
 
 ### Update
 - `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your bot from filled repository on each restart. `Str`.
@@ -214,15 +215,8 @@ In each single file there is a major change inspire from base code by my friend 
 
 # Repo is design for big groups
 
-### Shortenner
-- `SHORTENER_API`: Fill your Shortener API key. `Str`
-- `SHORTENER`: Shortener URL. `Str`
-  - Supported URL Shorteners:
-  >exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io, adfoc.us, cutt.ly
-  - To use random shorteners:
-  >SHORTENER = "exe.io,gplinks.in, urlshortx.com"
-
-  >SHORTENER_API = "abcd123, efg456,hijk789"
+### Button Timeout
+- `BUTTON_TIMEOUT`: To timeout for downloading automatically start. `Str`
 
 ### Limits
 - `STORAGE_THRESHOLD`: To leave specific storage free and any download will lead to leave free storage less than this value will be cancelled. Don't add unit, the default unit is `GB`.
@@ -264,13 +258,7 @@ In each single file there is a major change inspire from base code by my friend 
 - `SET_COMMANDS`: To set bot commands automatically on every startup. Default is `False`. `Bool`
   - **Note**: or you can set it manually according to your needs few commands are available [here](#bot-commands-to-be-set-in-botfatherhttpstmebotfather)
 - `MIRROR_LOG`: It will send the message when upload to drive is finished
-  - **Note**: it will not support any shortnner
-### Extra Buttons
-- Four buttons are already added including Sharer, Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
-  - `BUTTON_FIVE_NAME`:
-  - `BUTTON_FIVE_URL`:
-  - `BUTTON_SIX_NAME`:
-  - `BUTTON_SIX_URL`:
+  - **Note**: it will not support any shortener
 ------
 
 ### 3. Getting Google OAuth API credential file and token.pickle
@@ -474,35 +462,58 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 5. Press on connect, choose `Allow Acces From Anywhere` and press on `Add IP Address` without editing the ip, then create user.
 6. After creating user press on `Choose a connection`, then press on `Connect your application`. Choose `Driver` **python** and `version` **3.6 or later**.
 7. Copy your `connection string` and replace `<password>` with the password of your user, then press close.
-
-------
-
+-----
 ## Multi Drive List
 To use list from multi TD/folder. Run driveid.py in your terminal and follow it. It will generate **list_drives.txt** file or u can simply create `list_drives.txt` file in working directory and fill it, check below format:
 ```
 DriveName folderID/tdID or `root` IndexLink(if available)
 DriveName folderID/tdID or `root` IndexLink(if available)
 ```
-
 Example:
 ```
 TD1 root https://example.dev
 TD2 0AO1JDB1t3i5jUk9PVA https://example.dev
 ```
 -----
-
 ## Multi Category IDs
-To use upload in categorywise folder. Run driveid.py in your terminal and follow it. It will generate **list_drives.txt** file than rename it to `categories.txt` or u can simply create
+To use upload in categorywise TD/folder. Run driveid.py in your terminal and follow it. It will generate **list_drives.txt** file than rename it to `categories.txt` or u can simply create
 `categories.txt` file in working directory and fill it, check below format:
 ```
-categoryName folderID IndexLink(if available)
-categoryName folderID IndexLink(if available)
+categoryName folderID/tdID IndexLink(if available)
+categoryName folderID/tdID IndexLink(if available)
 ```
 Example:
 ```
+Team_Drive 0AO1JDB1t3i5jUk9PVA https://example.dev/0:
 Movies 1H4w824ZhOt4rs14XPajDja0dAdFp1glI https://example.dev/0:/movies
-Series 1H4w824ZhOt4rs14XPajDja0dAdFp1glI https://example.dev/0:/series
+Series 1H4w434ZhOt4rs14XPajDja0dAdFp1glI https://example.dev/0:/series
 ```
+## Multi Shortener
+To use multiple shorteners to maintain CPM! it will use random shorteners to generate short links.
+you can simply create `shorteners.txt` file in working directory and fill it, check below format:
+```
+shortener_Domain shortener_Api
+```
+Example:
+```
+urlshortx.com 91fc872f9882144c27eecdc22d16f7369766f297
+ouo.io LYT0zBn1
+```
+- Supported URL Shorteners:
+>exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io, adfoc.us, cutt.ly
+-----
+### Extra Buttons
+- Five buttons are already added including Sharer, Drive Link, Index Link, Log and View Link, You can add up to four extra buttons if you don't know what are the below entries.
+You can simply create `buttons.txt` file in working directory and fill it, check below format:
+```
+button_name button_url
+```
+Example:
+```
+Master_❤️ https://github.com/anasty17
+Updates https://t.me/JMDKH_Team
+```
+- **Note**: If you want to add space in button name use `_` for add space
 -----
 
 ## Yt-dlp and Aria2c Authentication Using .netrc File
@@ -538,7 +549,6 @@ clone - Copy file/folder to Drive
 count - Count file/folder of Drive
 ytdl - or /y yt-dlp supported link it will ask you to where you want to upload.
 usetting - users settings
-setthumb - Set thumbnail
 status - Get Mirror Status message
 btsel - select files from torrent
 rsslist - or /rl List all subscribed rss feed info

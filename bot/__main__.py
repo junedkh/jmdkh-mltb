@@ -91,7 +91,6 @@ NOTE: Try each command without any perfix to see more detalis.
 /{BotCommands.CountCommand} [drive_url]: Count file/folder of Google Drive.
 /{BotCommands.DeleteCommand} [drive_url]: Delete file/folder from Google Drive (Only Owner & Sudo).
 /{BotCommands.UserSetCommand} : Users settings.
-/{BotCommands.SetThumbCommand}: Reply photo to set it as Thumbnail.
 /{BotCommands.BtSelectCommand}: Select files from torrents by gid or reply.
 /{BotCommands.CancelMirror}: Cancel task by gid or reply.
 /{BotCommands.CancelAllCommand} : Cancel all tasks which added by you.
