@@ -73,18 +73,16 @@ class DbManger:
         self.__db.settings.qbittorrent.update_one({'_id': bot_id}, {'$set': {key: value}}, upsert=True)
         self.__conn.close()
 
-    def update_private_file(self, path, delete=False):
+    def update_private_file(self, path):
         if self.__err:
             return
-        path = path.replace('.', '__')
-        if delete:
-            pf_bin = ''
-            key = '$unset'
-        else:
+        if ospath.exists(path):
             with open(path, 'rb+') as pf:
                 pf_bin = pf.read()
-            key = '$set'
-        self.__db.settings.files.update_one({'_id': bot_id}, {key: {path: pf_bin}}, upsert=True)
+        else:
+            pf_bin = ''
+        path = path.replace('.', '__')
+        self.__db.settings.files.update_one({'_id': bot_id}, {'$set': {path: pf_bin}}, upsert=True)
         self.__conn.close()
 
     def update_user_data(self, user_id):
