@@ -537,9 +537,12 @@ if not aria2_options:
 qb_client = get_client()
 if not qbit_options:
     qbit_options = dict(qb_client.app_preferences())
-    del qbit_options['scan_dirs']
 else:
-    qb_client.app_set_preferences(qbit_options)
+    qb_opt = {**qbit_options}
+    for k, v in list(qb_opt.items()):
+        if v in ["", "*"] or k.startswith('rss'):
+            del qb_opt[k]
+    qb_client.app_set_preferences(qb_opt)
 
 Thread(target=aria2c_init).start()
 sleep(1.5)

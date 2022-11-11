@@ -25,7 +25,8 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'STATUS_UPDATE_INTERVAL': 10,
                   'LEECH_SPLIT_SIZE': MAX_SPLIT_SIZE,
                   'SEARCH_LIMIT': 0,
-                  'RSS_DELAY': 900}
+                  'RSS_DELAY': 900,
+                  'BUTTON_TIMEOUT': 30}
 
 
 def load_config():
@@ -717,6 +718,12 @@ def edit_bot_settings(update, context):
         value = ''
         if data[2] in default_values:
             value = default_values[data[2]]
+            if data[2] == "STATUS_UPDATE_INTERVAL" and len(download_dict) != 0:
+                with status_reply_dict_lock:
+                    if Interval:
+                        Interval[0].cancel()
+                        Interval.clear()
+                        Interval.append(setInterval(value, update_all_messages))
         elif data[2] == 'EXTENSION_FILTER':
             GLOBAL_EXTENSION_FILTER.clear()
             GLOBAL_EXTENSION_FILTER.append('.aria2')
@@ -731,8 +738,6 @@ def edit_bot_settings(update, context):
             value = 80
             srun(["pkill", "-9", "-f", "gunicorn"])
             Popen("gunicorn web.wserver:app --bind 0.0.0.0:80", shell=True)
-        elif data[2] == 'BUTTON_TIMEOUT':
-            value = 30
         elif data[2] == 'GDRIVE_ID':
             if DRIVES_NAMES and DRIVES_NAMES[0] == 'Main':
                 DRIVES_NAMES.pop(0)

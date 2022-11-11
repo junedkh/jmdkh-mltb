@@ -31,8 +31,8 @@ class DbManger:
         if self.__db.settings.qbittorrent.find_one({'_id': bot_id}) is None:
             self.__db.settings.qbittorrent.update_one({'_id': bot_id}, {'$set': qbit_options}, upsert=True)
         # User Data
-        if self.__db.users.find_one():
-            rows = self.__db.users.find({})  # return a dict ==> {_id, is_sudo, is_auth, as_media, as_doc, thumb}
+        if self.__db.users[bot_id].find_one():
+            rows = self.__db.users[bot_id].find({})  # return a dict ==> {_id, is_sudo, is_auth, as_media, as_doc, thumb}
             for row in rows:
                 uid = row['_id']
                 del row['_id']
@@ -91,7 +91,7 @@ class DbManger:
         data = user_data[user_id]
         if data.get('thumb'):
             del data['thumb']
-        self.__db.users.update_one({'_id': user_id}, {'$set': data}, upsert=True)
+        self.__db.users[bot_id].update_one({'_id': user_id}, {'$set': data}, upsert=True)
         self.__conn.close()
 
     def update_thumb(self, user_id, path=None):
@@ -102,7 +102,7 @@ class DbManger:
                 image_bin = image.read()
         else:
             image_bin = ''
-        self.__db.users.update_one({'_id': user_id}, {'$set': {'thumb': image_bin}}, upsert=True)
+        self.__db.users[bot_id].update_one({'_id': user_id}, {'$set': {'thumb': image_bin}}, upsert=True)
         self.__conn.close()
 
     def rss_update(self, title):
