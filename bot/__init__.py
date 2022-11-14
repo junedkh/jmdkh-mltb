@@ -75,12 +75,12 @@ if len(BOT_TOKEN) == 0:
 
 bot_id = int(BOT_TOKEN.split(':', 1)[0])
 
-DB_URI = environ.get('DATABASE_URL', '')
-if len(DB_URI) == 0:
-    DB_URI = ''
+DATABASE_URL = environ.get('DATABASE_URL', '')
+if len(DATABASE_URL) == 0:
+    DATABASE_URL = ''
 
-if DB_URI:
-    conn = MongoClient(DB_URI)
+if DATABASE_URL:
+    conn = MongoClient(DATABASE_URL)
     db = conn.mltb
     # retrun config dict (all env vars)
     if config_dict := db.settings.config.find_one({'_id': bot_id}):
@@ -100,6 +100,9 @@ if DB_URI:
     if qbit_opt := db.settings.qbittorrent.find_one({'_id': bot_id}):
         del qbit_opt['_id']
         qbit_options = qbit_opt
+    BOT_TOKEN = environ.get('BOT_TOKEN', '')
+    bot_id = int(BOT_TOKEN.split(':', 1)[0])
+    DATABASE_URL = environ.get('DATABASE_URL', '')
     conn.close()
 else:
     config_dict = {}
@@ -375,7 +378,10 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                 'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
                 'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                 'BASE_URL': BASE_URL,
+                'BOT_TOKEN': BOT_TOKEN,
                 'CMD_PERFIX': CMD_PERFIX,
+                'DATABASE_URL': DATABASE_URL,
+                'DOWNLOAD_DIR': DOWNLOAD_DIR,
                 'DUMP_CHAT': DUMP_CHAT,
                 'EQUAL_SPLITS': EQUAL_SPLITS,
                 'EXTENSION_FILTER': EXTENSION_FILTER,
@@ -389,6 +395,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                 'MEGA_API_KEY': MEGA_API_KEY,
                 'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                 'MEGA_PASSWORD': MEGA_PASSWORD,
+                'OWNER_ID': OWNER_ID,
                 'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                 'RSS_CHAT_ID': RSS_CHAT_ID,
                 'RSS_COMMAND': RSS_COMMAND,
@@ -499,6 +506,8 @@ srun(["chmod", "600", ".netrc"])
 srun(["chmod", "+x", "aria.sh"])
 srun("./aria.sh", shell=True)
 if ospath.exists('accounts.zip'):
+    if ospath.exists('accounts'):
+        srun(["rm", "-rf", "accounts"])
     srun(["unzip", "-q", "-o", "accounts.zip"])
     srun(["chmod", "-R", "777", "accounts"])
     osremove('accounts.zip')

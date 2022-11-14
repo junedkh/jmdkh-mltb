@@ -2,7 +2,7 @@ from os import path as ospath, makedirs
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
-from bot import DB_URI, user_data, rss_dict, botname, LOGGER, bot_id, config_dict, aria2_options, qbit_options
+from bot import DATABASE_URL, user_data, rss_dict, botname, LOGGER, bot_id, config_dict, aria2_options, qbit_options
 
 class DbManger:
     def __init__(self):
@@ -13,7 +13,7 @@ class DbManger:
 
     def __connect(self):
         try:
-            self.__conn = MongoClient(DB_URI)
+            self.__conn = MongoClient(DATABASE_URL)
             self.__db = self.__conn.mltb
         except PyMongoError as e:
             LOGGER.error(f"Error in DB connection: {e}")
@@ -145,7 +145,6 @@ class DbManger:
                     usr_dict = {row['tag']: [row['_id']]}
                     notifier_dict[row['cid']] = usr_dict
         self.__db.tasks[bot_id].drop()
-        self.clear_download_links()
         self.__conn.close()
         return notifier_dict # return a dict ==> {cid: {tag: [_id, _id, ...]}}
 
@@ -169,10 +168,12 @@ class DbManger:
         self.__conn.close()
         return exist
 
-    def clear_download_links(self):
+    def clear_download_links(self, bot_name=None):
         if self.__err:
             return
-        self.__db.download_links.delete_many({'botname': botname})
+        if not bot_name:
+            bot_name = botname
+        self.__db.download_links.delete_many({'botname': bot_name})
         self.__conn.close()
 
     def remove_download(self, url: str):
@@ -181,5 +182,5 @@ class DbManger:
         self.__db.download_links.delete_one({'_id': url})
         self.__conn.close()
 
-if DB_URI:
+if DATABASE_URL:
     DbManger().db_load()

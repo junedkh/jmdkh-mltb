@@ -3,7 +3,7 @@ from threading import Thread, Event
 from time import time
 from math import ceil
 from html import escape
-from psutil import disk_usage
+from psutil import disk_usage, cpu_percent, virtual_memory
 from requests import head as rhead
 from urllib.request import urlopen
 from urllib.parse import urlparse
@@ -188,17 +188,17 @@ def get_readable_message():
                     up_speed += float(spd.split('K')[0]) * 1024
                 elif 'M' in spd:
                     up_speed += float(spd.split('M')[0]) * 1048576
-        bmsg = f"<b>Free</b>: {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)} | <b>Uptime</b>: {get_readable_time(time() - botStartTime)}" \
-                f"\n<b>DL</b>: {get_readable_file_size(dl_speed)}/s | <b>UL</b>: {get_readable_file_size(up_speed)}/s"
-        buttons = ButtonMaker()
+        bmsg = f"<b>Cpu</b>: {cpu_percent()}% | <b>Free</b>: {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
+        bmsg += f"\n<b>Ram</b>: {virtual_memory().percent}% | <b>Uptime</b>: {get_readable_time(time() - botStartTime)}"
+        bmsg += f"\n<b>DL</b>: {get_readable_file_size(dl_speed)}/s | <b>UL</b>: {get_readable_file_size(up_speed)}/s"
         if STATUS_LIMIT and tasks > STATUS_LIMIT:
+            buttons = ButtonMaker()
             buttons.sbutton("<<", "status pre")
             buttons.sbutton(f"{PAGE_NO}/{PAGES} ♻️", "status ref")
             buttons.sbutton(">>", "status nex")
-        buttons.sbutton("Statistics", "status stats", 'footer')
-        button = buttons.build_menu(3)
-        return msg + bmsg, button
-
+            button = buttons.build_menu(3)
+            return msg + bmsg, button
+        return msg + bmsg, ""
 def turn(data):
     STATUS_LIMIT = config_dict['STATUS_LIMIT']
     try:

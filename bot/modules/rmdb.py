@@ -1,4 +1,4 @@
-from bot import DB_URI, dispatcher
+from bot import DATABASE_URL, dispatcher
 from bot.helper.ext_utils.bot_utils import is_magnet, is_url, new_thread
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.jmdkh_utils import extract_link
@@ -70,6 +70,6 @@ def _rmdb(message, bot):
 def rmdbNode(update, context):
     _rmdb(update.message, context.bot)
 
-if DB_URI:
+if DATABASE_URL:
     rmdb_handler = CommandHandler(command=BotCommands.RmdbCommand, callback=rmdbNode, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     dispatcher.add_handler(rmdb_handler)

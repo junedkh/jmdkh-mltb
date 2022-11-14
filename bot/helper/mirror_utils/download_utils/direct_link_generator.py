@@ -303,8 +303,7 @@ def racaty(url: str) -> str:
         ids = soup.find("input", {"name": "id"})["value"]
         rapost = scraper.post(url, data = {"op": op, "id": ids})
         rsoup = BeautifulSoup(rapost.text, "lxml")
-        dl_url = rsoup.find("a", {"id": "uniqueExpirylink"})["href"].replace(" ", "%20")
-        return dl_url
+        return rsoup.find("a", {"id": "uniqueExpirylink"})["href"].replace(" ", "%20")
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e}")
 

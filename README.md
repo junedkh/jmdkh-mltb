@@ -29,7 +29,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Download from Google Drive
 - Counting Google Drive files/folders
 - Search in multiple Drive folder/TeamDrive
-- Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method)
+- Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method). Based on [Sreeraj](https://github.com/SVR666) searchX-bot.
 - Use Token.pickle if file not found with Service Account, for all Gdrive functions
 - List result in html file instead of telegraph or telegram message to avoid limits by [junedkh](https://github.com/junedkh)
 - Random Service Account for each task
