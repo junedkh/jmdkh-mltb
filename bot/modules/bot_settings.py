@@ -290,6 +290,9 @@ def load_config():
     DISABLE_DRIVE_LINK = environ.get('DISABLE_DRIVE_LINK', '')
     DISABLE_DRIVE_LINK = DISABLE_DRIVE_LINK.lower() == 'true'
 
+    DISABLE_LEECH = environ.get('DISABLE_LEECH', '')
+    DISABLE_LEECH = DISABLE_LEECH.lower() == 'true'
+
     SET_COMMANDS = environ.get('SET_COMMANDS', '')
     SET_COMMANDS = SET_COMMANDS.lower() == 'true'
 
@@ -411,6 +414,7 @@ def load_config():
                    'MIRROR_LOG': MIRROR_LOG,
                    'SHARER_EMAIL': SHARER_EMAIL,
                    'SHARER_PASS': SHARER_PASS,
+                   'DISABLE_LEECH': DISABLE_LEECH,
                    'BUTTON_TIMEOUT': BUTTON_TIMEOUT})
 
     if DATABASE_URL:
@@ -617,15 +621,21 @@ def update_private_file(update, context, omsg):
     message = update.message
     if not message.document and message.text:
         file_name = message.text.strip()
-        if file_name == 'buttons.txt':
+        file_name = file_name.rsplit('.zip', 1)[0]
+        if ospath.exists(file_name):
+            remove(file_name)
+        if file_name == 'accounts':
+            config_dict['USE_SERVICE_ACCOUNTS'] = False
+            if DATABASE_URL:
+                DbManger().update_config({'USE_SERVICE_ACCOUNTS': False})
+        elif file_name == 'buttons.txt':
             BUTTON_NAMES.clear()
             BUTTON_URLS.clear()
         elif file_name == 'categories.txt':
             CATEGORY_NAMES.clear()
             CATEGORY_IDS.clear()
             CATEGORY_INDEXS.clear()
-            GDRIVE_ID = config_dict['GDRIVE_ID']
-            if GDRIVE_ID:
+            if GDRIVE_ID:= config_dict['GDRIVE_ID']:
                 CATEGORY_NAMES.append('Root')
                 CATEGORY_IDS.append(GDRIVE_ID)
                 CATEGORY_INDEXS.append(config_dict['INDEX_URL'])
@@ -633,8 +643,7 @@ def update_private_file(update, context, omsg):
             DRIVES_IDS.clear()
             DRIVES_NAMES.clear()
             INDEX_URLS.clear()
-            GDRIVE_ID = config_dict['GDRIVE_ID']
-            if GDRIVE_ID:
+            if GDRIVE_ID:= config_dict['GDRIVE_ID']:
                 DRIVES_NAMES.append('Main')
                 DRIVES_IDS.append(GDRIVE_ID)
                 INDEX_URLS.append(config_dict['INDEX_URL'])
@@ -645,11 +654,6 @@ def update_private_file(update, context, omsg):
             file_name = ".netrc"
             if ospath.exists("/root/.netrc"):
                 remove("/root/.netrc")
-        if ospath.exists(file_name):
-            remove(file_name)
-        elif file_name == 'accounts':
-            if ospath.exists('accounts'):
-                srun(["rm", "-rf", "accounts"])
         message.delete()
     else:
         doc = message.document
@@ -658,7 +662,7 @@ def update_private_file(update, context, omsg):
         if file_name == 'accounts.zip':
             if ospath.exists('accounts'):
                 srun(["rm", "-rf", "accounts"])
-            srun(["unzip", "-q", "-o", "accounts.zip"])
+            srun(["unzip", "-q", "-o", "accounts.zip", "-x", "accounts/emails.txt"])
             srun(["chmod", "-R", "777", "accounts"])
         elif file_name == 'list_drives.txt':
             DRIVES_IDS.clear()
@@ -753,8 +757,8 @@ def edit_bot_settings(update, context):
     elif data[1] == 'close':
         query.answer()
         handler_dict[message.chat.id] = False
-        query.message.delete()
-        query.message.reply_to_message.delete()
+        message.delete()
+        message.reply_to_message.delete()
     elif data[1] == 'back':
         query.answer()
         handler_dict[message.chat.id] = False
@@ -970,12 +974,17 @@ def edit_bot_settings(update, context):
             globals()['START'] = int(data[3])
             update_buttons(message, data[2])
     elif data[1] == 'push':
-        query.answer()
-        srun([f"git add -f {data[2].rsplit('.zip', 1)[0]} \
-                && git commit -sm botsettings -q \
-                && git push origin {config_dict['UPSTREAM_BRANCH']} -q"], shell=True)
-        query.message.delete()
-        query.message.reply_to_message.delete()
+        filename = data[2].rsplit('.zip', 1)[0]
+        if ospath.exits(filename):
+            srun([f"git add -f {filename} \
+                    && git commit -sm botsettings -q \
+                    && git push origin {config_dict['UPSTREAM_BRANCH']} -q"], shell=True)
+        else:
+            srun([f"git rm -r --cached {filename} \
+                    && git commit -sm botsettings -q \
+                    && git push origin {config_dict['UPSTREAM_BRANCH']} -q"], shell=True)
+        message.delete()
+        message.reply_to_message.delete()
 
 
 def bot_settings(update, context):

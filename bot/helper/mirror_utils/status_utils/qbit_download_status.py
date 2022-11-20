@@ -21,7 +21,6 @@ class QbDownloadStatus:
         self.__info = get_download(self.__client, self.__hash)
         self.seeding = seeding
         self.message = listener.message
-        self.__mode = listener.mode
 
     def __update(self):
         self.__info = get_download(self.__client, self.__hash)
@@ -124,4 +123,4 @@ class QbDownloadStatus:
                 or self.message.from_user.id
 
     def mode(self):
-        return self.__mode
+        return self.__listener.mode

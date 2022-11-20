@@ -10,8 +10,8 @@ class YtDlpDownloadStatus:
         self.__obj = obj
         self.__uid = listener.uid
         self.__gid = gid
+        self.__listener = listener
         self.message = listener.message
-        self.__mode = listener.mode
         self.__isPlayList = self.__obj.is_playlist
 
     def playList(self):
@@ -53,6 +53,9 @@ class YtDlpDownloadStatus:
         """
         return self.__obj.download_speed
 
+    def listener(self):
+        return self.__listener
+
     def speed(self):
         return f'{get_readable_file_size(self.speed_raw())}/s'
 
@@ -78,4 +81,4 @@ class YtDlpDownloadStatus:
                 or self.message.from_user.id
 
     def mode(self):
-        return self.__mode
+        return self.__listener.mode

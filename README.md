@@ -259,6 +259,7 @@ In each single file there is a major change inspire from base code by my friend 
   - **Note**: or you can set it manually according to your needs few commands are available [here](#bot-commands-to-be-set-in-botfatherhttpstmebotfather)
 - `MIRROR_LOG`: It will send the message when upload to drive is finished
   - **Note**: it will not support any shortener
+- `DISABLE_LEECH`: It will disable leech functionality. Default is `False`. `Bool`
 ------
 
 ### 3. Getting Google OAuth API credential file and token.pickle
@@ -550,6 +551,7 @@ count - Count file/folder of Drive
 ytdl - or /y yt-dlp supported link it will ask you to where you want to upload.
 usetting - users settings
 status - Get Mirror Status message
+catsel - select Category to upload only mirror
 btsel - select files from torrent
 rsslist - or /rl List all subscribed rss feed info
 rssget - or /rg Get specific No. of links from specific rss feed

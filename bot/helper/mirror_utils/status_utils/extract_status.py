@@ -14,7 +14,6 @@ class ExtractStatus:
         self.__uid = self.__listener.uid
         self.__start_time = time()
         self.message = self.__listener.message
-        self.__mode = self.__listener.mode
 
     def gid(self):
         return self.__gid
@@ -78,4 +77,4 @@ class ExtractStatus:
                 or self.message.from_user.id
 
     def mode(self):
-        return self.__mode
+        return self.__listener.mode

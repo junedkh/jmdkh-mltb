@@ -9,7 +9,6 @@ class MegaDownloadStatus:
         self.__listener = listener
         self.__obj = obj
         self.message = self.__listener.message
-        self.__mode = self.__listener.mode
 
     def name(self) -> str:
         return self.__obj.name
@@ -49,6 +48,9 @@ class MegaDownloadStatus:
     def speed_raw(self):
         return self.__obj.speed
 
+    def listener(self):
+        return self.__listener
+
     def speed(self) -> str:
         return f'{get_readable_file_size(self.speed_raw())}/s'
 
@@ -68,4 +70,4 @@ class MegaDownloadStatus:
                 or self.message.from_user.id
 
     def mode(self):
-        return self.__mode
+        return self.__listener.mode

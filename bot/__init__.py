@@ -358,6 +358,9 @@ ENABLE_SHARER_LIST = ENABLE_SHARER_LIST.lower() == 'true'
 DISABLE_DRIVE_LINK = environ.get('DISABLE_DRIVE_LINK', '')
 DISABLE_DRIVE_LINK = DISABLE_DRIVE_LINK.lower() == 'true'
 
+DISABLE_LEECH = environ.get('DISABLE_LEECH', '')
+DISABLE_LEECH = DISABLE_LEECH.lower() == 'true'
+
 SET_COMMANDS = environ.get('SET_COMMANDS', '')
 SET_COMMANDS = SET_COMMANDS.lower() == 'true'
 
@@ -439,6 +442,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                 'MIRROR_LOG': MIRROR_LOG,
                 'SHARER_EMAIL': SHARER_EMAIL,
                 'SHARER_PASS': SHARER_PASS,
+                'DISABLE_LEECH': DISABLE_LEECH,
                 'BUTTON_TIMEOUT': BUTTON_TIMEOUT}
 
 if GDRIVE_ID:
@@ -508,9 +512,11 @@ srun("./aria.sh", shell=True)
 if ospath.exists('accounts.zip'):
     if ospath.exists('accounts'):
         srun(["rm", "-rf", "accounts"])
-    srun(["unzip", "-q", "-o", "accounts.zip"])
+    srun(["unzip", "-q", "-o", "accounts.zip", "-x", "accounts/emails.txt"])
     srun(["chmod", "-R", "777", "accounts"])
     osremove('accounts.zip')
+if not ospath.exists('accounts'):
+    config_dict['USE_SERVICE_ACCOUNTS'] = False
 sleep(0.5)
 
 aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
@@ -546,10 +552,14 @@ if not aria2_options:
 qb_client = get_client()
 if not qbit_options:
     qbit_options = dict(qb_client.app_preferences())
+    del qbit_options['listen_port']
+    for k in list(qbit_options.keys()):
+        if k.startswith('rss'):
+            del qbit_options[k]
 else:
     qb_opt = {**qbit_options}
     for k, v in list(qb_opt.items()):
-        if v in ["", "*"] or k.startswith('rss'):
+        if v in ["", "*"]:
             del qb_opt[k]
     qb_client.app_set_preferences(qb_opt)
 

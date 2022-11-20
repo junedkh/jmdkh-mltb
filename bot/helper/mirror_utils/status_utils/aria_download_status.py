@@ -21,7 +21,6 @@ class AriaDownloadStatus:
         self.start_time = 0
         self.seeding = seeding
         self.message = listener.message
-        self.__mode = listener.mode
 
     def __update(self):
         self.__download = self.__download.live
@@ -127,4 +126,4 @@ class AriaDownloadStatus:
                 or self.message.from_user.id
 
     def mode(self):
-        return self.__mode
+        return self.__listener.mode

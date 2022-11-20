@@ -45,6 +45,7 @@ class _BotCommands:
         self.BotSetCommand = f'bsetting{CMD_PERFIX}'
         self.UserSetCommand = f'usetting{CMD_PERFIX}'
         self.BtSelectCommand = f'btsel{CMD_PERFIX}'
+        self.CategorySelect = f'catsel{CMD_PERFIX}'
         self.RssListCommand = (f'rsslist{CMD_PERFIX}', f'rl{CMD_PERFIX}')
         self.RssGetCommand = (f'rssget{CMD_PERFIX}', f'rg{CMD_PERFIX}')
         self.RssSubCommand = (f'rsssub{CMD_PERFIX}', f'rs{CMD_PERFIX}')

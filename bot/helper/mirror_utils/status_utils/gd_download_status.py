@@ -8,8 +8,8 @@ class GdDownloadStatus:
         self.__obj = obj
         self.__size = size
         self.__gid = gid
+        self.__listener = listener
         self.message = listener.message
-        self.__mode = listener.mode
 
     def processed_bytes(self):
         return self.__obj.processed_bytes
@@ -37,6 +37,9 @@ class GdDownloadStatus:
 
     def progress(self):
         return f'{round(self.progress_raw(), 2)}%'
+
+    def listener(self):
+        return self.__listener
 
     def speed_raw(self):
         """
@@ -67,4 +70,4 @@ class GdDownloadStatus:
                 or self.message.from_user.id
 
     def mode(self):
-        return self.__mode
+        return self.__listener.mode

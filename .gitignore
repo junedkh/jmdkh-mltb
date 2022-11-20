@@ -29,6 +29,7 @@ gdriveTools.py
 message_utils.py
 bot_updater.py
 cancel_mirror.py
+category_select.py
 clone.py
 drive_list.py
 mirror_leech.py

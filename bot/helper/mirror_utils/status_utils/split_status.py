@@ -8,7 +8,6 @@ class SplitStatus:
         self.__size = size
         self.__listener = listener
         self.message = self.__listener.message
-        self.__mode = self.__listener.mode
 
     def gid(self):
         return self.__gid
@@ -53,4 +52,4 @@ class SplitStatus:
                 or self.message.from_user.id
 
     def mode(self):
-        return self.__mode
+        return self.__listener.mode

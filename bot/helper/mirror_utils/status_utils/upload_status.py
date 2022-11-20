@@ -9,7 +9,7 @@ class UploadStatus:
         self.__size = size
         self.__gid = gid
         self.message = listener.message
-        self.__mode = listener.mode
+        self.__listener = listener
 
     def processed_bytes(self):
         return self.__obj.processed_bytes
@@ -67,4 +67,4 @@ class UploadStatus:
                 or self.message.from_user.id
 
     def mode(self):
-        return self.__mode
+        return self.__listener.mode
