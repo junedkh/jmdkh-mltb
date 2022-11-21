@@ -260,6 +260,8 @@ In each single file there is a major change inspire from base code by my friend 
 - `MIRROR_LOG`: It will send the message when upload to drive is finished
   - **Note**: it will not support any shortener
 - `DISABLE_LEECH`: It will disable leech functionality. Default is `False`. `Bool`
+- `ENABLE_DM`: It will enable dm functionality. Default is `False`. `Bool`
+- `DELETE_LINKS`: It will delete links on download start. Default is `False`. `Bool`
 ------
 
 ### 3. Getting Google OAuth API credential file and token.pickle

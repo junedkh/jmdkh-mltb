@@ -296,6 +296,12 @@ def load_config():
     SET_COMMANDS = environ.get('SET_COMMANDS', '')
     SET_COMMANDS = SET_COMMANDS.lower() == 'true'
 
+    ENABLE_DM = environ.get('ENABLE_DM', '')
+    ENABLE_DM = ENABLE_DM.lower() == 'true'
+
+    DELETE_LINKS = environ.get('DELETE_LINKS', '')
+    DELETE_LINKS = DELETE_LINKS.lower() == 'true'
+
     MIRROR_LOG = environ.get('MIRROR_LOG', '')
     if len(MIRROR_LOG) != 0 and not MIRROR_LOG.startswith('-100') or len(MIRROR_LOG) == 0:
         MIRROR_LOG = ''
@@ -415,6 +421,8 @@ def load_config():
                    'SHARER_EMAIL': SHARER_EMAIL,
                    'SHARER_PASS': SHARER_PASS,
                    'DISABLE_LEECH': DISABLE_LEECH,
+                   'ENABLE_DM': ENABLE_DM,
+                   'DELETE_LINKS': DELETE_LINKS,
                    'BUTTON_TIMEOUT': BUTTON_TIMEOUT})
 
     if DATABASE_URL:

@@ -192,18 +192,18 @@ class TgUploader:
             self.__thumb = None
 
     def __msg_to_reply(self):
-        DUMP_CHAT = config_dict['DUMP_CHAT']
-        if DUMP_CHAT:
+        if self.__listener.dmMessage:
+            self.__sent_msg = app.get_messages(self.__listener.message.from_user.id, self.__listener.dmMessage.message_id)
+        elif DUMP_CHAT:= config_dict['DUMP_CHAT']:
             if self.__listener.isPrivate:
                 msg = self.__listener.message.text
             else:
                 msg = self.__listener.message.link
             self.__sent_msg = app.send_message(DUMP_CHAT, msg, disable_web_page_preview=True)
-            self.__button = InlineKeyboardMarkup([[InlineKeyboardButton(text='Save Message', callback_data="save")]])
         else:
-            if not self.__listener.isPrivate:
-                self.__button = InlineKeyboardMarkup([[InlineKeyboardButton(text='Save Message', callback_data="save")]])
             self.__sent_msg = app.get_messages(self.__listener.message.chat.id, self.__listener.uid)
+        if self.__listener.message.chat.type != 'private' and not self.__listener.dmMessage:
+            self.__button = InlineKeyboardMarkup([[InlineKeyboardButton(text='Save Message', callback_data="save")]])
 
     @property
     def speed(self):
