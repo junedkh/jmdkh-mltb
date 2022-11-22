@@ -259,9 +259,11 @@ In each single file there is a major change inspire from base code by my friend 
   - **Note**: or you can set it manually according to your needs few commands are available [here](#bot-commands-to-be-set-in-botfatherhttpstmebotfather)
 - `MIRROR_LOG`: It will send the message when upload to drive is finished
   - **Note**: it will not support any shortener
+- `BUTTON_TIMEOUT`: Timeout in seconds for selecting options in /dl cmd. Default is 30.
 - `DISABLE_LEECH`: It will disable leech functionality. Default is `False`. `Bool`
 - `ENABLE_DM`: It will enable dm functionality. Default is `False`. `Bool`
 - `DELETE_LINKS`: It will delete links on download start. Default is `False`. `Bool`
+
 ------
 
 ### 3. Getting Google OAuth API credential file and token.pickle
