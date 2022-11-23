@@ -98,6 +98,32 @@ In each single file there is a major change from base code, it's almost totaly d
 - Direct links Supported:
   >mediafire, letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com and solidfiles.com
 
+## By [Junedkh](https://github.com/junedkh)
+### Repo is design for big groups
+In each single file there is a major change inspire from base code by my friend [Anasty17](https://github.com/anasty17/mirror-leech-telegram-bot) ❤️, it's almost not totaly different but. Here some of features which i hide it in .so files.
+
+### Limits
+- Storage threshold limit 
+- leech limit
+- Clone limit
+- Mega limits
+- Torrent limits
+- Direct download limits
+- YTDLP limits
+- Google drive limits
+
+### Sharer Drive
+- Clone support for sites like GDToT, appdrive, driveapp, hubdrive
+
+### Group Features
+- Force subscribe module
+- Chat restrictions
+- Message filters
+- Bot DM (Beta)
+
+### Extra
+- Category wise drive uploads - more info can be found [here](https://github.com/junedkh/jmdkh-mltb#multi-category-ids)  
+
 # How to deploy?
 
 ## Prerequisites
@@ -210,18 +236,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `SEARCH_LIMIT`: Search limit for search api, limit for each site and not overall result limit. Default is zero (Default api limit for each site). `Str`
 - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). I have added some plugins, you can remove/add plugins as you want. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins). `Str`
 
-## By [Junedkh](https://github.com/junedkh)
-In each single file there is a major change inspire from base code by my friend [Anasty17](https://github.com/anasty17/mirror-leech-telegram-bot) ❤️, it's almost not totaly different but. Here some of features which i hide it in .so files.
-
-# Repo is design for big groups
-
-### Button Timeout
-- `BUTTON_TIMEOUT`: To timeout for downloading automatically start. `Str`
-
 ### Limits
 - `STORAGE_THRESHOLD`: To leave specific storage free and any download will lead to leave free storage less than this value will be cancelled. Don't add unit, the default unit is `GB`.
-  - Q. Why STORAGE_THRESHOLD only.
-  - A. This is best and enough for all limits for groups.
 - `LEECH_LIMIT`:  To limit the Torrent/Direct/ytdlp leech size. Don't add unit, the default unit is `GB`.
 - `MAX_PLAYLIST`: To limit the ytdlp playlist in leech mode. `Str`
 - `CLONE_LIMIT`: To limit the size of Google Drive folder/file which you can clone. Don't add unit, the default unit is `GB`.
@@ -230,6 +246,7 @@ In each single file there is a major change inspire from base code by my friend 
 - `DIRECT_LIMIT`: To limit the size of direct link download. Don't add unit, the default unit is `GB`.
 - `YTDLP_LIMIT`: To limit the size of ytdlp download. Don't add unit, the default unit is `GB`.
 - `GDRIVE_LIMIT`: To limit the size of Google Drive folder/file which you can use for leech etc. Don't add unit, the default unit is `GB`.
+
 ### Sharer Drive
 - `GDTOT_CRYPT`: To download/clone gdtot link. `Str`
 - `SHARER_EMAIL`: youremail@gmail.com `Str`
@@ -238,10 +255,10 @@ In each single file there is a major change inspire from base code by my friend 
     > appdrive, driveapp, hubdrive
   - Will add more in future on public demand.
   - **Note**: Must change account password from supported sharer [account](https://appdrive.info/account) settings. same email and same password.
-- `SHARER_DRIVE_SITE`: To enable upload sharer drive just add website like `https://appdrive.info`. `Str`
+- `SHARER_DRIVE_SITE`: To enable upload sharer drive just add website link, for eg `https://appdrive.info`. `Str`
   - **Note**: Must added `SHARER_EMAIL` and `SHARER_PASS`
 - `ENABLE_SHARER_LIST`: To enable gdflix upload link while using `/list_drive` cmd. Default is `False`. `Bool`
-  - **Note**: it will make slower your /list_drive command. or may sharer drive account suspend due to mess link genrating.
+  - **Note**: it will make slower your /list_drive command. or may sharer drive account suspend due to mass link genrating.
 
 ### Group Features
 - `FSUB_IDS`: Fill chat_id of groups/channel you want to force subscribe. Separate them by space. `Str`
@@ -261,7 +278,7 @@ In each single file there is a major change inspire from base code by my friend 
   - **Note**: it will not support any shortener
 - `BUTTON_TIMEOUT`: Timeout in seconds for selecting options in /dl cmd. Default is 30.
 - `DISABLE_LEECH`: It will disable leech functionality. Default is `False`. `Bool`
-- `ENABLE_DM`: It will enable dm functionality. Default is `False`. `Bool`
+- `ENABLE_DM`: It will enable dm functionality for sending Mirrored/Leeched files. Default is `False`. `Bool`
 - `DELETE_LINKS`: It will delete links on download start. Default is `False`. `Bool`
 
 ------
@@ -481,7 +498,7 @@ TD2 0AO1JDB1t3i5jUk9PVA https://example.dev
 ```
 -----
 ## Multi Category IDs
-To use upload in categorywise TD/folder. Run driveid.py in your terminal and follow it. It will generate **list_drives.txt** file than rename it to `categories.txt` or u can simply create
+To use upload in categorywise TD/folder. Run driveid.py in your terminal and follow it. It will generate **drive_folder** file than rename it to `categories.txt` or u can simply create
 `categories.txt` file in working directory and fill it, check below format:
 ```
 categoryName folderID/tdID IndexLink(if available)
@@ -493,6 +510,8 @@ Team_Drive 0AO1JDB1t3i5jUk9PVA https://example.dev/0:
 Movies 1H4w824ZhOt4rs14XPajDja0dAdFp1glI https://example.dev/0:/movies
 Series 1H4w434ZhOt4rs14XPajDja0dAdFp1glI https://example.dev/0:/series
 ```
+Now when /dl cmd is used to mirror files, you will see category option. Using that u can upload files categorywise in TD/Folder.
+
 ## Multi Shortener
 To use multiple shorteners to maintain CPM! it will use random shorteners to generate short links.
 you can simply create `shorteners.txt` file in working directory and fill it, check below format:

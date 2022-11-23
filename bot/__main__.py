@@ -92,6 +92,7 @@ NOTE: Try each command without any perfix to see more detalis.
 /{BotCommands.DeleteCommand} [drive_url]: Delete file/folder from Google Drive (Only Owner & Sudo).
 /{BotCommands.UserSetCommand} : Users settings.
 /{BotCommands.BtSelectCommand}: Select files from torrents by gid or reply.
+/{BotCommands.CategorySelect}: Change upload category for Google Drive.
 /{BotCommands.CancelMirror}: Cancel task by gid or reply.
 /{BotCommands.CancelAllCommand} : Cancel all tasks which added by you.
 /{BotCommands.ListCommand[0]} [query]: Search in Google Drive(s).
