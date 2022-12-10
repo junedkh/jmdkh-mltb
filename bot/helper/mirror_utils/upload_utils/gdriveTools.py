@@ -588,20 +588,22 @@ class GoogleDriveHelper:
                         url = short_url(f'{index_url}/{url_path}/')
                         msg += f' 📁 <b>| <a href="{url}">Index Link</a></b>'
                 elif mime_type == 'application/vnd.google-apps.shortcut':
-                    furl = short_url(f"https://drive.google.com/drive/folders/{file.get('id')}")
-                    if SHORTENERES:
-                        msg += f"⁍<a href='{furl}'>{file.get('name').replace(' ', '-').replace('.', ',')}" \
-                               f"</a> (shortcut)"
-                    else:
-                        msg += f"⁍<a href='{furl}'>{file.get('name')}" \
+                    if not config_dict['DISABLE_DRIVE_LINK']:
+                        furl = short_url(f"https://drive.google.com/drive/folders/{file.get('id')}")
+                        if SHORTENERES:
+                            msg += f"⁍<a href='{furl}'>{file.get('name').replace(' ', '-').replace('.', ',')}" \
+                                f"</a> (shortcut)"
+                        else:
+                            msg += f"⁍<a href='{furl}'>{file.get('name')}" \
                                f"</a> (shortcut)"
                 else:
-                    furl = short_url(f"https://drive.google.com/uc?id={file.get('id')}&export=download")
                     if SHORTENERES:
                         msg += f"📄 <code>{file.get('name').replace(' ', '-').replace('.', ',')}<br>({get_readable_file_size(int(file.get('size', 0)))})</code><br>"
                     else:
                         msg += f"📄 <code>{file.get('name')}<br>({get_readable_file_size(int(file.get('size', 0)))})</code><br>"
-                    msg += f"<b><a href={furl}>Drive Link</a></b>"
+                    if not config_dict['DISABLE_DRIVE_LINK']:
+                        furl = short_url(f"https://drive.google.com/uc?id={file.get('id')}&export=download")
+                        msg += f"<b><a href={furl}>Drive Link</a></b>"
                     if index_url:
                         if isRecur:
                             url_path = "/".join(rquote(n, safe='') for n in self.__get_recursive_list(file, dir_id))
