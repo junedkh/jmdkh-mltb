@@ -387,11 +387,9 @@ class GoogleDriveHelper:
                 if not config_dict['DISABLE_DRIVE_LINK']:
                     durl = short_url(durl)
                     buttons.buildbutton("🔐 Drive Link", durl)
-                INDEX_URL = CATEGORY_INDEXS[c_index]
-                if INDEX_URL:
+                if INDEX_URL:= CATEGORY_INDEXS[c_index]:
                     url_path = rquote(f'{meta.get("name")}', safe='')
-                    url = f'{INDEX_URL}/{url_path}/'
-                    url = short_url(url)
+                    url = short_url(f'{INDEX_URL}/{url_path}/')
                     buttons.buildbutton("📁 Index Link", url)
             else:
                 file = self.__copyFile(meta.get('id'), CATEGORY_IDS[c_index])
@@ -408,15 +406,12 @@ class GoogleDriveHelper:
                     buttons.buildbutton("🔐 Drive Link", durl)
                 msg += f'\n\n<b>Size</b>: {get_readable_file_size(int(meta.get("size", 0)))}'
                 msg += f'\n\n<b>Type</b>: {mime_type}'
-                INDEX_URL = CATEGORY_INDEXS[c_index]
-                if INDEX_URL:
+                if INDEX_URL:= CATEGORY_INDEXS[c_index]:
                     url_path = rquote(f'{file.get("name")}', safe='')
-                    url = f'{INDEX_URL}/{url_path}'
-                    url = short_url(url)
+                    url = short_url(f'{INDEX_URL}/{url_path}')
                     buttons.buildbutton("🚀 Index Link", url)
                     if config_dict['VIEW_LINK']:
-                        urls = f'{INDEX_URL}/{url_path}?a=view'
-                        urls = short_url(urls)
+                        urls = short_url(f'{INDEX_URL}/{url_path}?a=view')
                         buttons.buildbutton("💻 View Link", urls)
         except Exception as err:
             if isinstance(err, RetryError):

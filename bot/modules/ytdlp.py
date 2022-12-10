@@ -38,7 +38,6 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
     index = 1
     link = ''
     c_index = 0
-    shouldDelete = config_dict['DELETE_LINKS']
     args = mssg.split(maxsplit=2)
     if len(args) > 1:
         for x in args:

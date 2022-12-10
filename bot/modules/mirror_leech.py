@@ -207,7 +207,7 @@ Number should be always before |newname or pswd:
         btn_listener[msg_id] = [listener, extras, time_out]
         text, btns = get_category_btns('mir', time_out, msg_id, c_index)
         chat_restrict(message)
-        engine = sendMarkup(_msg, bot, message, btns)
+        engine = sendMarkup(text, bot, message, btns)
         _auto_start_dl(engine, msg_id, time_out)
     else:
         chat_restrict(message)

@@ -282,11 +282,9 @@ class MirrorLeechListener:
                 link = short_url(link)
                 buttons.buildbutton("🔐 Drive Link", link)    
             LOGGER.info(f'Done Uploading {name}')
-            INDEX_URL = CATEGORY_INDEXS[self.c_index]
-            if INDEX_URL:
+            if INDEX_URL:= CATEGORY_INDEXS[self.c_index]:
                 url_path = rutils.quote(f'{name}')
                 if typ == "Folder":
-                    
                     share_url = short_url(f'{INDEX_URL}/{url_path}/')
                     buttons.buildbutton("📁 Index Link", share_url)
                 else:
