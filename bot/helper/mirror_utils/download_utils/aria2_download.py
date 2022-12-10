@@ -78,28 +78,30 @@ def __onDownloadStarted(api, gid):
                 listener.onDownloadError(msg)
                 api.remove([download], force=True, files=True, clean=True)
                 return
-        if LEECH_LIMIT:= config_dict['LEECH_LIMIT'] and listener.isLeech:
-            limit = LEECH_LIMIT * 1024**3
-            mssg = f'Leech limit is {get_readable_file_size(limit)}'
-            if size > limit:
-                listener.onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
-                api.remove([download], force=True, files=True, clean=True)
-                return
-        if DIRECT_LIMIT:= config_dict['DIRECT_LIMIT'] and not download.is_torrent:
-            limit = DIRECT_LIMIT * 1024**3
-            mssg = f'Direct limit is {get_readable_file_size(limit)}'
-            if size > limit:
-                listener.onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
-                api.remove([download], force=True, files=True, clean=True)
-                return
-        TORRENT_LIMIT = config_dict['TORRENT_LIMIT']
-        if TORRENT_LIMIT and download.is_torrent:
-            limit = TORRENT_LIMIT * 1024**3
-            mssg = f'Torrent limit is {get_readable_file_size(limit)}'
-            if size > limit:
-                listener.onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
-                api.remove([download], force=True, files=True, clean=True)
-                return
+        if LEECH_LIMIT:= config_dict['LEECH_LIMIT']:
+            if listener.isLeech:
+                limit = LEECH_LIMIT * 1024**3
+                mssg = f'Leech limit is {get_readable_file_size(limit)}'
+                if size > limit:
+                    listener.onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
+                    api.remove([download], force=True, files=True, clean=True)
+                    return
+        if DIRECT_LIMIT:= config_dict['DIRECT_LIMIT']:
+            if not download.is_torrent:
+                limit = DIRECT_LIMIT * 1024**3
+                mssg = f'Direct limit is {get_readable_file_size(limit)}'
+                if size > limit:
+                    listener.onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
+                    api.remove([download], force=True, files=True, clean=True)
+                    return
+        if TORRENT_LIMIT:= config_dict['TORRENT_LIMIT']:
+            if download.is_torrent:
+                limit = TORRENT_LIMIT * 1024**3
+                mssg = f'Torrent limit is {get_readable_file_size(limit)}'
+                if size > limit:
+                    listener.onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
+                    api.remove([download], force=True, files=True, clean=True)
+                    return
     except Exception as e:
         LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")
 

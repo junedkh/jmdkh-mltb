@@ -200,12 +200,13 @@ def __size_checked(client, tor):
             if size > limit:
                 fmsg = f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}"
                 return __onDownloadError(fmsg, client, tor)
-        if LEECH_LIMIT:= config_dict['LEECH_LIMIT'] and listener.isLeech:
-            limit = LEECH_LIMIT * 1024**3
-            mssg = f'Leech limit is {get_readable_file_size(limit)}'
-            if size > limit:
-                fmsg = f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}"
-                return __onDownloadError(fmsg, client, tor)
+        if LEECH_LIMIT:= config_dict['LEECH_LIMIT']:
+            if listener.isLeech:
+                limit = LEECH_LIMIT * 1024**3
+                mssg = f'Leech limit is {get_readable_file_size(limit)}'
+                if size > limit:
+                    fmsg = f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}"
+                    return __onDownloadError(fmsg, client, tor)
     except:
         pass
 

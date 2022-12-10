@@ -195,12 +195,13 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
         if size > limit:
             listener.ismega.delete()
             return sendMessage(f"{msg3}.\nYour File/Folder size is {get_readable_file_size(size)}.", listener.bot, listener.message)    
-    if LEECH_LIMIT:= config_dict['LEECH_LIMIT'] and listener.isLeech:
-        limit = LEECH_LIMIT * 1024**3
-        msg3 = f'Leech limit is {get_readable_file_size(limit)}'
-        if size > limit:
-            listener.ismega.delete()
-            return sendMessage(f"{msg3}.\nYour File/Folder size is {get_readable_file_size(size)}.", listener.bot, listener.message)
+    if LEECH_LIMIT:= config_dict['LEECH_LIMIT']:
+        if listener.isLeech:
+            limit = LEECH_LIMIT * 1024**3
+            msg3 = f'Leech limit is {get_readable_file_size(limit)}'
+            if size > limit:
+                listener.ismega.delete()
+                return sendMessage(f"{msg3}.\nYour File/Folder size is {get_readable_file_size(size)}.", listener.bot, listener.message)
     with download_dict_lock:
         download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
     listener.onDownloadStart()

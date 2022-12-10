@@ -245,19 +245,21 @@ class YoutubeDLHelper:
                 msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
                 msg += f'\nYour File/Folder size is {get_readable_file_size(self.__size)}'
                 return self.__onDownloadError(msg)
-        if MAX_PLAYLIST:= config_dict['MAX_PLAYLIST'] and self.is_playlist and self.listener.isLeech and self.playlist_count > MAX_PLAYLIST:
-            _msg = f'Leech Playlist limit is {MAX_PLAYLIST}\nYour Playlist is {self.playlist_count}'
-            return self.__onDownloadError(_msg)
+        if MAX_PLAYLIST:= config_dict['MAX_PLAYLIST']:
+            if self.is_playlist and self.listener.isLeech and self.playlist_count > MAX_PLAYLIST:
+                _msg = f'Leech Playlist limit is {MAX_PLAYLIST}\nYour Playlist is {self.playlist_count}'
+                return self.__onDownloadError(_msg)
         if YTDLP_LIMIT:= config_dict['YTDLP_LIMIT']:
             limit = YTDLP_LIMIT * 1024**3
             if self.__size > limit:
                 _msg = f'Ytldp limit is {get_readable_file_size(limit)}\nYour {"Playlist" if self.is_playlist else "Video"} size is {get_readable_file_size(self.__size)}'
                 return self.__onDownloadError(_msg)
-        if LEECH_LIMIT:= config_dict['LEECH_LIMIT'] and self.listener.isLeech:
-            limit = LEECH_LIMIT * 1024**3
-            if self.__size > limit:
-                _msg = f'Leech limit is {get_readable_file_size(limit)}\nYour {"Playlist" if self.is_playlist else "Video"} size is {get_readable_file_size(self.__size)}'
-                return self.__onDownloadError(_msg)
+        if LEECH_LIMIT:= config_dict['LEECH_LIMIT']:
+            if self.listener.isLeech:
+                limit = LEECH_LIMIT * 1024**3
+                if self.__size > limit:
+                    _msg = f'Leech limit is {get_readable_file_size(limit)}\nYour {"Playlist" if self.is_playlist else "Video"} size is {get_readable_file_size(self.__size)}'
+                    return self.__onDownloadError(_msg)
         if self.is_playlist:
             self.opts['outtmpl'] = f"{dpath}/{self.name}/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"
         elif not args:

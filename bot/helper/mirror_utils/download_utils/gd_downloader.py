@@ -45,12 +45,13 @@ def add_gd_download(link, path, listener, newname):
         if size > limit:
             msg = f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}.'
             return sendMessage(msg, listener.bot, listener.message)
-    if LEECH_LIMIT:= config_dict['LEECH_LIMIT'] and listener.isLeech:
-        limit = LEECH_LIMIT * 1024**3
-        mssg = f'Leech limit is {get_readable_file_size(limit)}'
-        if size > limit:
-            msg = f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}.'
-            return sendMessage(msg, listener.bot, listener.message)
+    if LEECH_LIMIT:= config_dict['LEECH_LIMIT']:
+        if listener.isLeech:
+            limit = LEECH_LIMIT * 1024**3
+            mssg = f'Leech limit is {get_readable_file_size(limit)}'
+            if size > limit:
+                msg = f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}.'
+                return sendMessage(msg, listener.bot, listener.message)
     LOGGER.info(f"Download Name: {name}")
     drive = GoogleDriveHelper(name, path, size, listener, listener.message.from_user.id)
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
