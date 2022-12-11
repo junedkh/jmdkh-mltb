@@ -168,7 +168,7 @@ def start_clone(listner):
     else:
         if dmMessage:
             sendMarkup(f"{result + cc}", bot, dmMessage, buttons.build_menu(2))
-            msg += f'\n\n<b>Links has been sent in your DM.</b>'
+            msg = f'\n\n<b>Links has been sent in your DM.</b>'
             sendMessage(f"{result + cc + msg}", bot, message)
         else:
             if message.chat.type != 'private':
