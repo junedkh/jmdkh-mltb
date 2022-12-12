@@ -127,7 +127,7 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 if forcesub(bot, message, tag):
                     return
                 if maxtask and not CustomFilters.owner_query(message.from_user.id) and check_user_tasks(message.from_user.id, maxtask):
-                    return sendMessage(f"Tasks limit exceeded for {maxtask} tasks", bot, message)
+                    return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
                 link = 'telegram_file'
                 listener = [bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url]
                 extras = [link, name, ratio, seed_time, c_index, time()]
@@ -200,7 +200,7 @@ Number should be always before |newname or pswd:
     if forcesub(bot, message, tag):
         return
     if maxtask and not CustomFilters.owner_query(message.from_user.id) and check_user_tasks(message.from_user.id, maxtask):
-        return sendMessage(f"Tasks limit exceeded for {maxtask} tasks", bot, message)
+        return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
     listener = [bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url]
     extras = [link, name, ratio, seed_time, c_index, time()]
     if len(CATEGORY_NAMES) > 1 and not isLeech :
@@ -257,9 +257,9 @@ def start_mirror_leech(extra, s_listener):
         return sendMessage('Locked!', bot, message)
     if not isZip and not extract and not isLeech and is_gdrive_link(link):
         gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
-        gmsg += "Use Zip mode to make zip of Google Drive folder\n\n"
-        gmsg += "Use Unzip mode to extracts Google Drive archive folder/file\n\n"
-        gmsg += "Use Telegram mode to upload on telegram"
+        gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
+        gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive folder/file\n\n"
+        gmsg += f"Use /{BotCommands.LeechCommand} to upload on telegram"
         delete_links(bot, message)
         return sendMessage(gmsg, bot, message)
     if config_dict['ENABLE_DM'] and message.chat.type != 'private':
