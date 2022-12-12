@@ -159,7 +159,7 @@ def get_readable_message():
                     pass
             msg += f"\n<b>Engine</b>: {download.engine()}"
             msg += f"\n<b>Upload</b>: {download.mode()}"
-            msg += f"\n<b>Stop</b>: /{BotCommands.CancelMirror}_{download.gid()}"
+            msg += f"\n<b>Stop</b>: <code>/{BotCommands.CancelMirror} {download.gid()}</code>"
             msg += "\n\n"
             if STATUS_LIMIT and index == STATUS_LIMIT:
                 break

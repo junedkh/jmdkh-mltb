@@ -173,7 +173,7 @@ class YoutubeDLHelper:
                     self.__size += entry['filesize_approx']
                 elif 'filesize' in entry:
                     self.__size += entry['filesize']
-                if name == "":
+                if not name:
                     outtmpl_ ='%(series,playlist_title,channel)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d'
                     self.name = ydl.prepare_filename(entry, outtmpl=outtmpl_)
                 else:
@@ -182,11 +182,7 @@ class YoutubeDLHelper:
             outtmpl_ ='%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s'
             realName = ydl.prepare_filename(result, outtmpl=outtmpl_)
             ext = realName.rsplit('.', 1)[-1]
-            if name == "":
-                newname = realName.split(f" [{result['id'].replace('*', '_')}]")
-                self.name = f'{newname[0]}.{ext}' if len(newname) > 1 else newname[0]
-            else:
-                self.name = f"{name}.{ext}"
+            self.name = f"{name}.{ext}" if name else realName
             if result.get('filesize'):
                 self.__size = result['filesize']
             elif result.get('filesize_approx'):
