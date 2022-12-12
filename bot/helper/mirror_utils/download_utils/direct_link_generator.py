@@ -19,7 +19,7 @@ from urllib.parse import unquote, urlparse
 from bs4 import BeautifulSoup
 from cfscrape import create_scraper
 from lk21 import Bypass
-from requests import Session, request, get as rget
+from requests import Session, request
 
 from bot import LOGGER, config_dict
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
@@ -141,7 +141,7 @@ def mediafire(url: str) -> str:
     except IndexError:
         raise DirectDownloadLinkException("No MediaFire links found\n")
     try:
-        page = BeautifulSoup(rget(link).content, 'lxml')
+        page = BeautifulSoup(request('get', link).content, 'lxml')
         info = page.find('a', {'aria-label': 'Download file'})
         dl_url = info.get('href')
         return dl_url
