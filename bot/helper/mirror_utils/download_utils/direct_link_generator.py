@@ -19,7 +19,7 @@ from urllib.parse import unquote, urlparse
 from bs4 import BeautifulSoup
 from cfscrape import create_scraper
 from lk21 import Bypass
-from requests import Session, request
+from requests import Session, request, get as rget
 
 from bot import LOGGER, config_dict
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
@@ -137,14 +137,17 @@ def mediafire(url: str) -> str:
     """ MediaFire direct link generator """
     try:
         link = findall(r'\bhttps?://.*mediafire\.com\S+', url)[0]
+        link = link.split('?dkey=')[0]
     except IndexError:
-        raise DirectDownloadLinkException("No MediaFire links found")
+        raise DirectDownloadLinkException("No MediaFire links found\n")
     try:
-        page = BeautifulSoup(request('get', link).content, 'lxml')
+        page = BeautifulSoup(rget(link).content, 'lxml')
         info = page.find('a', {'aria-label': 'Download file'})
-        return info.request('get', 'href')
+        dl_url = info.get('href')
+        return dl_url
     except Exception as e:
-        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+        LOGGER.error(e)
+        raise DirectDownloadLinkException("ERROR: Generate Mediafire Failed!")
 
 def osdn(url: str) -> str:
     """ OSDN direct link generator """
