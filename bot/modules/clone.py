@@ -7,7 +7,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 
 from bot import (CATEGORY_NAMES, DATABASE_URL, LOGGER, Interval, btn_listener,
                  config_dict, dispatcher, download_dict, download_dict_lock)
-from bot.helper.ext_utils.bot_utils import (check_user_tasks,
+from bot.helper.ext_utils.bot_utils import (check_buttons, check_user_tasks,
                                             get_category_btns,
                                             get_readable_file_size,
                                             get_readable_time, is_gdrive_link,
@@ -75,6 +75,8 @@ def _clone(message, bot):
     time_out = 30
     listner = [bot, message, c_index, time_out, time(), tag, link]
     if len(CATEGORY_NAMES) > 1:
+        if checked:= check_buttons():
+            return sendMessage(checked, bot, message)
         text, btns = get_category_btns('clone', time_out, msg_id, c_index)
         btn_listener[msg_id] = listner
         chat_restrict(message)
@@ -98,9 +100,9 @@ def _auto_start_dl(msg, msg_id, time_out):
     sleep(time_out)
     try:
         info = btn_listener[msg_id]
+        del btn_listener[msg_id]
         editMessage("Timed out! Task has been started.", msg)
         start_clone(info)
-        del btn_listener[msg_id]
     except:
         pass
 
@@ -168,8 +170,7 @@ def start_clone(listner):
     else:
         if dmMessage:
             sendMarkup(f"{result + cc}", bot, dmMessage, buttons.build_menu(2))
-            msg = f'\n\n<b>Links has been sent in your DM.</b>'
-            sendMessage(f"{result + cc + msg}", bot, message)
+            sendMessage(f"{result + cc}\n\n<b>Links has been sent in your DM.</b>", bot, message)
         else:
             if message.chat.type != 'private':
                 buttons.sbutton("Save This Message", 'save', 'footer')

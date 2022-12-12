@@ -8,7 +8,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 from bot import (CATEGORY_NAMES, DATABASE_URL, DOWNLOAD_DIR, IS_USER_SESSION,
                  btn_listener, config_dict, dispatcher, user_data)
 from bot.helper.ext_utils.bot_utils import (check_user_tasks,
-                                            get_category_btns,
+                                            get_category_btns, check_buttons,
                                             get_readable_file_size, is_url,
                                             new_thread)
 from bot.helper.ext_utils.db_handler import DbManger
@@ -28,8 +28,6 @@ from bot.modules.listener import MirrorLeechListener
 listener_dict = {}
 
 def _ytdl(bot, message, isZip=False, isLeech=False):
-    if len(btn_listener) > 2:
-        return sendMessage("Sorry, I can only handle 3 tasks at a time.", bot, message)
     mssg = message.text
     msg_id = message.message_id
     qual = ''
@@ -133,6 +131,8 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     listener = [bot, message, isZip, isLeech, pswd, tag, link]
     extra = [name, opt, qual, select, c_index, time()]
     if len(CATEGORY_NAMES) > 1 and not isLeech:
+        if checked:= check_buttons():
+            return sendMessage(checked, bot, message)
         time_out = 30
         btn_listener[msg_id] = [extra, listener, time_out]
         chat_restrict(message)
@@ -388,9 +388,9 @@ def _auto_start_dl(msg, msg_id, time_out):
     sleep(time_out)
     try:
         info = btn_listener[msg_id]
+        del btn_listener[msg_id]
         editMessage("Timed out! Task has been started.", msg)
         start_ytdlp(info[0], info[1])
-        del btn_listener[msg_id]
     except:
         pass
 

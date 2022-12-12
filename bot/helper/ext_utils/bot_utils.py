@@ -1,21 +1,23 @@
 from html import escape
 from math import ceil
-from re import findall as re_findall
+from re import findall
 from threading import Event, Thread
 from time import time
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from psutil import cpu_percent, disk_usage, virtual_memory
-from requests import head as rhead
+from requests import request
 
 from bot import (BUTTON_NAMES, BUTTON_URLS, CATEGORY_NAMES, DOWNLOAD_DIR,
-                 botStartTime, config_dict, download_dict, download_dict_lock,
-                 user_data)
+                 botStartTime, btn_listener, config_dict, download_dict,
+                 download_dict_lock, user_data)
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
 MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
+
+URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
 
 COUNT = 0
 PAGE_NO = 1
@@ -244,6 +246,10 @@ def check_user_tasks(user_id, maxtask):
     if tasks:= getAllDownload(MirrorStatus.STATUS_DOWNLOADING, user_id, False):
         return len(tasks) >= maxtask
 
+def check_buttons():
+    if len(btn_listener) >= 3:
+        return 'Sorry, I can only handle 3 tasks at a time.'
+
 def get_readable_time(seconds: int) -> str:
     result = ''
     (days, remainder) = divmod(seconds, 86400)
@@ -263,21 +269,15 @@ def get_readable_time(seconds: int) -> str:
     return result
 
 def is_url(url: str):
-    try:
-        return urlparse(url).scheme in ['http','https', 'ftp']
-    except:
-        return False
+    url = findall(URL_REGEX, url)
+    return bool(url)
 
 def is_gdrive_link(url: str):
-    url_ = urlparse(url)
-    if url_.scheme in ['http','https']:
-        return "drive.google.com" in url_.netloc
-    return False
+    return "drive.google.com" in urlparse(url).netloc
 
 def is_mega_link(url: str):
     url_ = urlparse(url)
-    if url_.scheme in ['http','https']:
-        return any(x in url_.netloc for x in ['mega.nz', 'mega.co.nz'])
+    return any(x in url_.netloc for x in ['mega.nz', 'mega.co.nz'])
 
 def get_mega_link_type(url: str):
     if "folder" in url:
@@ -289,7 +289,7 @@ def get_mega_link_type(url: str):
     return "file"
 
 def is_magnet(url: str):
-    magnet = re_findall(MAGNET_REGEX, url)
+    magnet = findall(MAGNET_REGEX, url)
     return bool(magnet)
 
 def new_thread(fn):
@@ -306,7 +306,7 @@ def new_thread(fn):
 
 def get_content_type(link: str) -> str:
     try:
-        res = rhead(link, allow_redirects=True, timeout=5, headers = {'user-agent': 'Wget/1.12'})
+        res = request('HEAD', link, allow_redirects=True, timeout=5, headers = {'user-agent': 'Wget/1.12'})
         content_type = res.headers.get('content-type')
     except:
         try:

@@ -11,7 +11,7 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 from bot import (CATEGORY_NAMES, DATABASE_URL, DOWNLOAD_DIR, IS_USER_SESSION,
                  LOGGER, btn_listener, config_dict, dispatcher)
 from bot.helper.ext_utils.bot_utils import (check_user_tasks,
-                                            get_category_btns,
+                                            get_category_btns, check_buttons,
                                             get_content_type, is_gdrive_link,
                                             is_magnet, is_mega_link, is_url,
                                             new_thread)
@@ -36,8 +36,6 @@ from bot.modules.listener import MirrorLeechListener
 
 
 def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False):
-    if len(btn_listener) > 2:
-        return sendMessage("Sorry, I can only handle 2 tasks at a time.", bot, message)
     msg_id = message.message_id
     mesg = message.text.split('\n')
     message_args = mesg[0].split(maxsplit=1)
@@ -134,6 +132,8 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 listener = [bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url]
                 extras = [link, name, ratio, seed_time, c_index, time()]
                 if len(CATEGORY_NAMES) > 1 and not isLeech:
+                    if checked:= check_buttons():
+                        return sendMessage(checked, bot, message)
                     btn_listener[msg_id] = [listener, extras, time_out]
                     chat_restrict(message)
                     text, btns = get_category_btns('mir', time_out, msg_id, c_index)
@@ -204,6 +204,8 @@ Number should be always before |newname or pswd:
     listener = [bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url]
     extras = [link, name, ratio, seed_time, c_index, time()]
     if len(CATEGORY_NAMES) > 1 and not isLeech :
+        if checked:= check_buttons():
+            return sendMessage(checked, bot, message)
         btn_listener[msg_id] = [listener, extras, time_out]
         text, btns = get_category_btns('mir', time_out, msg_id, c_index)
         chat_restrict(message)
@@ -369,8 +371,8 @@ def mir_confirm(update, context):
         return editMessage('<b>Download has been cancelled</b>', message)
     elif data[1] == 'start':
         query.answer()
-        message.delete()
         del btn_listener[msg_id]
+        message.delete()
         return start_mirror_leech(extra, listener)
     time_out = listnerInfo[2] - (time() - extra[5])
     text, btns = get_category_btns('mir', time_out, msg_id, extra[4])

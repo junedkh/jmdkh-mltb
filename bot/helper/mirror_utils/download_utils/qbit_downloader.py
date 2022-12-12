@@ -177,7 +177,7 @@ def __stop_duplicate(client, tor):
             if qbname:
                 qbmsg, button = GoogleDriveHelper().drive_list(qbname, True)
                 if qbmsg:
-                    __onDownloadError("File/Folder is already available in Drive.", client, tor)
+                    __onDownloadError("File/Folder is already available in Drive.\n", client, tor)
                     return sendMarkup("Here are the search results:", listener.bot, listener.message, button)
     except:
         pass

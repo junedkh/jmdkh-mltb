@@ -58,7 +58,7 @@ def __onDownloadStarted(api, gid):
                     if sname:
                         smsg, button = GoogleDriveHelper().drive_list(sname, True)
                         if smsg:
-                            listener.onDownloadError('File/Folder already available in Drive.\n\n')
+                            listener.onDownloadError('File/Folder already available in Drive.\n')
                             api.remove([download], force=True, files=True, clean=True)
                             return sendMarkup("Here are the search results:", listener.bot, listener.message, button)
         sleep(1)
