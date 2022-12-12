@@ -80,15 +80,23 @@ def get_message(key):
 Send YT-DLP Qaulity. Timeout: 60 sec
 Examples:
 1. <code>{escape('bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]')}</code> this will give 1080p-mp4.
+
 2. <code>{escape('bv*[height<=720][ext=webm]+ba/b[height<=720]')}</code> this will give 720p-webm.
+
 Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#filtering-formats">HERE</a>.
         '''
     elif key == 'lprefix':
         rmsg = f'''
 Send Leech Prefix. Timeout: 60 sec
 Examples:
-1. <code>{escape('<b>@JMDKH_Team</b>')}</code> this will give <b>@JMDKH_Team</b>  <code>50MB.bin</code>.
-2. <code>{escape('<code>@JMDKH_Team</code>')}</code> this will give <code>@JMDKH_Team</code> <code>50MB.bin</code>.
+1. <code>{escape('<b>@JMDKH_Team</b>')}</code> 
+This will give output of:
+<b>@JMDKH_Team</b>  <code>50MB.bin</code>.
+
+2. <code>{escape('<code>@JMDKH_Team</code>')}</code> 
+This will give output of:
+<code>@JMDKH_Team</code> <code>50MB.bin</code>.
+
 Check all available formatting options <a href="https://core.telegram.org/bots/api#formatting-options">HERE</a>.
         '''
     return rmsg

@@ -174,7 +174,7 @@ def sendDmMessage(text, bot, message, disable_notification=False, forward=False)
     except Unauthorized:
         buttons = ButtonMaker()
         buttons.buildbutton("Start", f"http://t.me/{botname}?start=start")
-        sendMarkup("<b>You Didn't START the BOT in DM</b>", bot, message, buttons.build_menu(1))
+        sendMarkup("<b>You didn't START the bot in DM</b>", bot, message, buttons.build_menu(1))
         return
     except Exception as e:
         LOGGER.error(str(e))

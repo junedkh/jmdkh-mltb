@@ -54,10 +54,10 @@ def stats(update, context):
 
 def start(update, context):
     if config_dict['ENABLE_DM']:
-        start_string = 'Okay I will send you files or you link here\n' \
-                    "Don't block or stop me!"
+        start_string = 'Bot Started.\n' \
+                    'Now I will send your files or links here.\n'
     else:
-        start_string = '🌹 Welcome To One Of A Modified Anas Mirror Bot\n' \
+        start_string = '🌹 Welcome To One Of A Modified Anasty Mirror Bot\n' \
                     'This bot can Mirror all your links To Google Drive!\n' \
                     '👨🏽‍💻 Powered By: @JMDKH_Team'
     sendMessage(start_string, context.bot, update.message)
@@ -137,6 +137,7 @@ NOTE: Try each command without any perfix to see more detalis.
 /{BotCommands.RssSubCommand[0]} or /{BotCommands.RssSubCommand[1]}: Subscribe new rss feed (Only Owner & Sudo).
 /{BotCommands.RssUnSubCommand[0]} or /{BotCommands.RssUnSubCommand[1]}: Unubscribe rss feed by title (Only Owner & Sudo).
 /{BotCommands.RssSettingsCommand[0]} or /{BotCommands.RssSettingsCommand[1]} [query]: Rss Settings (Only Owner & Sudo).
+/{BotCommands.RmdbCommand}: Remove task from the database.
 '''
 
 def bot_help(update, context):

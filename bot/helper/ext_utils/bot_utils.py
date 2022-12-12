@@ -344,6 +344,7 @@ def set_commands(bot):
         (f'{BotCommands.YtdlZipLeechCommand[0]}', f'or /{BotCommands.YtdlZipLeechCommand[1]} Leech yt-dlp support link as zip'),
         (f'{BotCommands.CloneCommand}', 'Copy file/folder to Drive'),
         (f'{BotCommands.StatusCommand[0]}', f'or /{BotCommands.StatusCommand[1]} Get mirror status message'),
+        (f'{BotCommands.StatsCommand}', 'Check bot stats'),
         (f'{BotCommands.BtSelectCommand}', 'Select files to download only torrents'),
         (f'{BotCommands.CategorySelect}', 'Select category to upload only mirror'),
         (f'{BotCommands.CancelMirror}', 'Cancel a Task'),
