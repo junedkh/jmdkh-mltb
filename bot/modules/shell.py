@@ -11,7 +11,7 @@ def shell(update, context):
     message = update.effective_message
     cmd = message.text.split(maxsplit=1)
     if len(cmd) == 1:
-        return message.reply_text('No command to execute was given.', parse_mode='HTML')
+        return message.reply_text('No command to execute was given.')
     cmd = cmd[1]
     process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
     stdout, stderr = process.communicate()
@@ -40,5 +40,5 @@ def shell(update, context):
 
 
 SHELL_HANDLER = CommandHandler(BotCommands.ShellCommand, shell,
-                                filters=CustomFilters.owner_filter, run_async=True)
+                                filters=CustomFilters.owner_filter)
 dispatcher.add_handler(SHELL_HANDLER)

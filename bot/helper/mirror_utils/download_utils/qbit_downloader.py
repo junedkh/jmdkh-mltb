@@ -19,7 +19,7 @@ from bot.helper.ext_utils.fs_utils import (check_storage_threshold,
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import (deleteMessage,
-                                                      sendMarkup, sendMessage,
+                                                      sendMessage,
                                                       sendStatusMessage,
                                                       update_all_messages)
 
@@ -110,7 +110,7 @@ def add_qb_torrent(link, path, listener, ratio, seed_time):
             SBUTTONS = bt_selection_buttons(ext_hash)
             msg = f"<b>Name</b>: <code>{tor_info.name}</code>\n\nYour download paused. Choose files then press Done Selecting button to start downloading." \
                 "\n<b><i>Your download will not start automatically</i></b>"
-            sendMarkup(msg, listener.bot, listener.message, SBUTTONS)
+            sendMessage(msg, listener.bot, listener.message, SBUTTONS)
         else:
             sendStatusMessage(listener.message, listener.bot)
     except Exception as e:
@@ -178,7 +178,7 @@ def __stop_duplicate(client, tor):
                 qbmsg, button = GoogleDriveHelper().drive_list(qbname, True)
                 if qbmsg:
                     __onDownloadError("File/Folder is already available in Drive.\n", client, tor)
-                    return sendMarkup("Here are the search results:", listener.bot, listener.message, button)
+                    return sendMessage("Here are the search results:", listener.bot, listener.message, button)
     except:
         pass
 

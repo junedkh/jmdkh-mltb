@@ -10,8 +10,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (deleteMessage,
-                                                      editMessage, sendMarkup,
-                                                      sendMessage)
+                                                      editMessage, sendMessage)
 
 list_listener = {}
 
@@ -33,7 +32,7 @@ def list_buttons(update, context):
     button = common_btn(isRecur, msg_id)
     query = update.message.text.split(" ", maxsplit=1)[1]
     list_listener[msg_id] = [user_id, query, isRecur]
-    sendMarkup('Choose option to list.', context.bot, update.message, button)
+    sendMessage('Choose option to list.', context.bot, update.message, button)
 
 def select_type(update, context):
     query = update.callback_query
@@ -76,13 +75,13 @@ def _list_drive(listener, bmsg, item_type, bot):
     deleteMessage(bot, bmsg)
     if button:
         msg = f'{msg}\n\n<b>Type</b>: {item_type} | <b>Recursive list</b>: {isRecur}\n#list: {tag}\n<b>Elapsed</b>: {Elapsed}'
-        sendMarkup(msg, bot, bmsg.reply_to_message, button)
+        sendMessage(msg, bot, bmsg.reply_to_message, button)
     else:
         sendMessage(f'No result found for <i>{query}</i>\n\n<b>Type</b>: {item_type} | <b>Recursive list</b>: {isRecur}\n#list: {tag}\n<b>Elapsed</b>: {Elapsed}', bot, bmsg.reply_to_message)
 
 list_handler = CommandHandler(BotCommands.ListCommand, list_buttons,
-                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-list_type_handler = CallbackQueryHandler(select_type, pattern="types", run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+list_type_handler = CallbackQueryHandler(select_type, pattern="types")
 
 dispatcher.add_handler(list_handler)
 dispatcher.add_handler(list_type_handler)

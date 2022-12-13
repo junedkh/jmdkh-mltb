@@ -21,7 +21,6 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (editMessage, sendFile,
-                                                      sendMarkup,
                                                       update_all_messages)
 from bot.modules.search import initiate_search_tools
 
@@ -171,7 +170,7 @@ def load_config():
     RSS_DELAY = environ.get('RSS_DELAY', '')
     RSS_DELAY = 900 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
 
-    CMD_PERFIX = environ.get('CMD_PERFIX', '')
+    CMD_SUFFIX = environ.get('CMD_SUFFIX', '')
 
     USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 
@@ -354,7 +353,7 @@ def load_config():
                    'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                    'BASE_URL': BASE_URL,
                    'BOT_TOKEN': BOT_TOKEN,
-                   'CMD_PERFIX': CMD_PERFIX,
+                   'CMD_SUFFIX': CMD_SUFFIX,
                    'DATABASE_URL': DATABASE_URL,
                    'DOWNLOAD_DIR': DOWNLOAD_DIR,
                    'DUMP_CHAT': DUMP_CHAT,
@@ -418,7 +417,7 @@ def load_config():
 def get_buttons(key=None, edit_type=None):
     buttons = ButtonMaker()
     if key is None:
-        buttons.sbutton('Edit Variables', "botset var")
+        buttons.sbutton('Config Variables', "botset var")
         buttons.sbutton('Private Files', "botset private")
         buttons.sbutton('Qbit Settings', "botset qbit")
         buttons.sbutton('Aria2c Settings', "botset aria")
@@ -737,7 +736,7 @@ def update_private_file(update, context, omsg):
             msg = 'Push to UPSTREAM_REPO ?'
             buttons.sbutton('Yes!', f"botset push {file_name}")
             buttons.sbutton('No', "botset close")
-            sendMarkup(msg, context.bot, message, buttons.build_menu(2))
+            sendMessage(msg, context.bot, message, buttons.build_menu(2))
         else:
             message.delete()
     update_buttons(omsg)
@@ -873,7 +872,7 @@ def edit_bot_settings(update, context):
         handler_dict[message.chat.id] = True
         update_buttons(message, 'private')
         partial_fnc = partial(update_private_file, omsg=message)
-        file_handler = MessageHandler(filters=(Filters.document | Filters.text) & Filters.chat(message.chat.id) & Filters.user(user_id), callback=partial_fnc, run_async=True)
+        file_handler = MessageHandler(filters=(Filters.document | Filters.text) & Filters.chat(message.chat.id) & Filters.user(user_id), callback=partial_fnc)
         dispatcher.add_handler(file_handler)
         while handler_dict[message.chat.id]:
             if time() - start_time > 60:
@@ -881,7 +880,7 @@ def edit_bot_settings(update, context):
                 update_buttons(message)
         dispatcher.remove_handler(file_handler)
     elif data[1] == 'editvar' and STATE == 'edit':
-        if data[2] in ['SUDO_USERS', 'RSS_USER_SESSION_STRING', 'IGNORE_PENDING_REQUESTS', 'CMD_PERFIX', 'OWNER_ID',
+        if data[2] in ['SUDO_USERS', 'RSS_USER_SESSION_STRING', 'IGNORE_PENDING_REQUESTS', 'CMD_SUFFIX', 'OWNER_ID',
                        'USER_SESSION_STRING', 'TELEGRAM_HASH', 'TELEGRAM_API', 'AUTHORIZED_CHATS', 'RSS_DELAY'
                        'DATABASE_URL', 'BOT_TOKEN', 'DOWNLOAD_DIR']:
             query.answer(text='Restart required for this edit to take effect!', show_alert=True)
@@ -895,7 +894,7 @@ def edit_bot_settings(update, context):
         update_buttons(message, data[2], data[1])
         partial_fnc = partial(edit_variable, omsg=message, key=data[2])
         value_handler = MessageHandler(filters=Filters.text & Filters.chat(message.chat.id) & Filters.user(user_id),
-                        callback=partial_fnc, run_async=True)
+                        callback=partial_fnc)
         dispatcher.add_handler(value_handler)
         while handler_dict[message.chat.id]:
             if time() - start_time > 60:
@@ -927,7 +926,7 @@ def edit_bot_settings(update, context):
         update_buttons(message, data[2], data[1])
         partial_fnc = partial(edit_aria, omsg=message, key=data[2])
         value_handler = MessageHandler(filters=Filters.text & Filters.chat(message.chat.id) & Filters.user(user_id),
-                                       callback=partial_fnc, run_async=True)
+                                       callback=partial_fnc)
         dispatcher.add_handler(value_handler)
         while handler_dict[message.chat.id]:
             if time() - start_time > 60:
@@ -956,7 +955,7 @@ def edit_bot_settings(update, context):
         update_buttons(message, data[2], data[1])
         partial_fnc = partial(edit_qbit, omsg=message, key=data[2])
         value_handler = MessageHandler(filters=Filters.text & Filters.chat(message.chat.id) & Filters.user(user_id),
-                                       callback=partial_fnc, run_async=True)
+                                       callback=partial_fnc)
         dispatcher.add_handler(value_handler)
         while handler_dict[message.chat.id]:
             if time() - start_time > 60:
@@ -1004,12 +1003,12 @@ def edit_bot_settings(update, context):
 
 def bot_settings(update, context):
     msg, button = get_buttons()
-    sendMarkup(msg, context.bot, update.message, button)
+    sendMessage(msg, context.bot, update.message, button)
 
 
 bot_settings_handler = CommandHandler(BotCommands.BotSetCommand, bot_settings,
-                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
-bb_set_handler = CallbackQueryHandler(edit_bot_settings, pattern="botset", run_async=True)
+                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
+bb_set_handler = CallbackQueryHandler(edit_bot_settings, pattern="botset")
 
 dispatcher.add_handler(bot_settings_handler)
 dispatcher.add_handler(bb_set_handler)

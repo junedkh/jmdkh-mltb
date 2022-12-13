@@ -12,7 +12,7 @@ from bot.helper.ext_utils.fs_utils import (check_storage_threshold,
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import (deleteMessage,
-                                                      sendMarkup, sendMessage,
+                                                      sendMessage,
                                                       sendStatusMessage,
                                                       update_all_messages)
 
@@ -60,7 +60,7 @@ def __onDownloadStarted(api, gid):
                         if smsg:
                             listener.onDownloadError('File/Folder already available in Drive.\n')
                             api.remove([download], force=True, files=True, clean=True)
-                            return sendMarkup("Here are the search results:", listener.bot, listener.message, button)
+                            return sendMessage("Here are the search results:", listener.bot, listener.message, button)
         sleep(1)
         dl = getDownloadByGid(gid)
         if dl and hasattr(dl, 'listener'):
@@ -120,7 +120,7 @@ def __onDownloadComplete(api, gid):
                 api.client.force_pause(new_gid)
                 SBUTTONS = bt_selection_buttons(new_gid)
                 msg = f"<b>Name</b>: <code>{dl.name()}</code>\n\nYour download paused. Choose files then press Done Selecting button to start downloading."
-                sendMarkup(msg, listener.bot, listener.message, SBUTTONS)
+                sendMessage(msg, listener.bot, listener.message, SBUTTONS)
     elif download.is_torrent:
         if dl:= getDownloadByGid(gid):
             if hasattr(dl, 'listener') and dl.seeding:

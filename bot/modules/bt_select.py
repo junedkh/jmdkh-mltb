@@ -7,7 +7,7 @@ from bot.helper.ext_utils.bot_utils import (MirrorStatus, bt_selection_buttons,
                                             getDownloadByGid)
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import (sendMarkup, sendMessage,
+from bot.helper.telegram_helper.message_utils import (sendMessage,
                                                       sendStatusMessage)
 
 
@@ -65,7 +65,7 @@ def select(update, context):
     SBUTTONS = bt_selection_buttons(id_, False)
     msg = f"<b>Name</b>: <code>{dl.name()}</code>\n\nYour download paused. Choose files then press Done Selecting button to resume downloading." \
         "\n<b><i>Your download will not start automatically</i></b>"
-    sendMarkup(msg, context.bot, update.message, SBUTTONS)
+    sendMessage(msg, context.bot, update.message, SBUTTONS)
 
 def get_confirm(update, context):
     query = update.callback_query
@@ -125,8 +125,8 @@ def get_confirm(update, context):
 
 
 select_handler = CommandHandler(BotCommands.BtSelectCommand, select,
-                                filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user), run_async=True)
-bts_handler = CallbackQueryHandler(get_confirm, pattern="btsel", run_async=True)
+                                filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user))
+bts_handler = CallbackQueryHandler(get_confirm, pattern="btsel")
 
 dispatcher.add_handler(select_handler)
 dispatcher.add_handler(bts_handler)

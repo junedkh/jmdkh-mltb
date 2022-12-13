@@ -7,8 +7,8 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 
 from bot import (CATEGORY_NAMES, DATABASE_URL, DOWNLOAD_DIR, IS_USER_SESSION,
                  btn_listener, config_dict, dispatcher, user_data)
-from bot.helper.ext_utils.bot_utils import (check_user_tasks,
-                                            get_category_btns, check_buttons,
+from bot.helper.ext_utils.bot_utils import (check_buttons, check_user_tasks,
+                                            get_category_btns,
                                             get_readable_file_size, is_url,
                                             new_thread)
 from bot.helper.ext_utils.db_handler import DbManger
@@ -22,7 +22,7 @@ from bot.helper.telegram_helper.message_utils import (chat_restrict,
                                                       editMessage, forcesub,
                                                       message_filter,
                                                       sendDmMessage,
-                                                      sendMarkup, sendMessage)
+                                                      sendMessage)
 from bot.modules.listener import MirrorLeechListener
 
 listener_dict = {}
@@ -40,7 +40,9 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
     if len(args) > 1:
         for x in args:
             x = x.strip()
-            if x == 's':
+            if x in ['|', 'pswd:', 'opt:']:
+                break
+            elif x == 's':
                select = True
                index += 1
             elif x.strip().isdigit():
@@ -54,7 +56,7 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
                     link = ''
                 else:
                     link = split(r"opt:|pswd:|\|", link)[0]
-                    link = link.strip() 
+                    link = link.strip()
 
     name = mssg.split('|', maxsplit=1)
     if len(name) > 1:
@@ -137,7 +139,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         btn_listener[msg_id] = [extra, listener, time_out]
         chat_restrict(message)
         text, btns = get_category_btns('ytdlp', time_out, msg_id, c_index)
-        engine = sendMarkup(text, bot, message, btns)
+        engine = sendMessage(text, bot, message, btns)
         _auto_start_dl(engine, msg_id, time_out)
     else:
         chat_restrict(message)
@@ -275,7 +277,7 @@ def start_ytdlp(extra, ytdlp_listener):
     if config_dict['ENABLE_DM'] and message.chat.type != 'private':
         if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
             return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
-        dmMessage = sendDmMessage(link, bot, message, disable_notification=True)
+        dmMessage = sendDmMessage(link, bot, message)
         if not dmMessage:
             return
     else:
@@ -328,7 +330,7 @@ def start_ytdlp(extra, ytdlp_listener):
             buttons.sbutton("Cancel", f"qu {msg_id} cancel")
             YTBUTTONS = buttons.build_menu(3)
             listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict]
-            bmsg = sendMarkup('Choose Playlist Videos Quality:', bot, message, YTBUTTONS)
+            bmsg = sendMessage('Choose Playlist Videos Quality:', bot, message, YTBUTTONS)
         else:
             formats = result.get('formats')
             if formats is not None:
@@ -378,7 +380,7 @@ def start_ytdlp(extra, ytdlp_listener):
             buttons.sbutton("Cancel", f"qu {msg_id} cancel")
             YTBUTTONS = buttons.build_menu(2)
             listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict]
-            bmsg = sendMarkup('Choose Video quality\n\n<i>This Will Cancel Automatically in <u>2 Minutes</u></i>', bot, message, YTBUTTONS)
+            bmsg = sendMessage('Choose Video quality\n\n<i>This Will Cancel Automatically in <u>2 Minutes</u></i>', bot, message, YTBUTTONS)
 
         Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
     delete_links(bot, message)
@@ -443,15 +445,15 @@ def ytdlZipleech(update, context):
 
 
 ytdl_handler = CommandHandler(BotCommands.YtdlCommand, ytdl,
-                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 ytdl_zip_handler = CommandHandler(BotCommands.YtdlZipCommand, ytdlZip,
-                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 ytdl_leech_handler = CommandHandler(BotCommands.YtdlLeechCommand, ytdlleech,
-                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 ytdl_zip_leech_handler = CommandHandler(BotCommands.YtdlZipLeechCommand, ytdlZipleech,
-                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-quality_handler = CallbackQueryHandler(select_format, pattern="qu", run_async=True)
-ytdl_confirm_handler = CallbackQueryHandler(ytdl_confirm, pattern="ytdlp", run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+quality_handler = CallbackQueryHandler(select_format, pattern="qu")
+ytdl_confirm_handler = CallbackQueryHandler(ytdl_confirm, pattern="ytdlp")
 dispatcher.add_handler(ytdl_handler)
 dispatcher.add_handler(ytdl_zip_handler)
 dispatcher.add_handler(ytdl_leech_handler)

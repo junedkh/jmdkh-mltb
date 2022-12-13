@@ -64,5 +64,5 @@ def rmdbNode(update, context):
     _rmdb(update.message, context.bot)
 
 if DATABASE_URL:
-    rmdb_handler = CommandHandler(command=BotCommands.RmdbCommand, callback=rmdbNode, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+    rmdb_handler = CommandHandler(command=BotCommands.RmdbCommand, callback=rmdbNode, filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
     dispatcher.add_handler(rmdb_handler)

@@ -14,8 +14,7 @@ from bot.helper.ext_utils.fs_utils import check_storage_threshold
 from bot.helper.mirror_utils.status_utils.convert_status import ConvertStatus
 from bot.helper.mirror_utils.status_utils.yt_dlp_download_status import YtDlpDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import (sendMarkup,
-                                                      sendStatusMessage)
+from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMessage
 
 LOGGER = getLogger(__name__)
 
@@ -181,8 +180,11 @@ class YoutubeDLHelper:
         else:
             outtmpl_ ='%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s'
             realName = ydl.prepare_filename(result, outtmpl=outtmpl_)
-            ext = realName.rsplit('.', 1)[-1]
-            self.name = f"{name}.{ext}" if name else realName
+            if name == "":
+                self.name = realName
+            else:
+                ext = realName.rsplit('.', 1)[-1]
+                self.name = f"{name}.{ext}"
             if result.get('filesize'):
                 self.__size = result['filesize']
             elif result.get('filesize_approx'):
@@ -234,7 +236,7 @@ class YoutubeDLHelper:
                 smsg, button = GoogleDriveHelper().drive_list(name, True, True)
                 if smsg:
                     self.__onDownloadError('File/Folder already available in Drive.\nHere are the search results:')
-                    return sendMarkup(msg, self.listener.bot, self.listener.message, button)
+                    return sendMessage(msg, self.listener.bot, self.listener.message, button)
         if STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']:
             acpt = check_storage_threshold(self.__size, self.listener.isZip)
             if not acpt:

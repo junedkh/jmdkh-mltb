@@ -9,8 +9,7 @@ from bot.helper.ext_utils.bot_utils import (MirrorStatus, getAllDownload,
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import (editMessage, sendMarkup,
-                                                      sendMessage)
+from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 
 
 def cancel_mirror(update, context):
@@ -106,7 +105,7 @@ def cancell_all_buttons(update, context):
     buttons.sbutton("Splitting", f"cnall {MirrorStatus.STATUS_SPLITTING} {msg_id}")
     buttons.sbutton("All", f"cnall all {msg_id}")
     buttons.sbutton("Close", f"cnall close {msg_id}")
-    bmgs = sendMarkup('Choose tasks to cancel. You have 30 Secounds only', context.bot, update.message, buttons.build_menu(2))
+    bmgs = sendMessage('Choose tasks to cancel. You have 30 Secounds only', context.bot, update.message, buttons.build_menu(2))
     cancel_listener[msg_id] = [user_id, bmgs, update.message]
     Thread(target=_auto_cancel, args=(bmgs, msg_id)).start()
 
@@ -144,12 +143,12 @@ def _auto_cancel(msg, msg_id):
 
 
 cancel_mirror_handler = CommandHandler(BotCommands.CancelMirror, cancel_mirror,
-                                   filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user), run_async=True)
+                                   filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user))
 
 cancel_all_handler = CommandHandler(BotCommands.CancelAllCommand, cancell_all_buttons,
-                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 
-cancel_all_buttons_handler = CallbackQueryHandler(cancel_all_update, pattern="cnall", run_async=True)
+cancel_all_buttons_handler = CallbackQueryHandler(cancel_all_update, pattern="cnall")
 
 dispatcher.add_handler(cancel_all_handler)
 dispatcher.add_handler(cancel_mirror_handler)

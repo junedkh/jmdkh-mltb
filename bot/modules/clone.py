@@ -25,7 +25,7 @@ from bot.helper.telegram_helper.message_utils import (chat_restrict,
                                                       editMessage, forcesub,
                                                       message_filter,
                                                       sendDmMessage,
-                                                      sendMarkup, sendMessage,
+                                                      sendMessage,
                                                       sendStatusMessage,
                                                       update_all_messages)
 
@@ -80,7 +80,7 @@ def _clone(message, bot):
         text, btns = get_category_btns('clone', time_out, msg_id, c_index)
         btn_listener[msg_id] = listner
         chat_restrict(message)
-        engine = sendMarkup(text, bot, message, btns)
+        engine = sendMessage(text, bot, message, btns)
         _auto_start_dl(engine, msg_id, time_out)
     else:
         chat_restrict(message)
@@ -130,7 +130,7 @@ def start_clone(listner):
         if smsg:
             msg = "File/Folder is already available in Drive.\nHere are the search results:"
             delete_links(bot, message)
-            return sendMarkup(msg, bot, message, button)
+            return sendMessage(msg, bot, message, button)
     CLONE_LIMIT = config_dict['CLONE_LIMIT']
     if CLONE_LIMIT:
         limit = CLONE_LIMIT * 1024**3
@@ -169,12 +169,12 @@ def start_clone(listner):
         sendMessage(f"{tag} {result}", bot, message)
     else:
         if dmMessage:
-            sendMarkup(f"{result + cc}", bot, dmMessage, buttons.build_menu(2))
+            sendMessage(f"{result + cc}", bot, dmMessage, buttons.build_menu(2))
             sendMessage(f"{result + cc}\n\n<b>Links has been sent in your DM.</b>", bot, message)
         else:
             if message.chat.type != 'private':
                 buttons.sbutton("Save This Message", 'save', 'footer')
-            sendMarkup(f"{result + cc}", bot, message, buttons.build_menu(2))
+            sendMessage(f"{result + cc}", bot, message, buttons.build_menu(2))
         LOGGER.info(f"Cloning Done: {name}")
 
 @new_thread
@@ -215,7 +215,7 @@ def cloneNode(update, context):
     _clone(update.message, context.bot)
 
 clone_handler = CommandHandler(BotCommands.CloneCommand, cloneNode,
-                               filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-clone_confirm_handler = CallbackQueryHandler(clone_confirm, pattern="clone", run_async=True)
+                               filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+clone_confirm_handler = CallbackQueryHandler(clone_confirm, pattern="clone")
 dispatcher.add_handler(clone_confirm_handler)
 dispatcher.add_handler(clone_handler)

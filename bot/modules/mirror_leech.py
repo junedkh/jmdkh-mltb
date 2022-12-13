@@ -10,8 +10,8 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 
 from bot import (CATEGORY_NAMES, DATABASE_URL, DOWNLOAD_DIR, IS_USER_SESSION,
                  LOGGER, btn_listener, config_dict, dispatcher)
-from bot.helper.ext_utils.bot_utils import (check_user_tasks,
-                                            get_category_btns, check_buttons,
+from bot.helper.ext_utils.bot_utils import (check_buttons, check_user_tasks,
+                                            get_category_btns,
                                             get_content_type, is_gdrive_link,
                                             is_magnet, is_mega_link, is_url,
                                             new_thread)
@@ -23,7 +23,7 @@ from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_
 from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_utils.download_utils.mega_downloader import add_mega_download
 from bot.helper.mirror_utils.download_utils.qbit_downloader import add_qb_torrent
-from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
+from bot.helper.mirror_utils.download_utils.telegram_downloader import  TelegramDownloadHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (chat_restrict,
@@ -31,7 +31,7 @@ from bot.helper.telegram_helper.message_utils import (chat_restrict,
                                                       editMessage, forcesub,
                                                       message_filter,
                                                       sendDmMessage,
-                                                      sendMarkup, sendMessage)
+                                                      sendMessage)
 from bot.modules.listener import MirrorLeechListener
 
 
@@ -55,7 +55,9 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
         args = mesg[0].split(maxsplit=3)
         for x in args:
             x = x.strip()
-            if x == 's':
+            if x in ['|', 'pswd:']:
+                break
+            elif x == 's':
                select = True
                index += 1
             elif x == 'd':
@@ -137,7 +139,7 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                     btn_listener[msg_id] = [listener, extras, time_out]
                     chat_restrict(message)
                     text, btns = get_category_btns('mir', time_out, msg_id, c_index)
-                    engine = sendMarkup(text, bot, message, btns)
+                    engine = sendMessage(text, bot, message, btns)
                     _auto_start_dl(engine, msg_id, time_out)
                 else:
                     chat_restrict(message)
@@ -169,21 +171,21 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
 
 <b>Bittorrent selection:</b>
 <code>/{cmd}</code> <b>s</b> link or by replying to file/link
-This perfix should be always before |newname or pswd:
+This option should be always before |newname or pswd:
 
 <b>Bittorrent seed</b>:
 <code>/{cmd}</code> <b>d</b> link or by replying to file/link
 To specify ratio and seed time add d:ratio:time. Ex: d:0.7:10 (ratio and time) or d:0.7 (only ratio) or d::10 (only time) where time in minutes.
-This perfix should be always before |newname or pswd:
+This options  should be always before |newname or pswd:
 
 <b>Multi links only by replying to first link/file:</b>
 <code>/{cmd}</code> 10(number of links/files)
 Number should be always before |newname or pswd:
 
 <b>NOTES:</b>
-1. When use cmd by reply don't add any perfix in link msg! always add them after cmd msg!
-2. You can't add this perfixes <b>|newname, pswd: and authorization</b> randomly. They should be arranged like exmaple above, rename then pswd then authorization. If you don't want to add pswd for example then it will be (|newname authorization), just don't change the arrangement.
-3. You can add this perfixes <b>d, s and multi</b> randomly. Ex: <code>/{cmd}</code> d:1:20 s 10 <b>or</b> <code>/{cmd}</code> s 10 d:0.5:100
+1. When use cmd by reply don't add any option in link msg! always add them after cmd msg!
+2. You can't add this those options <b>|newname, pswd: and authorization</b> randomly. They should be arranged like exmaple above, rename then pswd. Those options should be after the link if link along with the cmd and after any other option
+3. You can add this those options <b>d, s and multi</b> randomly. Ex: <code>/{cmd}</code> d:1:20 s 10 <b>or</b> <code>/{cmd}</code> s 10 d:0.5:100
 4. Commands that start with <b>qb</b> are ONLY for torrents.
 '''
         delete_links(bot, message)
@@ -209,7 +211,7 @@ Number should be always before |newname or pswd:
         btn_listener[msg_id] = [listener, extras, time_out]
         text, btns = get_category_btns('mir', time_out, msg_id, c_index)
         chat_restrict(message)
-        engine = sendMarkup(text, bot, message, btns)
+        engine = sendMessage(text, bot, message, btns)
         _auto_start_dl(engine, msg_id, time_out)
     else:
         chat_restrict(message)
@@ -267,7 +269,7 @@ def start_mirror_leech(extra, s_listener):
             delete_links(bot, message)
             return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
         tfile = link == 'telegram_file' or "https://api.telegram.org/file/" in link
-        dmMessage = sendDmMessage(link, bot, message, True, tfile)
+        dmMessage = sendDmMessage(link, bot, message, tfile)
         if not dmMessage:
             return
     else:
@@ -418,31 +420,31 @@ def qb_zip_leech(update, context):
     _mirror_leech(context.bot, update.message, True, isQbit=True, isLeech=True)
 
 mirror_handler = CommandHandler(BotCommands.MirrorCommand, mirror,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 unzip_mirror_handler = CommandHandler(BotCommands.UnzipMirrorCommand, unzip_mirror,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 zip_mirror_handler = CommandHandler(BotCommands.ZipMirrorCommand, zip_mirror,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 qb_mirror_handler = CommandHandler(BotCommands.QbMirrorCommand, qb_mirror,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 qb_unzip_mirror_handler = CommandHandler(BotCommands.QbUnzipMirrorCommand, qb_unzip_mirror,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 qb_zip_mirror_handler = CommandHandler(BotCommands.QbZipMirrorCommand, qb_zip_mirror,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 leech_handler = CommandHandler(BotCommands.LeechCommand, leech,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 unzip_leech_handler = CommandHandler(BotCommands.UnzipLeechCommand, unzip_leech,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 zip_leech_handler = CommandHandler(BotCommands.ZipLeechCommand, zip_leech,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 qb_leech_handler = CommandHandler(BotCommands.QbLeechCommand, qb_leech,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 qb_unzip_leech_handler = CommandHandler(BotCommands.QbUnzipLeechCommand, qb_unzip_leech,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 qb_zip_leech_handler = CommandHandler(BotCommands.QbZipLeechCommand, qb_zip_leech,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 
-mir_handler = CallbackQueryHandler(mir_confirm, pattern="mir", run_async=True)
+mir_handler = CallbackQueryHandler(mir_confirm, pattern="mir")
 
 dispatcher.add_handler(mirror_handler)
 dispatcher.add_handler(unzip_mirror_handler)

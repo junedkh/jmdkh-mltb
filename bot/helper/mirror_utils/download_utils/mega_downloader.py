@@ -12,7 +12,7 @@ from bot.helper.ext_utils.fs_utils import (check_storage_threshold,
                                            get_base_name)
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import (sendMarkup, sendMessage,
+from bot.helper.telegram_helper.message_utils import (sendMessage,
                                                       sendStatusMessage)
 
 
@@ -175,7 +175,7 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
             if smsg:
                 listener.ismega.delete()
                 msg1 = "File/Folder is already available in Drive.\nHere are the search results:"
-                sendMarkup(msg1, listener.bot, listener.message, button)
+                sendMessage(msg1, listener.bot, listener.message, button)
                 api.removeListener(mega_listener)
                 if folder_api:
                     folder_api.removeListener(mega_listener)

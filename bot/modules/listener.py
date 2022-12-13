@@ -28,7 +28,7 @@ from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.upload_utils.pyrogramEngine import TgUploader
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import (delete_all_messages,
-                                                      sendMarkup, sendMessage,
+                                                      sendMessage,
                                                       update_all_messages)
 
 
@@ -253,7 +253,7 @@ class MirrorLeechListener:
                         buttons = extra_btns(buttons)
                         if self.message.chat.type != 'private':
                             buttons.sbutton('Save This Message', 'save', 'footer')
-                        sendMarkup(msg + fmsg, self.bot, self.message, buttons.build_menu(2))
+                        sendMessage(msg + fmsg, self.bot, self.message, buttons.build_menu(2))
                         sleep(1)
                         fmsg = ''
                 if fmsg != '':
@@ -261,7 +261,7 @@ class MirrorLeechListener:
                     buttons = extra_btns(buttons)
                     if self.message.chat.type != 'private':
                         buttons.sbutton('Save This Message', 'save', 'footer')
-                    sendMarkup(msg + fmsg, self.bot, self.message, buttons.build_menu(2))
+                    sendMessage(msg + fmsg, self.bot, self.message, buttons.build_menu(2))
             if self.seed:
                 if self.newDir:
                     clean_target(self.newDir)
@@ -295,13 +295,13 @@ class MirrorLeechListener:
                         buttons.buildbutton("💻 View Link", share_urls)
             buttons = extra_btns(buttons)
             if self.dmMessage:
-                sendMarkup(msg, self.bot, self.dmMessage, buttons.build_menu(2))
+                sendMessage(msg, self.bot, self.dmMessage, buttons.build_menu(2))
                 msg += '\n\n<b>Links has been sent in your DM.</b>'
                 sendMessage(msg, self.bot, self.message)
             else:
                 if self.message.chat.type != 'private':
                     buttons.sbutton("Save This Message", 'save', 'footer')
-                sendMarkup(msg, self.bot, self.message, buttons.build_menu(2))
+                sendMessage(msg, self.bot, self.message, buttons.build_menu(2))
             if self.seed:
                 if self.isZip:
                     clean_target(f"{self.dir}/{name}")

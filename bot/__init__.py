@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 from pyrogram import Client, enums
 from qbittorrentapi import Client as qbClient
-from telegram.ext import Updater as tgUpdater
+from telegram.ext import Updater as tgUpdater, Defaults
 
 main_loop = get_event_loop()
 
@@ -249,7 +249,7 @@ STATUS_LIMIT = '' if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
 USER_MAX_TASKS = environ.get('USER_MAX_TASKS', '')
 USER_MAX_TASKS = '' if len(USER_MAX_TASKS) == 0 else int(USER_MAX_TASKS)
 
-CMD_PERFIX = environ.get('CMD_PERFIX', '')
+CMD_SUFFIX = environ.get('CMD_SUFFIX', '')
 
 RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
 RSS_CHAT_ID = '' if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
@@ -365,7 +365,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                 'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                 'BASE_URL': BASE_URL,
                 'BOT_TOKEN': BOT_TOKEN,
-                'CMD_PERFIX': CMD_PERFIX,
+                'CMD_SUFFIX': CMD_SUFFIX,
                 'DATABASE_URL': DATABASE_URL,
                 'DOWNLOAD_DIR': DOWNLOAD_DIR,
                 'DUMP_CHAT': DUMP_CHAT,
@@ -550,7 +550,8 @@ else:
 Thread(target=aria2c_init).start()
 sleep(1.5)
 
-updater = tgUpdater(token=BOT_TOKEN, request_kwargs={'read_timeout': 20, 'connect_timeout': 15})
+tgDefaults = Defaults(parse_mode='HTML', disable_web_page_preview=True, allow_sending_without_reply=True, run_async=True)
+updater = tgUpdater(token=BOT_TOKEN, defaults=tgDefaults, request_kwargs={'read_timeout': 20, 'connect_timeout': 15})
 bot = updater.bot
 dispatcher = updater.dispatcher
 job_queue = updater.job_queue
