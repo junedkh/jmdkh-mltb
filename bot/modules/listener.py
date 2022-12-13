@@ -28,12 +28,15 @@ from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.upload_utils.pyrogramEngine import TgUploader
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import (delete_all_messages,
+                                                      delete_links,
                                                       sendMessage,
                                                       update_all_messages)
 
 
 class MirrorLeechListener:
-    def __init__(self, bot, message, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None, tag=None, select=False, seed=False, raw_url=None, c_index=0, dmMessage=None):
+    def __init__(self, bot, message, isZip=False, extract=False, isQbit=False,
+                isLeech=False, pswd=None, tag=None, select=False, seed=False,
+                raw_url=None, c_index=0, dmMessage=None, logMessage=None):
         self.bot = bot
         self.message = message
         self.uid = message.message_id
@@ -52,6 +55,7 @@ class MirrorLeechListener:
         self.raw_url = raw_url
         self.c_index = c_index
         self.dmMessage = dmMessage
+        self.logMessage = logMessage
 
     def clean(self):
         try:
@@ -280,7 +284,7 @@ class MirrorLeechListener:
             buttons = ButtonMaker()
             if not config_dict['DISABLE_DRIVE_LINK']:
                 link = short_url(link)
-                buttons.buildbutton("🔐 Drive Link", link)    
+                buttons.buildbutton("🔐 Drive Link", link)
             LOGGER.info(f'Done Uploading {name}')
             if INDEX_URL:= CATEGORY_INDEXS[self.c_index]:
                 url_path = rutils.quote(f'{name}')
@@ -302,6 +306,11 @@ class MirrorLeechListener:
                 if self.message.chat.type != 'private':
                     buttons.sbutton("Save This Message", 'save', 'footer')
                 sendMessage(msg, self.bot, self.message, buttons.build_menu(2))
+            if self.logMessage:
+                if config_dict['DISABLE_DRIVE_LINK']:
+                    link = short_url(link)
+                    buttons.buildbutton("🔐 Drive Link", link, 'header')
+                sendMessage(msg, self.bot, self.logMessage, buttons.build_menu(2))
             if self.seed:
                 if self.isZip:
                     clean_target(f"{self.dir}/{name}")
@@ -341,3 +350,4 @@ class MirrorLeechListener:
             DbManger().remove_download(self.raw_url)
         if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             DbManger().rm_complete_task(self.message.link)
+        delete_links(self.bot, self.message)

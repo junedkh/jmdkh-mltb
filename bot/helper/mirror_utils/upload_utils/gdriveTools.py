@@ -21,7 +21,7 @@ from tenacity import (RetryError, retry, retry_if_exception_type,
 
 from bot import (CATEGORY_IDS, CATEGORY_INDEXS, DRIVES_IDS, DRIVES_NAMES,
                  GLOBAL_EXTENSION_FILTER, INDEX_URLS, SHORTENERES, config_dict)
-from bot.helper.ext_utils.bot_utils import (extra_btns, get_readable_file_size,
+from bot.helper.ext_utils.bot_utils import (get_readable_file_size,
                                             setInterval)
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.shortener import short_url
@@ -368,6 +368,7 @@ class GoogleDriveHelper:
         try:
             meta = self.__getFileMetadata(file_id)
             mime_type = meta.get("mimeType")
+            links_dict = {}
             if mime_type == self.__G_DRIVE_DIR_MIME_TYPE:
                 dir_id = self.__create_directory(meta.get('name'), CATEGORY_IDS[c_index])
                 self.__cloneFolder(meta.get('name'), meta.get('name'), meta.get('id'), dir_id)
@@ -384,14 +385,10 @@ class GoogleDriveHelper:
                 msg += '\n\n<b>Type</b>: Folder'
                 msg += f' |<b>SubFolders</b>: {self.__total_folders}'
                 msg += f' |<b>Files</b>: {self.__total_files}'
-                buttons = ButtonMaker()
-                if not config_dict['DISABLE_DRIVE_LINK']:
-                    durl = short_url(durl)
-                    buttons.buildbutton("🔐 Drive Link", durl)
+                links_dict['durl'] = durl
                 if INDEX_URL:= CATEGORY_INDEXS[c_index]:
                     url_path = rquote(f'{meta.get("name")}', safe='')
-                    url = short_url(f'{INDEX_URL}/{url_path}/')
-                    buttons.buildbutton("📁 Index Link", url)
+                    links_dict['index'] = f'{INDEX_URL}/{url_path}/'
             else:
                 file = self.__copyFile(meta.get('id'), CATEGORY_IDS[c_index])
                 if SHORTENERES:
@@ -399,21 +396,16 @@ class GoogleDriveHelper:
                 else:
                     msg += f'<b>Name</b>: <code>{meta.get("name")}</code>'
                 durl = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
-                buttons = ButtonMaker()
                 if mime_type is None:
                     mime_type = 'File'
-                if not config_dict['DISABLE_DRIVE_LINK']:
-                    durl = short_url(durl)
-                    buttons.buildbutton("🔐 Drive Link", durl)
+                links_dict['durl'] = durl
                 msg += f'\n\n<b>Size</b>: {get_readable_file_size(int(meta.get("size", 0)))}'
                 msg += f'\n\n<b>Type</b>: {mime_type}'
                 if INDEX_URL:= CATEGORY_INDEXS[c_index]:
                     url_path = rquote(f'{file.get("name")}', safe='')
-                    url = short_url(f'{INDEX_URL}/{url_path}')
-                    buttons.buildbutton("🚀 Index Link", url)
+                    links_dict['index'] = f'{INDEX_URL}/{url_path}'
                     if config_dict['VIEW_LINK']:
-                        urls = short_url(f'{INDEX_URL}/{url_path}?a=view')
-                        buttons.buildbutton("💻 View Link", urls)
+                        links_dict['view'] = f'{INDEX_URL}/{url_path}?a=view'
         except Exception as err:
             if isinstance(err, RetryError):
                 LOGGER.info(f"Total Attempts: {err.last_attempt.attempt_number}")
@@ -429,9 +421,8 @@ class GoogleDriveHelper:
                 msg = "File not found."
             else:
                 msg = f"Error.\n{err}"
-            return msg, "", ""
-        buttons = extra_btns(buttons)
-        return msg, buttons
+            return msg, ""
+        return msg, links_dict
 
     def __cloneFolder(self, name, local_path, folder_id, dest_id):
         LOGGER.info(f"Syncing: {local_path}")

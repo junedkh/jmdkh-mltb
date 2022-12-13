@@ -20,7 +20,7 @@ from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import (editMessage, sendFile,
+from bot.helper.telegram_helper.message_utils import (editMessage, sendFile, sendMessage,
                                                       update_all_messages)
 from bot.modules.search import initiate_search_tools
 
@@ -157,6 +157,9 @@ def load_config():
 
     DUMP_CHAT = environ.get('DUMP_CHAT', '')
     DUMP_CHAT = '' if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
+
+    LOG_CHAT = environ.get('LOG_CHAT', '')
+    LOG_CHAT = '' if len(LOG_CHAT) == 0 else int(LOG_CHAT)
 
     STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
     STATUS_LIMIT = '' if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
@@ -304,6 +307,10 @@ def load_config():
     DELETE_LINKS = environ.get('DELETE_LINKS', '')
     DELETE_LINKS = DELETE_LINKS.lower() == 'true'
 
+    FSUB_IDS = environ.get('FSUB_IDS', '')
+    if len(FSUB_IDS) == 0:
+        FSUB_IDS = ''
+
     DRIVES_NAMES.clear()
     DRIVES_IDS.clear()
     INDEX_URLS.clear()
@@ -350,6 +357,7 @@ def load_config():
 
     config_dict.update({'AS_DOCUMENT': AS_DOCUMENT,
                    'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
+                   'FSUB_IDS': FSUB_IDS,
                    'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                    'BASE_URL': BASE_URL,
                    'BOT_TOKEN': BOT_TOKEN,
@@ -357,6 +365,7 @@ def load_config():
                    'DATABASE_URL': DATABASE_URL,
                    'DOWNLOAD_DIR': DOWNLOAD_DIR,
                    'DUMP_CHAT': DUMP_CHAT,
+                   'LOG_CHAT': LOG_CHAT,
                    'EQUAL_SPLITS': EQUAL_SPLITS,
                    'EXTENSION_FILTER': EXTENSION_FILTER,
                    'GDRIVE_ID': GDRIVE_ID,
@@ -562,7 +571,7 @@ def edit_variable(update, context, omsg, key):
             CATEGORY_INDEXS.insert(0, value)
     elif key not in ['SEARCH_LIMIT', 'STATUS_LIMIT'] and key.endswith(('_THRESHOLD', '_LIMIT')):
         value = float(value)
-    elif value.isdigit():
+    elif value.isdigit() and key != 'FSUB_IDS':
         value = int(value)
     config_dict[key] = value
     if key == 'SET_COMMANDS':

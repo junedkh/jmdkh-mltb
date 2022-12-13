@@ -5,7 +5,7 @@ from pyrogram.errors import FloodWait
 from telegram import ChatPermissions
 from telegram.error import RetryAfter, Unauthorized
 
-from bot import (FSUB_IDS, LOGGER, Interval, bot, botname, config_dict,
+from bot import (LOGGER, Interval, bot, config_dict,
                  rss_session, status_reply_dict, status_reply_dict_lock)
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -144,7 +144,7 @@ def sendStatusMessage(msg, bot):
         message = sendMessage(progress, bot, msg, buttons)
         status_reply_dict[msg.chat_id] = [message, time()]
         if not Interval:
-            Interval.append(setInterval(config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))
+            Interval.append(setInterval(config_dict['DOWNLOAD_STATUS_UPDATE_INTERVAL'], update_all_messages))
 
 def sendDmMessage(text, bot, message, forward=False):
     try:
@@ -163,15 +163,35 @@ def sendDmMessage(text, bot, message, forward=False):
         return sendDmMessage(text, bot, message, forward)
     except Unauthorized:
         buttons = ButtonMaker()
-        buttons.buildbutton("Start", f"http://t.me/{botname}?start=start")
+        buttons.buildbutton("Start", f"{bot.link}?start=start")
         sendMessage("<b>You didn't START the bot in DM</b>", bot, message, buttons.build_menu(1))
         return
     except Exception as e:
         LOGGER.error(str(e))
         return
 
+def sendLogMessage(text, bot, message, forward=False):
+    if not (log_chat := config_dict['LOG_CHAT']):
+        return
+    try:
+        if forward:
+            return bot.forward_message(log_chat,
+                            from_chat_id=message.chat_id,
+                            message_id=message.reply_to_message.message_id,
+                            disable_notification=False)
+        return bot.sendMessage(log_chat,
+                            disable_notification=False,
+                            text=text)
+    except RetryAfter as r:
+        LOGGER.warning(str(r))
+        sleep(r.retry_after * 1.5)
+        return sendLogMessage(text, bot, message, forward)
+    except Exception as e:
+        LOGGER.error(str(e))
+        return
+
 def forcesub(bot, message, tag):
-    if not FSUB_IDS:
+    if not (FSUB_IDS := config_dict['FSUB_IDS']):
         return
     if message.chat.type != 'supergroup':
         return
@@ -182,7 +202,9 @@ def forcesub(bot, message, tag):
     if member.is_anonymous or member.status in ["administrator", "creator"]:
         return
     join_button = {}
-    for channel_id in FSUB_IDS:
+    for channel_id in FSUB_IDS.split():
+        if not str(channel_id).startswith('-100'):
+            continue
         chat = bot.get_chat(channel_id)
         member = chat.get_member(user_id)
         if member.status in ["left", "kicked"] :
@@ -230,5 +252,4 @@ def delete_links(bot, message):
     if config_dict['DELETE_LINKS']:
         if message.reply_to_message:
             deleteMessage(bot, message.reply_to_message)
-        else:
-            deleteMessage(bot, message)
+        deleteMessage(bot, message)

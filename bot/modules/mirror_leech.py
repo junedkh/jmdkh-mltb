@@ -31,6 +31,7 @@ from bot.helper.telegram_helper.message_utils import (chat_restrict,
                                                       editMessage, forcesub,
                                                       message_filter,
                                                       sendDmMessage,
+                                                      sendLogMessage,
                                                       sendMessage)
 from bot.modules.listener import MirrorLeechListener
 
@@ -188,7 +189,6 @@ Number should be always before |newname or pswd:
 3. You can add this those options <b>d, s and multi</b> randomly. Ex: <code>/{cmd}</code> d:1:20 s 10 <b>or</b> <code>/{cmd}</code> s 10 d:0.5:100
 4. Commands that start with <b>qb</b> are ONLY for torrents.
 '''
-        delete_links(bot, message)
         return sendMessage(help_msg.format_map({'cmd': BotCommands.MirrorCommand[0]}), bot, message)
     if message_filter(bot, message, tag):
         return
@@ -262,19 +262,18 @@ def start_mirror_leech(extra, s_listener):
         gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
         gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive folder/file\n\n"
         gmsg += f"Use /{BotCommands.LeechCommand} to upload on telegram"
-        delete_links(bot, message)
         return sendMessage(gmsg, bot, message)
+    tfile = link == 'telegram_file' or "https://api.telegram.org/file/" in link
     if config_dict['ENABLE_DM'] and message.chat.type != 'private':
         if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
-            delete_links(bot, message)
             return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
-        tfile = link == 'telegram_file' or "https://api.telegram.org/file/" in link
         dmMessage = sendDmMessage(link, bot, message, tfile)
         if not dmMessage:
             return
     else:
         dmMessage = None
-    listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url, c_index, dmMessage)
+    logMessage = None if isLeech else sendLogMessage(link, bot, message, tfile)
+    listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url, c_index, dmMessage, logMessage)
     listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
     if isZip:
         listener.mode += ' as Zip'
@@ -282,7 +281,6 @@ def start_mirror_leech(extra, s_listener):
         listener.mode += ' as Unzip'
     if link == 'telegram_file':
         Thread(target=TelegramDownloadHelper(listener).add_download, args=(message, f'{DOWNLOAD_DIR}{listener.uid}/', name)).start()
-        delete_links(bot, message)
         return
     LOGGER.info(link)
     if not is_mega_link(link) and not isQbit and not is_magnet(link) \
@@ -343,7 +341,6 @@ def start_mirror_leech(extra, s_listener):
         else:
             auth = ''
         Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name, auth, ratio, seed_time)).start()
-    delete_links(bot, message)
 
 @new_thread
 def mir_confirm(update, context):

@@ -22,6 +22,7 @@ from bot.helper.telegram_helper.message_utils import (chat_restrict,
                                                       editMessage, forcesub,
                                                       message_filter,
                                                       sendDmMessage,
+                                                      sendLogMessage,
                                                       sendMessage)
 from bot.modules.listener import MirrorLeechListener
 
@@ -282,7 +283,8 @@ def start_ytdlp(extra, ytdlp_listener):
             return
     else:
         dmMessage = None
-    listener = MirrorLeechListener(bot, message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, raw_url=link, c_index=c_index, dmMessage=dmMessage)
+    logMessage = None if isLeech else sendLogMessage(link, bot, message)
+    listener = MirrorLeechListener(bot, message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, raw_url=link, c_index=c_index, dmMessage=dmMessage, logMessage=logMessage)
     listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
     if isZip:
         listener.mode += ' as Zip'
@@ -383,7 +385,6 @@ def start_ytdlp(extra, ytdlp_listener):
             bmsg = sendMessage('Choose Video quality\n\n<i>This Will Cancel Automatically in <u>2 Minutes</u></i>', bot, message, YTBUTTONS)
 
         Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
-    delete_links(bot, message)
 
 @new_thread
 def _auto_start_dl(msg, msg_id, time_out):
