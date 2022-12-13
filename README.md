@@ -96,11 +96,11 @@ In each single file there is a major change from base code, it's almost totaly d
 - Extract these filetypes
   > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
 - Direct links Supported:
-  >mediafire, letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com and solidfiles.com, mdisk.me (using ytdl command), terabox.com (you need to add cookies txt with name) [terabox.txt](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid)
+  > mediafire, letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com and solidfiles.com, mdisk.me (using ytdl command), terabox.com (you need to add cookies txt with name) [terabox.txt](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid)
 
 ## By [Junedkh](https://github.com/junedkh)
 ### Repo is design for big groups
-In each single file there is a major change inspire from base code by my friend [Anasty17](https://github.com/anasty17/mirror-leech-telegram-bot) ❤️, it's almost not totaly different but. Here some of features which i hide it in .so files.
+In each single file there is a major change inspire from base code by my friend [Anasty17](https://github.com/anasty17/mirror-leech-telegram-bot) ❤️.
 
 ### Limits
 - Storage threshold limit 
@@ -117,10 +117,11 @@ In each single file there is a major change inspire from base code by my friend 
 - Force subscribe module
 - Chat restrictions
 - Message filters
-- Bot DM 
+- Bot DM support
 - Stop duplicate tasks
 - Enable/Disable drive links
 - Enable/Disable leech function
+- Mirror/Clone log chat
 
 
 ### Extra
@@ -251,20 +252,23 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 ### Group Features
 - `FSUB_IDS`: Fill chat_id of groups/channel you want to force subscribe. Separate them by space. `Int`
   - it will apply only for member
+  - **Note**: Bot should be added in the filled chat_id as admin.
 - `USER_MAX_TASKS`: Maximum number of tasks for each group members at a time. `Int` 
 - `ENABLE_CHAT_RESTRICT`: To enable restriction when download started. `Bool`
   - it will restrict the user for 1 minute.
 - `ENABLE_MESSAGE_FILTER`: If enabled then bot will not download files with captions or forwarded. `Bool`
 - `STOP_DUPLICATE_TASKS`: To enable stop duplicate task across multiple bots. `Bool`
-  - **Note**: all bot must have added same database link.
+  - **Note**: All bot must have added same database link.
 - `DISABLE_DRIVE_LINK`: To disable google drive link button in case you need it. `Bool`
 
 ### Extra Features
 - `SET_COMMANDS`: To set bot commands automatically on every startup. Default is `False`. `Bool`
-  - **Note**: or you can set it manually according to your needs few commands are available [here](#bot-commands-to-be-set-in-botfatherhttpstmebotfather)
+  - **Note**: You can set commands manually according to your needs few commands are available [here](#bot-commands-to-be-set-in-botfatherhttpstmebotfather)
 - `DISABLE_LEECH`: It will disable leech functionality. Default is `False`. `Bool`
 - `ENABLE_DM`: If enabled then bot will send Mirrored/Leeched files in user's DM. Default is `False`. `Bool`
 - `DELETE_LINKS`: It will delete links on download start. Default is `False`. `Bool`
+- `LOG_CHAT`: Fill chat_id of the group/channel. It will send mirror/clone links in the log chat. `Int`
+  - **Note**: Bot should be added in the log chat as admin.
 
 ------
 
@@ -511,7 +515,7 @@ Root 0AO1JDB1t3i5jUk9PVA https://example.dev/0:
 Movies 1H4w824ZhOt4rs14XPajDja0dAdFp1glI https://example.dev/0:/movies
 Series 1H4w434ZhOt4rs14XPajDja0dAdFp1glI https://example.dev/0:/series
 ```
-Now when you use /mirror or /clone cmd is used to mirror files, you will see category option. Using that u can upload files categorywise in TD/Folder.
+Now when you use /mirror or /clone cmd, you will see category options. Using that u can upload files categorywise in TD/Folder.
 
 ## Multi Shortener
 To use multiple shorteners to maintain CPM! it will use random shorteners to generate short links.
