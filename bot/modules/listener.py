@@ -1,9 +1,6 @@
 from html import escape
-from os import listdir
-from os import path as ospath
-from os import remove as osremove
-from os import walk
-from re import search as re_search
+from os import listdir, path, remove, walk
+from re import search
 from subprocess import Popen
 from time import sleep, time
 
@@ -11,7 +8,8 @@ from requests import utils as rutils
 
 from bot import (CATEGORY_INDEXS, DATABASE_URL, DOWNLOAD_DIR, LOGGER,
                  MAX_SPLIT_SIZE, SHORTENERES, Interval, aria2, config_dict,
-                 download_dict, download_dict_lock, status_reply_dict_lock)
+                 download_dict, download_dict_lock, status_reply_dict_lock,
+                 user_data)
 from bot.helper.ext_utils.bot_utils import extra_btns, get_readable_time
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
@@ -74,37 +72,38 @@ class MirrorLeechListener:
             DbManger().add_incomplete_task(self.message.chat.id, self.message.link, self.tag)
 
     def onDownloadComplete(self):
-        LEECH_SPLIT_SIZE = config_dict['LEECH_SPLIT_SIZE']
+        user_dict = user_data.get(self.message.from_user.id, False)
         with download_dict_lock:
             download = download_dict[self.uid]
             name = str(download.name()).replace('/', '')
             gid = download.gid()
         LOGGER.info(f"Download completed: {name}")
-        if name == "None" or self.isQbit or not ospath.exists(f"{self.dir}/{name}"):
+        if name == "None" or self.isQbit or not path.exists(f"{self.dir}/{name}"):
             name = listdir(self.dir)[-1]
         m_path = f'{self.dir}/{name}'
         size = get_path_size(m_path)
         if self.isZip:
             if self.seed and self.isLeech:
                 self.newDir = f"{self.dir}10000"
-                path = f"{self.newDir}/{name}.zip"
+                path_ = f"{self.newDir}/{name}.zip"
             else:
-                path = f"{m_path}.zip"
+                path_ = f"{m_path}.zip"
             with download_dict_lock:
                 download_dict[self.uid] = ZipStatus(name, size, gid, self)
+            LEECH_SPLIT_SIZE = (user_dict and user_dict.get('split_size')) or config_dict['LEECH_SPLIT_SIZE']
             if self.pswd:
                 if self.isLeech and int(size) > LEECH_SPLIT_SIZE:
-                    LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}.0*')
-                    self.suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.pswd}", path, m_path])
+                    LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path_}.0*')
+                    self.suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.pswd}", path_, m_path])
                 else:
-                    LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
-                    self.suproc = Popen(["7z", "a", "-mx=0", f"-p{self.pswd}", path, m_path])
+                    LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path_}')
+                    self.suproc = Popen(["7z", "a", "-mx=0", f"-p{self.pswd}", path_, m_path])
             elif self.isLeech and int(size) > LEECH_SPLIT_SIZE:
-                LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}.0*')
-                self.suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, m_path])
+                LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path_}.0*')
+                self.suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path_, m_path])
             else:
-                LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
-                self.suproc = Popen(["7z", "a", "-mx=0", path, m_path])
+                LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path_}')
+                self.suproc = Popen(["7z", "a", "-mx=0", path_, m_path])
             self.suproc.wait()
             if self.suproc.returncode == -9:
                 return
@@ -112,21 +111,21 @@ class MirrorLeechListener:
                 clean_target(m_path)
         elif self.extract:
             try:
-                if ospath.isfile(m_path):
-                    path = get_base_name(m_path)
+                if path.isfile(m_path):
+                    path_ = get_base_name(m_path)
                 LOGGER.info(f"Extracting: {name}")
                 with download_dict_lock:
                     download_dict[self.uid] = ExtractStatus(name, size, gid, self)
-                if ospath.isdir(m_path):
+                if path.isdir(m_path):
                     if self.seed:
                         self.newDir = f"{self.dir}10000"
-                        path = f"{self.newDir}/{name}"
+                        path_ = f"{self.newDir}/{name}"
                     else:
-                        path = m_path
+                        path_ = m_path
                     for dirpath, _, files in walk(m_path, topdown=False):
                         for file_ in files:
-                            if re_search('\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$|\.zip$|\.7z$|^.(?!.*\.part\d+\.rar)(?=.*\.rar$)', file_):
-                                f_path = ospath.join(dirpath, file_)
+                            if search('\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$|\.zip$|\.7z$|^.(?!.*\.part\d+\.rar)(?=.*\.rar$)', file_):
+                                f_path = path.join(dirpath, file_)
                                 t_path = dirpath.replace(self.dir, self.newDir) if self.seed else dirpath
                                 if self.pswd:
                                     self.suproc = Popen(["7z", "x", f"-p{self.pswd}", f_path, f"-o{t_path}", "-aot"])
@@ -139,51 +138,52 @@ class MirrorLeechListener:
                                     LOGGER.error('Unable to extract archive splits!')
                         if not self.seed and self.suproc and self.suproc.returncode == 0:
                             for file_ in files:
-                                if re_search('\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$|\.zip$|\.rar$|\.7z$', file_):
-                                    del_path = ospath.join(dirpath, file_)
+                                if search('\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$|\.zip$|\.rar$|\.7z$', file_):
+                                    del_path = path.join(dirpath, file_)
                                     try:
-                                        osremove(del_path)
+                                        remove(del_path)
                                     except:
                                         return
                 else:
                     if self.seed and self.isLeech:
                         self.newDir = f"{self.dir}10000"
-                        path = path.replace(self.dir, self.newDir)
+                        path_ = path_.replace(self.dir, self.newDir)
                     if self.pswd:
-                        self.suproc = Popen(["7z", "x", f"-p{self.pswd}", m_path, f"-o{path}", "-aot"])
+                        self.suproc = Popen(["7z", "x", f"-p{self.pswd}", m_path, f"-o{path_}", "-aot"])
                     else:
-                        self.suproc = Popen(["7z", "x", m_path, f"-o{path}", "-aot"])
+                        self.suproc = Popen(["7z", "x", m_path, f"-o{path_}", "-aot"])
                     self.suproc.wait()
                     if self.suproc.returncode == -9:
                         return
                     elif self.suproc.returncode == 0:
-                        LOGGER.info(f"Extracted Path: {path}")
+                        LOGGER.info(f"Extracted Path: {path_}")
                         if not self.seed:
                             try:
-                                osremove(m_path)
+                                remove(m_path)
                             except:
                                 return
                     else:
                         LOGGER.error('Unable to extract archive! Uploading anyway')
                         self.newDir = ""
-                        path = m_path
+                        path_ = m_path
             except NotSupportedExtractionArchive:
                 LOGGER.info("Not any valid archive, uploading file as it is.")
                 self.newDir = ""
-                path = m_path
+                path_ = m_path
         else:
-            path = m_path
-        up_dir, up_name = path.rsplit('/', 1)
+            path_ = m_path
+        up_dir, up_name = path_.rsplit('/', 1)
         size = get_path_size(up_dir)
         if self.isLeech:
             m_size = []
             o_files = []
             if not self.isZip:
                 checked = False
+                LEECH_SPLIT_SIZE = (user_dict and user_dict.get('split_size')) or config_dict['LEECH_SPLIT_SIZE']
                 for dirpath, _, files in walk(up_dir, topdown=False):
                     for file_ in files:
-                        f_path = ospath.join(dirpath, file_)
-                        f_size = ospath.getsize(f_path)
+                        f_path = path.join(dirpath, file_)
+                        f_size = path.getsize(f_path)
                         if f_size > LEECH_SPLIT_SIZE:
                             if not checked:
                                 checked = True
@@ -197,12 +197,12 @@ class MirrorLeechListener:
                                 if f_size <= MAX_SPLIT_SIZE:
                                     continue
                                 try:
-                                    osremove(f_path)
+                                    remove(f_path)
                                 except:
                                     return
                             elif not self.seed or self.newDir:
                                 try:
-                                    osremove(f_path)
+                                    remove(f_path)
                                 except:
                                     return
                             else:

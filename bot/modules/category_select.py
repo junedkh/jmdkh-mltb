@@ -8,10 +8,15 @@ from bot.helper.ext_utils.bot_utils import (MirrorStatus, get_category_btns,
                                             getDownloadByGid, new_thread)
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
+from bot.helper.telegram_helper.message_utils import (anno_checker,
+                                                      editMessage, sendMessage)
 
 
 def change_category(update, context):
+    if update.message.sender_chat:
+        update.message.from_user.id = anno_checker(update.message)
+        if not update.message.from_user.id:
+            return
     user_id = update.message.from_user.id
     if len(context.args) == 1:
         gid = context.args[0]
@@ -56,7 +61,7 @@ def change_category(update, context):
 @new_thread
 def _auto_select(msg, msg_id, time_out):
     sleep(time_out)
-    try:
+    if msg_id in btn_listener:
         info = btn_listener[msg_id]
         del btn_listener[msg_id]
         listener = info[3]
@@ -69,8 +74,6 @@ def _auto_select(msg, msg_id, time_out):
             mode += ' as Unzip'
         listener.mode = mode
         editMessage(f"Timed out! Task has been set.\n\n<b>Upload</b>: {mode}", msg)
-    except:
-        pass
 
 @new_thread
 def confirm_category(update, context):

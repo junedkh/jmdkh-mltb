@@ -20,7 +20,8 @@ from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import (chat_restrict,
+from bot.helper.telegram_helper.message_utils import (anno_checker,
+                                                      chat_restrict,
                                                       delete_all_messages,
                                                       delete_links,
                                                       deleteMessage,
@@ -60,7 +61,7 @@ def _clone(message, bot):
         msg_ = 'Send Gdrive link along with command or by replying to the link by command' \
             f'\n\n<b>Multi links only by replying to first link/file:</b>\n<code>/{BotCommands.CloneCommand}</code> 10(number of links/files)'
         return sendMessage(msg_, bot, message)
-    if message_filter(bot,message, tag):
+    if message_filter(bot, message, tag):
         return
     if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
         raw_url = extract_link(link)
@@ -69,8 +70,12 @@ def _clone(message, bot):
             _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
             delete_links(bot, message)
             return sendMessage(_msg, bot, message)
-    if forcesub(bot,message, tag):
+    if forcesub(bot, message, tag):
         return
+    if message.sender_chat:
+        message.from_user.id = anno_checker(message)
+        if not message.from_user.id:
+            return
     maxtask = config_dict['USER_MAX_TASKS']
     if maxtask and not CustomFilters.owner_query(message.from_user.id) and check_user_tasks(message.from_user.id, maxtask):
         return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)

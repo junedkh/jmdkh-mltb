@@ -5,8 +5,8 @@ from pyrogram.errors import FloodWait
 from telegram import ChatPermissions
 from telegram.error import RetryAfter, Unauthorized
 
-from bot import (LOGGER, Interval, bot, config_dict,
-                 rss_session, status_reply_dict, status_reply_dict_lock)
+from bot import (LOGGER, Interval, bot, btn_listener, config_dict, rss_session,
+                 status_reply_dict, status_reply_dict_lock)
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
@@ -199,7 +199,7 @@ def forcesub(bot, message, tag):
         return sendMessage('You cannot use bot as a channel', bot, message)
     user_id = message.from_user.id
     member = message.chat.get_member(user_id)
-    if member.is_anonymous or member.status in ["administrator", "creator"]:
+    if member.status in ["administrator", "creator"] or member.username == 'GroupAnonymousBot':
         return
     join_button = {}
     for channel_id in FSUB_IDS.split():
@@ -221,7 +221,7 @@ def message_filter(bot, message, tag):
     if message.chat.type != 'supergroup':
         return
     member = message.chat.get_member(message.from_user.id)
-    if member.is_anonymous or member.status in ["administrator", "creator"]:
+    if member.status in ["administrator", "creator"] or member.username == 'GroupAnonymousBot':
         return
     _msg = ''
     if message.reply_to_message:
@@ -244,7 +244,7 @@ def chat_restrict(message):
     if message.chat.type != 'supergroup':
         return
     member = message.chat.get_member(message.from_user.id)
-    if member.is_anonymous or member.status in ["administrator", "creator"]:
+    if member.status in ["administrator", "creator"] or member.username == 'GroupAnonymousBot':
         return
     message.chat.restrict_member(message.from_user.id, ChatPermissions(), int(time() + 60))
 
@@ -253,3 +253,18 @@ def delete_links(bot, message):
         if message.reply_to_message:
             deleteMessage(bot, message.reply_to_message)
         deleteMessage(bot, message)
+
+def anno_checker(message):
+    msg_id = message.message_id
+    btn_listener[msg_id] = [True, None]
+    buttons = ButtonMaker()
+    buttons.sbutton('Anno', f'verify {msg_id}')
+    sendMessage('Anno Verification', message.bot, message, buttons.build_menu(1))
+    from_user = None
+    start_time = time()
+    while btn_listener[msg_id][0] and time() - start_time <= 10:
+        if btn_listener[msg_id][1]:
+            from_user = btn_listener[msg_id][1]
+            break
+    del btn_listener[msg_id]
+    return from_user

@@ -7,13 +7,15 @@ from PIL import Image
 from telegram.ext import (CallbackQueryHandler, CommandHandler, Filters,
                           MessageHandler)
 
-from bot import DATABASE_URL, config_dict, dispatcher, user_data
+from bot import (DATABASE_URL, IS_PREMIUM_USER, MAX_SPLIT_SIZE, config_dict,
+                 dispatcher, user_data)
 from bot.helper.ext_utils.bot_utils import update_user_ldata
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
+from bot.helper.telegram_helper.message_utils import (editMessage, sendMessage,
+                                                      sendPhoto)
 
 handler_dict = {}
 
@@ -29,40 +31,40 @@ def get_user_settings(from_user):
     else:
         ltype = "MEDIA"
         buttons.sbutton("Send As Document", f"userset {user_id} doc")
-
-    if user_dict and user_dict.get('lprefix'):
-        lprefix = user_dict['lprefix']
-        buttons.sbutton("Change Leech Prefix", f"userset {user_id} lprefix")
-        buttons.sbutton("Remove Leech Prefix", f"userset {user_id} rlpre")
+    buttons.sbutton("Leech Splits", f"userset {user_id} lss")
+    if user_dict and user_dict.get('split_size'):
+        split_size = user_dict['split_size']
     else:
-        buttons.sbutton("Add Leech Prefix", f"userset {user_id} lprefix")
-        lprefix = 'None'
+        split_size = config_dict['LEECH_SPLIT_SIZE']
 
+    if not user_dict and config_dict['EQUAL_SPLITS'] or user_dict and user_dict.get('equal_splits'):
+        equal_splits = 'Enabled'
+    else:
+        equal_splits = 'Disabled'
+
+    buttons.sbutton("YT-DLP Quality", f"userset {user_id} ytq")
     if user_dict and user_dict.get('yt_ql'):
         ytq = user_dict['yt_ql']
-        buttons.sbutton("Change YT-DLP Quality", f"userset {user_id} yt_ql")
-        buttons.sbutton("Remove YT-DLP Quality", f"userset {user_id} rytq")
     elif config_dict['YT_DLP_QUALITY']:
         ytq = config_dict['YT_DLP_QUALITY']
-        buttons.sbutton("Set YT-DLP Quality", f"userset {user_id} yt_ql")
     else:
-        buttons.sbutton("Set YT-DLP Quality", f"userset {user_id} yt_ql")
         ytq = 'None'
 
-    if path.exists(thumbpath):
-        thumbmsg = "Exists"
-        buttons.sbutton("Change Thumbnail", f"userset {user_id} sthumb")
-        buttons.sbutton("Delete Thumbnail", f"userset {user_id} dthumb")
-    else:
-        thumbmsg = "Not Exists"
-        buttons.sbutton("Set Thumbnail", f"userset {user_id} sthumb")
-
+    buttons.sbutton("Thumbnail", f"userset {user_id} sthumb")
+    thumbmsg = "Exists" if path.exists(thumbpath) else "Not Exists"
+    buttons.sbutton("Leech Prefix", f"userset {user_id} lprefix")
     buttons.sbutton("Close", f"userset {user_id} close")
+    if user_dict and user_dict.get('lprefix'):
+        lprefix = user_dict['lprefix']
+    else:
+        lprefix = 'None'
     text = f"<u>Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n"\
-            f"Leech Type <b>{ltype}</b>\n" \
-            f"Custom Thumbnail <b>{thumbmsg}</b>\n" \
-            f"YT-DLP Quality is <code>{escape(ytq)}</code>\n" \
-            f"Leech Prefix <code>{escape(lprefix)}</code>"
+            f"Leech Type is <b>{ltype}</b>\n"\
+            f"Custom Thumbnail <b>{thumbmsg}</b>\n"\
+            f"Leech Split Size is <b>{split_size}</b>\n"\
+            f"Equal Splits is <b>{equal_splits}</b>\n"\
+            f"YT-DLP Quality is <b><code>{escape(ytq)}</code></b>\n" \
+            f"Leech Prefix is <code>{escape(lprefix)}</code>"
     return text, buttons.build_menu(1)
 
 def update_user_settings(message, from_user):
@@ -73,39 +75,23 @@ def user_settings(update, context):
     msg, button = get_user_settings(update.message.from_user)
     sendMessage(msg, context.bot, update.message, button)
 
-def get_message(key):
-    if key == 'yt_ql':
-        rmsg = f'''
-Send YT-DLP Qaulity. Timeout: 60 sec
-Examples:
-1. <code>{escape('bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]')}</code> this will give 1080p-mp4.
-
-2. <code>{escape('bv*[height<=720][ext=webm]+ba/b[height<=720]')}</code> this will give 720p-webm.
-
-Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#filtering-formats">HERE</a>.
-        '''
-    elif key == 'lprefix':
-        rmsg = f'''
-Send Leech Prefix. Timeout: 60 sec
-Examples:
-1. <code>{escape('<b>@JMDKH_Team</b>')}</code> 
-This will give output of:
-<b>@JMDKH_Team</b>  <code>50MB.bin</code>.
-
-2. <code>{escape('<code>@JMDKH_Team</code>')}</code> 
-This will give output of:
-<code>@JMDKH_Team</code> <code>50MB.bin</code>.
-
-Check all available formatting options <a href="https://core.telegram.org/bots/api#formatting-options">HERE</a>.
-        '''
-    return rmsg
-
-def set_values(update, context, omsg, key):
+def set_yt_quality(update, context, omsg):
     message = update.message
     user_id = message.from_user.id
     handler_dict[user_id] = False
     value = message.text
-    update_user_ldata(user_id, key, value)
+    update_user_ldata(user_id, 'yt_ql', value)
+    update.message.delete()
+    update_user_settings(omsg, message.from_user)
+    if DATABASE_URL:
+        DbManger().update_user_data(user_id)
+
+def set_perfix(update, context, omsg):
+    message = update.message
+    user_id = message.from_user.id
+    handler_dict[user_id] = False
+    value = message.text
+    update_user_ldata(user_id, 'lprefix', value)
     update.message.delete()
     update_user_settings(omsg, message.from_user)
     if DATABASE_URL:
@@ -119,7 +105,6 @@ def set_thumb(update, context, omsg):
     if not path.isdir(path_):
         mkdir(path_)
     photo_dir = message.photo[-1].get_file().download()
-    user_id = message.from_user.id
     des_dir = path.join(path_, f'{user_id}.jpg')
     Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
     remove(photo_dir)
@@ -129,31 +114,50 @@ def set_thumb(update, context, omsg):
     if DATABASE_URL:
         DbManger().update_thumb(user_id, des_dir)
 
+def leech_split_size(update, context, omsg):
+    message = update.message
+    user_id = message.from_user.id
+    handler_dict[user_id] = False
+    value = min(int(message.text), MAX_SPLIT_SIZE)
+    update_user_ldata(user_id, 'split_size', value)
+    update.message.delete()
+    update_user_settings(omsg, message.from_user)
+    if DATABASE_URL:
+        DbManger().update_user_data(user_id)
+
 def edit_user_settings(update, context):
     query = update.callback_query
     message = query.message
     user_id = query.from_user.id
     data = query.data
     data = data.split()
+    thumb_path = f"Thumbnails/{user_id}.jpg"
+    user_dict = user_data.get(user_id, False)
     if user_id != int(data[1]):
         query.answer(text="Not Yours!", show_alert=True)
     elif data[2] == "doc":
         update_user_ldata(user_id, 'as_doc', True)
-        query.answer(text="Your File Will Deliver As Document!", show_alert=True)
+        query.answer()
         update_user_settings(message, query.from_user)
         if DATABASE_URL:
             DbManger().update_user_data(user_id)
     elif data[2] == "med":
         update_user_ldata(user_id, 'as_doc', False)
-        query.answer(text="Your File Will Deliver As Media!", show_alert=True)
+        query.answer()
         update_user_settings(message, query.from_user)
         if DATABASE_URL:
             DbManger().update_user_data(user_id)
+    elif data[2] == 'vthumb':
+        query.answer()
+        handler_dict[user_id] = False
+        sendPhoto(f"Thumbnail for <a href='tg://user?id={user_id}'>{query.from_user.full_name}</a>",
+                   context.bot, message, open(thumb_path, 'rb'))
+        update_user_settings(message, query.from_user)
     elif data[2] == "dthumb":
-        path_ = f"Thumbnails/{user_id}.jpg"
-        if path.lexists(path_):
-            query.answer(text="Thumbnail Removed!", show_alert=True)
-            remove(path_)
+        handler_dict[user_id] = False
+        if path.lexists(thumb_path):
+            query.answer()
+            remove(thumb_path)
             update_user_ldata(user_id, 'thumb', '')
             update_user_settings(message, query.from_user)
             if DATABASE_URL:
@@ -166,51 +170,138 @@ def edit_user_settings(update, context):
         if handler_dict.get(user_id):
             handler_dict[user_id] = False
             sleep(0.5)
-        start_time = time()
         handler_dict[user_id] = True
         buttons = ButtonMaker()
+        if path.exists(thumb_path):
+            buttons.sbutton("View Thumbnail", f"userset {user_id} vthumb")
+            buttons.sbutton("Delete Thumbnail", f"userset {user_id} dthumb")
         buttons.sbutton("Back", f"userset {user_id} back")
         buttons.sbutton("Close", f"userset {user_id} close")
         editMessage('Send a photo to save it as custom thumbnail. Timeout: 60 sec', message, buttons.build_menu(1))
         partial_fnc = partial(set_thumb, omsg=message)
-        photo_handler = MessageHandler(filters=Filters.photo & Filters.chat(message.chat.id) & Filters.user(user_id),
+        photo_handler = MessageHandler(filters=Filters.photo & Filters.chat(message.chat.id) & Filters.user(user_id), 
                                        callback=partial_fnc)
         dispatcher.add_handler(photo_handler)
+        start_time = time()
         while handler_dict[user_id]:
             if time() - start_time > 60:
                 handler_dict[user_id] = False
                 update_user_settings(message, query.from_user)
         dispatcher.remove_handler(photo_handler)
-    elif data[2] in ['yt_ql', 'lprefix']:
+    elif data[2] == 'ytq':
         query.answer()
         if handler_dict.get(user_id):
             handler_dict[user_id] = False
             sleep(0.5)
-        start_time = time()
         handler_dict[user_id] = True
         buttons = ButtonMaker()
         buttons.sbutton("Back", f"userset {user_id} back")
+        if user_dict and user_dict.get('yt_ql'):
+            buttons.sbutton("Remove YT-DLP Quality", f"userset {user_id} rytq", 'header')
         buttons.sbutton("Close", f"userset {user_id} close")
-        rmsg = get_message(data[2])
+        rmsg = f'''
+Send YT-DLP Qaulity. Timeout: 60 sec
+Examples:
+1. <code>{escape('bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]')}</code> this will give 1080p-mp4.
+2. <code>{escape('bv*[height<=720][ext=webm]+ba/b[height<=720]')}</code> this will give 720p-webm.
+Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#filtering-formats">HERE</a>.
+        '''
         editMessage(rmsg, message, buttons.build_menu(1))
-        partial_fnc = partial(set_values, omsg=message, key=data[2])
+        partial_fnc = partial(set_yt_quality, omsg=message)
         value_handler = MessageHandler(filters=Filters.text & Filters.chat(message.chat.id) & Filters.user(user_id),
                                        callback=partial_fnc)
         dispatcher.add_handler(value_handler)
+        start_time = time()
         while handler_dict[user_id]:
             if time() - start_time > 60:
                 handler_dict[user_id] = False
                 update_user_settings(message, query.from_user)
         dispatcher.remove_handler(value_handler)
     elif data[2] == 'rytq':
-        query.answer(text="YT-DLP Quality Removed!", show_alert=True)
+        query.answer()
+        handler_dict[user_id] = False
         update_user_ldata(user_id, 'yt_ql', '')
         update_user_settings(message, query.from_user)
         if DATABASE_URL:
             DbManger().update_user_data(user_id)
+    elif data[2] == 'lprefix':
+        query.answer()
+        if handler_dict.get(user_id):
+            handler_dict[user_id] = False
+            sleep(0.5)
+        handler_dict[user_id] = True
+        buttons = ButtonMaker()
+        buttons.sbutton("Back", f"userset {user_id} back")
+        if user_dict and user_dict.get('lprefix'):
+            buttons.sbutton("Remove Leech Prefix", f"userset {user_id} rlpre", 'header')
+        buttons.sbutton("Close", f"userset {user_id} close")
+        rmsg = f'''
+Send Leech Prefix. Timeout: 60 sec
+Examples:
+1. <code>{escape('<b>@JMDKH_Team</b>')}</code> 
+This will give output of:
+<b>@JMDKH_Team</b>  <code>50MB.bin</code>.
+
+2. <code>{escape('<code>@JMDKH_Team</code>')}</code> 
+This will give output of:
+<code>@JMDKH_Team</code> <code>50MB.bin</code>.
+
+Check all available formatting options <a href="https://core.telegram.org/bots/api#formatting-options">HERE</a>.
+        '''
+        editMessage(rmsg, message, buttons.build_menu(1))
+        partial_fnc = partial(set_perfix, omsg=message)
+        value_handler = MessageHandler(filters=Filters.text & Filters.chat(message.chat.id) & Filters.user(user_id),
+                                       callback=partial_fnc)
+        dispatcher.add_handler(value_handler)
+        start_time = time()
+        while handler_dict[user_id]:
+            if time() - start_time > 60:
+                handler_dict[user_id] = False
+                update_user_settings(message, query.from_user)
+        dispatcher.remove_handler(value_handler)
     elif data[2] == 'rlpre':
         query.answer(text="Leech Prefix Removed!", show_alert=True)
         update_user_ldata(user_id, 'lprefix', '')
+        update_user_settings(message, query.from_user)
+        if DATABASE_URL:
+            DbManger().update_user_data(user_id)
+    elif data[2] == 'lss':
+        query.answer()
+        if handler_dict.get(user_id):
+            handler_dict[user_id] = False
+            sleep(0.5)
+        handler_dict[user_id] = True
+        buttons = ButtonMaker()
+        if user_dict and user_dict.get('split_size'):
+            buttons.sbutton("Reset Split Size", f"userset {user_id} rlss")
+        if not user_dict and config_dict['EQUAL_SPLITS'] or user_dict and user_dict.get('equal_splits'):
+            buttons.sbutton("Disable Equal Splits", f"userset {user_id} esplits")
+        else:
+            buttons.sbutton("Enable Equal Splits", f"userset {user_id} esplits")
+        buttons.sbutton("Back", f"userset {user_id} back")
+        buttons.sbutton("Close", f"userset {user_id} close")
+        editMessage(f'Send Leech split size in bytes. IS_PREMIUM_USER: {IS_PREMIUM_USER}. Timeout: 60 sec', message, buttons.build_menu(1))
+        partial_fnc = partial(leech_split_size, omsg=message)
+        size_handler = MessageHandler(filters=Filters.text & Filters.chat(message.chat.id) & Filters.user(user_id),
+                                      callback=partial_fnc)
+        dispatcher.add_handler(size_handler)
+        start_time = time()
+        while handler_dict[user_id]:
+            if time() - start_time > 60:
+                handler_dict[user_id] = False
+                update_user_settings(message, query.from_user)
+        dispatcher.remove_handler(size_handler)
+    elif data[2] == 'rlss':
+        query.answer()
+        handler_dict[user_id] = False
+        update_user_ldata(user_id, 'split_size', '')
+        update_user_settings(message, query.from_user)
+        if DATABASE_URL:
+            DbManger().update_user_data(user_id)
+    elif data[2] == 'esplits':
+        query.answer()
+        handler_dict[user_id] = False
+        update_user_ldata(user_id, 'equal_splits', not bool(user_dict and user_dict.get('equal_splits')))
         update_user_settings(message, query.from_user)
         if DATABASE_URL:
             DbManger().update_user_data(user_id)
@@ -234,7 +325,8 @@ def send_users_settings(update, context):
 users_settings_handler = CommandHandler(BotCommands.UsersCommand, send_users_settings,
                                             filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
 user_set_handler = CommandHandler(BotCommands.UserSetCommand, user_settings,
-                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+                                filters=((~Filters.sender_chat.super_group | ~Filters.sender_chat.channel)
+                                & (CustomFilters.authorized_chat | CustomFilters.authorized_user)))
 but_set_handler = CallbackQueryHandler(edit_user_settings, pattern="userset")
 
 dispatcher.add_handler(user_set_handler)

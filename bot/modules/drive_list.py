@@ -9,7 +9,8 @@ from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import (deleteMessage,
+from bot.helper.telegram_helper.message_utils import (anno_checker,
+                                                      deleteMessage,
                                                       editMessage, sendMessage)
 
 list_listener = {}
@@ -24,6 +25,10 @@ def common_btn(isRecur, msg_id):
     return buttons.build_menu(3)
 
 def list_buttons(update, context):
+    if update.message.sender_chat:
+        update.message.from_user.id = anno_checker(update.message)
+        if not update.message.from_user.id:
+            return
     user_id = update.message.from_user.id
     msg_id = update.message.message_id
     if len(context.args) == 0:

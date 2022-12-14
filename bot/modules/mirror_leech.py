@@ -26,7 +26,7 @@ from bot.helper.mirror_utils.download_utils.qbit_downloader import add_qb_torren
 from bot.helper.mirror_utils.download_utils.telegram_downloader import  TelegramDownloadHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import (chat_restrict,
+from bot.helper.telegram_helper.message_utils import (anno_checker, chat_restrict,
                                                       delete_links,
                                                       editMessage, forcesub,
                                                       message_filter,
@@ -129,6 +129,10 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                         return sendMessage(_msg, bot, message)
                 if forcesub(bot, message, tag):
                     return
+                if message.sender_chat:
+                    message.from_user.id = anno_checker(message)
+                    if not message.from_user.id:
+                        return
                 if maxtask and not CustomFilters.owner_query(message.from_user.id) and check_user_tasks(message.from_user.id, maxtask):
                     return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
                 link = 'telegram_file'
@@ -201,6 +205,10 @@ Number should be always before |newname or pswd:
             return sendMessage(_msg, bot, message)
     if forcesub(bot, message, tag):
         return
+    if message.sender_chat:
+        message.from_user.id = anno_checker(message)
+        if not message.from_user.id:
+            return
     if maxtask and not CustomFilters.owner_query(message.from_user.id) and check_user_tasks(message.from_user.id, maxtask):
         return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
     listener = [bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url]
@@ -229,13 +237,11 @@ Number should be always before |newname or pswd:
 @new_thread
 def _auto_start_dl(msg, msg_id, time_out):
     sleep(time_out)
-    try:
+    if msg_id in btn_listener:
         info = btn_listener[msg_id]
         del btn_listener[msg_id]
         editMessage("Timed out! Task has been started.", msg)
         start_mirror_leech(info[1], info[0])
-    except:
-        pass
 
 def start_mirror_leech(extra, s_listener):
     bot = s_listener[0]

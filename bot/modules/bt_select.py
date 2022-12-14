@@ -7,11 +7,15 @@ from bot.helper.ext_utils.bot_utils import (MirrorStatus, bt_selection_buttons,
                                             getDownloadByGid)
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import (sendMessage,
+from bot.helper.telegram_helper.message_utils import (sendMessage, anno_checker,
                                                       sendStatusMessage)
 
 
 def select(update, context):
+    if update.message.sender_chat:
+        update.message.from_user.id = anno_checker(update.message)
+        if not update.message.from_user.id:
+            return
     user_id = update.message.from_user.id
     if len(context.args) == 1:
         gid = context.args[0]

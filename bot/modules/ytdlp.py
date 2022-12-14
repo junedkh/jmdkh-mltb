@@ -17,7 +17,8 @@ from bot.helper.mirror_utils.download_utils.yt_dlp_download_helper import Youtub
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import (chat_restrict,
+from bot.helper.telegram_helper.message_utils import (anno_checker,
+                                                      chat_restrict,
                                                       delete_links,
                                                       editMessage, forcesub,
                                                       message_filter,
@@ -128,6 +129,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             return sendMessage(_msg, bot, message)
     if forcesub(bot, message, tag):
         return
+    if message.sender_chat:
+        message.from_user.id = anno_checker(message)
+        if not message.from_user.id:
+            return
     maxtask = config_dict['USER_MAX_TASKS']
     if maxtask and not CustomFilters.owner_query(message.from_user.id) and check_user_tasks(message.from_user.id, maxtask):
         return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
@@ -251,11 +256,9 @@ def _mdisk(link, name):
 
 def _auto_cancel(msg, task_id):
     sleep(120)
-    try:
+    if task_id in listener_dict:
         del listener_dict[task_id]
         editMessage('Timed out! Task has been cancelled.', msg)
-    except:
-        pass
 
 def start_ytdlp(extra, ytdlp_listener):
     bot = ytdlp_listener[0]
@@ -389,13 +392,11 @@ def start_ytdlp(extra, ytdlp_listener):
 @new_thread
 def _auto_start_dl(msg, msg_id, time_out):
     sleep(time_out)
-    try:
+    if msg_id in btn_listener:
         info = btn_listener[msg_id]
         del btn_listener[msg_id]
         editMessage("Timed out! Task has been started.", msg)
         start_ytdlp(info[0], info[1])
-    except:
-        pass
 
 @new_thread
 def ytdl_confirm(update, context):

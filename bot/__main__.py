@@ -23,7 +23,7 @@ from bot.helper.telegram_helper.message_utils import (editMessage, sendLogFile, 
 from bot.modules import (authorize, bot_settings, bt_select, cancel_mirror,
                          category_select, clone, count, delete, drive_list,
                          eval, mirror_leech, mirror_status, rmdb, rss,
-                         save_message, search, shell, users_settings, ytdlp)
+                         save_message, search, shell, users_settings, ytdlp, anonymous)
 
 if path.exists('.git'):
     last_commit = check_output(["git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'"], shell=True).decode()

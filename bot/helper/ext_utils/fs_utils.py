@@ -16,7 +16,7 @@ from magic import Magic
 from PIL import Image
 
 from bot import (DOWNLOAD_DIR, LOGGER, MAX_SPLIT_SIZE, app, aria2, config_dict,
-                 get_client)
+                 get_client, user_data)
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.telegraph_helper import telegraph
 
@@ -137,8 +137,11 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
         dirpath = f"{dirpath}/splited_files_mltb"
         if not ospath.exists(dirpath):
             mkdir(dirpath)
-    parts = ceil(size/config_dict['LEECH_SPLIT_SIZE'])
-    if config_dict['EQUAL_SPLITS'] and not inLoop:
+    user_id = listener.message.from_user.id
+    user_dict = user_data.get(user_id, False)
+    leech_split_size = (user_dict and user_dict.get('split_size')) or config_dict['LEECH_SPLIT_SIZE']
+    parts = ceil(size/leech_split_size)
+    if ((user_dict and user_dict.get('equal_splits')) or config_dict['EQUAL_SPLITS']) and not inLoop:
         split_size = ceil(size/parts) + 1000
     if get_media_streams(path)[0]:
         duration = get_media_info(path)[0]

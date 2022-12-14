@@ -1,17 +1,19 @@
-from requests import get as rget
-from threading import Thread
 from html import escape
-from urllib.parse import quote
-from telegram.ext import CommandHandler, CallbackQueryHandler
 from json import loads as jsonloads
+from threading import Thread
+from urllib.parse import quote
 
-from bot import dispatcher, LOGGER, config_dict, get_client
-from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
-from bot.helper.ext_utils.telegraph_helper import telegraph
-from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.bot_commands import BotCommands
+from requests import get as rget
+from telegram.ext import CallbackQueryHandler, CommandHandler
+
+from bot import LOGGER, config_dict, dispatcher, get_client
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
+from bot.helper.ext_utils.telegraph_helper import telegraph
+from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
+from bot.helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.message_utils import (anno_checker,
+                                                      editMessage, sendMessage)
 
 PLUGINS = []
 SITES = None
@@ -41,6 +43,10 @@ def initiate_search_tools():
             SITES = None
 
 def torser(update, context):
+    if update.message.sender_chat:
+        update.message.from_user.id = anno_checker(update.message)
+        if not update.message.from_user.id:
+            return
     user_id = update.message.from_user.id
     buttons = ButtonMaker()
     SEARCH_PLUGINS = config_dict['SEARCH_PLUGINS']

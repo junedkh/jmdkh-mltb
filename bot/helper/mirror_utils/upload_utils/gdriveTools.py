@@ -4,13 +4,12 @@ from logging import ERROR, getLogger
 from os import listdir, makedirs
 from os import path as ospath
 from os import remove
-from pickle import dump as pdump
 from pickle import load as pload
+from random import randrange
 from re import search as re_search
 from time import time
 from urllib.parse import parse_qs, urlparse
 
-from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -21,8 +20,7 @@ from tenacity import (RetryError, retry, retry_if_exception_type,
 
 from bot import (CATEGORY_IDS, CATEGORY_INDEXS, DRIVES_IDS, DRIVES_NAMES,
                  GLOBAL_EXTENSION_FILTER, INDEX_URLS, SHORTENERES, config_dict)
-from bot.helper.ext_utils.bot_utils import (get_readable_file_size,
-                                            setInterval)
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, setInterval
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.shortener import short_url
 from bot.helper.ext_utils.telegraph_helper import telegraph
@@ -87,6 +85,8 @@ class GoogleDriveHelper:
         credentials = None
         if config_dict['USE_SERVICE_ACCOUNTS']:
             globals()['SERVICE_ACCOUNTS_NUMBER'] = len(listdir("accounts"))
+            if self.__sa_count == 0:
+                self.__service_account_index = randrange(SERVICE_ACCOUNTS_NUMBER)
             LOGGER.info(f"Authorizing with {self.__service_account_index}.json service account")
             credentials = service_account.Credentials.from_service_account_file(
                 f'accounts/{self.__service_account_index}.json',
@@ -95,8 +95,6 @@ class GoogleDriveHelper:
             LOGGER.info("Authorize with token.pickle")
             with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
                 credentials = pload(f)
-            if credentials and not credentials.valid and credentials.expired and credentials.refresh_token:
-                self.__refreshToken(credentials)
         else:
             LOGGER.error('token.pickle not found!')
         return build('drive', 'v3', credentials=credentials, cache_discovery=False)
@@ -109,16 +107,8 @@ class GoogleDriveHelper:
                 LOGGER.info("Authorize with token.pickle")
                 with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
                     credentials = pload(f)
-                if credentials and not credentials.valid and credentials.expired and credentials.refresh_token:
-                    self.__refreshToken(credentials)
                 return build('drive', 'v3', credentials=credentials, cache_discovery=False)
         return None
-
-    def __refreshToken(self, credentials):
-        LOGGER.warning('Your token is expired! Refreshing Token...')
-        credentials.refresh(Request())
-        with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:
-            pdump(credentials, token)
 
     def __switchServiceAccount(self):
         if self.__service_account_index == SERVICE_ACCOUNTS_NUMBER - 1:

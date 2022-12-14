@@ -8,11 +8,17 @@ from bot.helper.ext_utils.bot_utils import (get_readable_time, is_gdrive_link,
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import deleteMessage, sendMessage
+from bot.helper.telegram_helper.message_utils import (anno_checker,
+                                                      deleteMessage,
+                                                      sendMessage)
 
 
 @new_thread
 def countNode(update, context):
+    if update.message.sender_chat:
+        update.message.from_user.id = anno_checker(update.message)
+        if not update.message.from_user.id:
+            return
     reply_to = update.message.reply_to_message
     link = ''
     if len(context.args) == 1:
