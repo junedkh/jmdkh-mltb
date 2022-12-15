@@ -191,7 +191,7 @@ def get_readable_message():
         bmsg += f"\n<b>DL</b>: {get_readable_file_size(dl_speed)}/s | <b>UL</b>: {get_readable_file_size(up_speed)}/s"
         if STATUS_LIMIT and tasks > STATUS_LIMIT:
             return _get_readable_message_btns(msg, bmsg)
-        return msg + bmsg, ""
+        return msg + bmsg, None
 
 
 def _get_readable_message_btns(msg, bmsg):
