@@ -27,7 +27,7 @@ from bot.helper.mirror_utils.download_utils.telegram_downloader import  Telegram
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (anno_checker, chat_restrict,
-                                                      delete_links,
+                                                      delete_links, isAdmin,
                                                       editMessage, forcesub,
                                                       message_filter,
                                                       sendDmMessage,
@@ -110,8 +110,6 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 tag = f"@{reply_to.from_user.username}"
             else:
                 tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
-        if message_filter(bot, message, tag):
-            return
         if len(link) == 0 or not is_url(link) and not is_magnet(link):
             if file_ is None:
                 reply_text = reply_to.text.split(maxsplit=1)[0].strip()
@@ -120,21 +118,24 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
             elif isinstance(file_, list):
                 link = file_[-1].get_file().file_path
             elif not isQbit and file_.mime_type != "application/x-bittorrent":
-                if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
-                    raw_url = file_.file_unique_id
-                    exist = DbManger().check_download(raw_url)
-                    if exist:
-                        _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
-                        delete_links(bot, message)
-                        return sendMessage(_msg, bot, message)
-                if forcesub(bot, message, tag):
-                    return
-                if message.sender_chat:
+                if message.from_user.id in [1087968824, 136817688]:
                     message.from_user.id = anno_checker(message)
                     if not message.from_user.id:
                         return
-                if maxtask and not CustomFilters.owner_query(message.from_user.id) and check_user_tasks(message.from_user.id, maxtask):
-                    return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
+                if not isAdmin(message):
+                    if message_filter(bot, message, tag):
+                        return
+                    if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
+                        raw_url = file_.file_unique_id
+                        exist = DbManger().check_download(raw_url)
+                        if exist:
+                            _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
+                            delete_links(bot, message)
+                            return sendMessage(_msg, bot, message)
+                    if forcesub(bot, message, tag):
+                        return
+                    if (maxtask:= config_dict['USER_MAX_TASKS']) and check_user_tasks(message.from_user.id, maxtask):
+                        return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
                 link = 'telegram_file'
                 listener = [bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url]
                 extras = [link, name, ratio, seed_time, c_index, time()]
@@ -194,23 +195,24 @@ Number should be always before |newname or pswd:
 4. Commands that start with <b>qb</b> are ONLY for torrents.
 '''
         return sendMessage(help_msg.format_map({'cmd': BotCommands.MirrorCommand[0]}), bot, message)
-    if message_filter(bot, message, tag):
-        return
-    if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
-        raw_url = extract_link(link, tfile)
-        exist = DbManger().check_download(raw_url)
-        if exist:
-            _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
-            delete_links(bot, message)
-            return sendMessage(_msg, bot, message)
-    if forcesub(bot, message, tag):
-        return
-    if message.sender_chat:
+    if message.from_user.id in [1087968824, 136817688]:
         message.from_user.id = anno_checker(message)
         if not message.from_user.id:
             return
-    if maxtask and not CustomFilters.owner_query(message.from_user.id) and check_user_tasks(message.from_user.id, maxtask):
-        return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
+    if not isAdmin(message):
+        if message_filter(bot, message, tag):
+            return
+        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
+            raw_url = extract_link(link, tfile)
+            exist = DbManger().check_download(raw_url)
+            if exist:
+                _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
+                delete_links(bot, message)
+                return sendMessage(_msg, bot, message)
+        if forcesub(bot, message, tag):
+            return
+        if (maxtask:= config_dict['USER_MAX_TASKS']) and check_user_tasks(message.from_user.id, maxtask):
+            return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
     listener = [bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url]
     extras = [link, name, ratio, seed_time, c_index, time()]
     if len(CATEGORY_NAMES) > 1 and not isLeech :
@@ -237,11 +239,12 @@ Number should be always before |newname or pswd:
 @new_thread
 def _auto_start_dl(msg, msg_id, time_out):
     sleep(time_out)
-    if msg_id in btn_listener:
-        info = btn_listener[msg_id]
-        del btn_listener[msg_id]
-        editMessage("Timed out! Task has been started.", msg)
-        start_mirror_leech(info[1], info[0])
+    if msg_id not in btn_listener:
+        return
+    info = btn_listener[msg_id]
+    del btn_listener[msg_id]
+    start_mirror_leech(info[1], info[0])
+    editMessage("Timed out! Task has been started.", msg)
 
 def start_mirror_leech(extra, s_listener):
     bot = s_listener[0]
@@ -356,10 +359,9 @@ def mir_confirm(update, context):
     data = query.data
     data = data.split()
     msg_id = int(data[2])
-    try:
-        listnerInfo = btn_listener[msg_id]
-    except KeyError:
+    if msg_id not in btn_listener:
         return editMessage('<b>Download has been cancelled or started already</b>', message)
+    listnerInfo = btn_listener[msg_id]
     listener = listnerInfo[0]
     extra = listnerInfo[1]
     if user_id != listener[1].from_user.id and not CustomFilters.owner_query(user_id):

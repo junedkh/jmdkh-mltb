@@ -190,24 +190,21 @@ def sendLogMessage(text, bot, message, forward=False):
         LOGGER.error(str(e))
         return
 
+def isAdmin(message):
+    if message.chat.type != message.chat.PRIVATE:
+        member = message.chat.get_member(message.from_user.id)
+        return member.status in [member.ADMINISTRATOR, member.CREATOR] or member.is_anonymous
+
 def forcesub(bot, message, tag):
     if not (FSUB_IDS := config_dict['FSUB_IDS']):
-        return
-    if message.chat.type != 'supergroup':
-        return
-    if message.from_user.username == "Channel_Bot":
-        return sendMessage('You cannot use bot as a channel', bot, message)
-    user_id = message.from_user.id
-    member = message.chat.get_member(user_id)
-    if member.status in ["administrator", "creator"] or member.username == 'GroupAnonymousBot':
         return
     join_button = {}
     for channel_id in FSUB_IDS.split():
         if not str(channel_id).startswith('-100'):
             continue
         chat = bot.get_chat(channel_id)
-        member = chat.get_member(user_id)
-        if member.status in ["left", "kicked"] :
+        member = chat.get_member(message.from_user.id)
+        if member.status in [member.LEFT, member.KICKED] :
             join_button[chat.title] = chat.link or chat.invite_link
     if join_button:
         btn = ButtonMaker()
@@ -217,11 +214,6 @@ def forcesub(bot, message, tag):
 
 def message_filter(bot, message, tag):
     if not config_dict['ENABLE_MESSAGE_FILTER']:
-        return
-    if message.chat.type != 'supergroup':
-        return
-    member = message.chat.get_member(message.from_user.id)
-    if member.status in ["administrator", "creator"] or member.username == 'GroupAnonymousBot':
         return
     _msg = ''
     if message.reply_to_message:
@@ -241,12 +233,8 @@ def message_filter(bot, message, tag):
 def chat_restrict(message):
     if not config_dict['ENABLE_CHAT_RESTRICT']:
         return
-    if message.chat.type != 'supergroup':
-        return
-    member = message.chat.get_member(message.from_user.id)
-    if member.status in ["administrator", "creator"] or member.username == 'GroupAnonymousBot':
-        return
-    message.chat.restrict_member(message.from_user.id, ChatPermissions(), int(time() + 60))
+    if not isAdmin(message):
+        message.chat.restrict_member(message.from_user.id, ChatPermissions(), int(time() + 60))
 
 def delete_links(bot, message):
     if config_dict['DELETE_LINKS']:
@@ -255,16 +243,22 @@ def delete_links(bot, message):
         deleteMessage(bot, message)
 
 def anno_checker(message):
+    user_id = message.from_user.id
+    if user_id == 1087968824:
+        _msg = "Group Anonymous Admin"
+    elif user_id == 136817688:
+        _msg = "Channel"
     msg_id = message.message_id
     btn_listener[msg_id] = [True, None]
     buttons = ButtonMaker()
-    buttons.sbutton('Anno', f'verify {msg_id}')
-    sendMessage('Anno Verification', message.bot, message, buttons.build_menu(1))
-    from_user = None
+    buttons.sbutton('Verify', f'verify yes {msg_id}')
+    buttons.sbutton('Cancel', f'verify no {msg_id}')
+    sendMessage(f'{_msg} Verification\nIf you hit Verify! Your username and id will expose in bot logs!', message.bot, message, buttons.build_menu(2))
+    user_id = None
     start_time = time()
-    while btn_listener[msg_id][0] and time() - start_time <= 10:
+    while btn_listener[msg_id][0] and time() - start_time <= 7:
         if btn_listener[msg_id][1]:
-            from_user = btn_listener[msg_id][1]
+            user_id = btn_listener[msg_id][1]
             break
     del btn_listener[msg_id]
-    return from_user
+    return user_id

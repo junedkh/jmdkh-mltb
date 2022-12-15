@@ -21,7 +21,7 @@ from bot.helper.telegram_helper.message_utils import (anno_checker,
                                                       chat_restrict,
                                                       delete_links,
                                                       editMessage, forcesub,
-                                                      message_filter,
+                                                      isAdmin, message_filter,
                                                       sendDmMessage,
                                                       sendLogMessage,
                                                       sendMessage)
@@ -38,6 +38,7 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
     index = 1
     link = ''
     c_index = 0
+    raw_url = None
     args = mssg.split(maxsplit=2)
     if len(args) > 1:
         for x in args:
@@ -118,25 +119,25 @@ You can always add video quality from yt-dlp api options.
 Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L178'>FILE</a>.
         """
         return sendMessage(help_msg.format_map({'cmd': BotCommands.YtdlCommand[0], 'fmg': '{"ffmpeg": ["-threads", "4"]}'}), bot, message)
-    if message_filter(bot, message, tag):
-        return
-    if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
-        raw_url = extract_link(link)
-        exist = DbManger().check_download(raw_url)
-        if exist:
-            _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
-            delete_links(bot, message)
-            return sendMessage(_msg, bot, message)
-    if forcesub(bot, message, tag):
-        return
-    if message.sender_chat:
+    if message.from_user.id in [1087968824, 136817688]:
         message.from_user.id = anno_checker(message)
         if not message.from_user.id:
             return
-    maxtask = config_dict['USER_MAX_TASKS']
-    if maxtask and not CustomFilters.owner_query(message.from_user.id) and check_user_tasks(message.from_user.id, maxtask):
-        return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
-    listener = [bot, message, isZip, isLeech, pswd, tag, link]
+    if not isAdmin(message):
+        if message_filter(bot, message, tag):
+            return
+        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
+            raw_url = extract_link(link)
+            exist = DbManger().check_download(raw_url)
+            if exist:
+                _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
+                delete_links(bot, message)
+                return sendMessage(_msg, bot, message)
+        if forcesub(bot, message, tag):
+            return
+        if (maxtask:= config_dict['USER_MAX_TASKS']) and check_user_tasks(message.from_user.id, maxtask):
+            return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
+    listener = [bot, message, isZip, isLeech, pswd, tag, link, raw_url]
     extra = [name, opt, qual, select, c_index, time()]
     if len(CATEGORY_NAMES) > 1 and not isLeech:
         if checked:= check_buttons():
@@ -194,10 +195,9 @@ def select_format(update, context):
     msg = query.message
     data = data.split(" ")
     task_id = int(data[1])
-    try:
-        task_info = listener_dict[task_id]
-    except:
+    if task_id not in listener_dict:
         return editMessage("This is an old task", msg)
+    task_info = listener_dict[task_id]
     uid = task_info[1]
     if user_id != uid and not CustomFilters.owner_query(user_id):
         return query.answer(text="This task is not for you!", show_alert=True)
@@ -256,9 +256,10 @@ def _mdisk(link, name):
 
 def _auto_cancel(msg, task_id):
     sleep(120)
-    if task_id in listener_dict:
-        del listener_dict[task_id]
-        editMessage('Timed out! Task has been cancelled.', msg)
+    if task_id not in listener_dict:
+        return
+    del listener_dict[task_id]
+    editMessage('Timed out! Task has been cancelled.', msg)
 
 def start_ytdlp(extra, ytdlp_listener):
     bot = ytdlp_listener[0]
@@ -268,6 +269,7 @@ def start_ytdlp(extra, ytdlp_listener):
     pswd = ytdlp_listener[4]
     tag = ytdlp_listener[5]
     link = ytdlp_listener[6]
+    raw_url = ytdlp_listener[7]
     name = extra[0]
     opt = extra[1]
     qual = extra[2]
@@ -287,7 +289,9 @@ def start_ytdlp(extra, ytdlp_listener):
     else:
         dmMessage = None
     logMessage = None if isLeech else sendLogMessage(link, bot, message)
-    listener = MirrorLeechListener(bot, message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, raw_url=link, c_index=c_index, dmMessage=dmMessage, logMessage=logMessage)
+    listener = MirrorLeechListener(bot, message, isZip, isLeech=isLeech, pswd=pswd,
+                                tag=tag, raw_url=raw_url, c_index=c_index,
+                                dmMessage=dmMessage, logMessage=logMessage)
     listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
     if isZip:
         listener.mode += ' as Zip'
@@ -392,11 +396,12 @@ def start_ytdlp(extra, ytdlp_listener):
 @new_thread
 def _auto_start_dl(msg, msg_id, time_out):
     sleep(time_out)
-    if msg_id in btn_listener:
-        info = btn_listener[msg_id]
-        del btn_listener[msg_id]
-        editMessage("Timed out! Task has been started.", msg)
-        start_ytdlp(info[0], info[1])
+    if msg_id not in btn_listener:
+        return
+    info = btn_listener[msg_id]
+    del btn_listener[msg_id]
+    start_ytdlp(info[0], info[1])
+    editMessage("Timed out! Task has been started.", msg)
 
 @new_thread
 def ytdl_confirm(update, context):
@@ -406,10 +411,9 @@ def ytdl_confirm(update, context):
     data = query.data
     data = data.split()
     msg_id = int(data[2])
-    try:
-        listnerInfo = btn_listener[msg_id]
-    except KeyError:
+    if msg_id not in btn_listener:
         return editMessage('<b>Download has been cancelled or started already</b>', message)
+    listnerInfo = btn_listener[msg_id]
     extra = listnerInfo[0]
     listener = listnerInfo[1]
     if user_id != listener[1].from_user.id and not CustomFilters.owner_query(user_id):

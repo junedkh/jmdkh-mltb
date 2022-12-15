@@ -43,35 +43,36 @@ def initiate_search_tools():
             SITES = None
 
 def torser(update, context):
-    if update.message.sender_chat:
-        update.message.from_user.id = anno_checker(update.message)
-        if not update.message.from_user.id:
+    message = update.message
+    if message.from_user.id in [1087968824, 136817688]:
+        message.from_user.id = anno_checker(message)
+        if not message.from_user.id:
             return
-    user_id = update.message.from_user.id
+    user_id = message.from_user.id
     buttons = ButtonMaker()
     SEARCH_PLUGINS = config_dict['SEARCH_PLUGINS']
     if SITES is None and not SEARCH_PLUGINS:
-        sendMessage("No API link or search PLUGINS added for this function", context.bot, update.message)
+        sendMessage("No API link or search PLUGINS added for this function", context.bot, message)
     elif len(context.args) == 0 and SITES is None:
-        sendMessage("Send a search key along with command", context.bot, update.message)
+        sendMessage("Send a search key along with command", context.bot, message)
     elif len(context.args) == 0:
         buttons.sbutton('Trending', f"torser {user_id} apitrend")
         buttons.sbutton('Recent', f"torser {user_id} apirecent")
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
         button = buttons.build_menu(2)
-        sendMessage("Send a search key along with command", context.bot, update.message, button)
+        sendMessage("Send a search key along with command", context.bot, message, button)
     elif SITES is not None and SEARCH_PLUGINS:
         buttons.sbutton('Api', f"torser {user_id} apisearch")
         buttons.sbutton('Plugins', f"torser {user_id} plugin")
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
         button = buttons.build_menu(2)
-        sendMessage('Choose tool to search:', context.bot, update.message, button)
+        sendMessage('Choose tool to search:', context.bot, message, button)
     elif SITES is not None:
         button = __api_buttons(user_id, "apisearch")
-        sendMessage('Choose site to search:', context.bot, update.message, button)
+        sendMessage('Choose site to search:', context.bot, message, button)
     else:
         button = __plugin_buttons(user_id)
-        sendMessage('Choose site to search:', context.bot, update.message, button)
+        sendMessage('Choose site to search:', context.bot, message, button)
 
 def torserbut(update, context):
     query = update.callback_query

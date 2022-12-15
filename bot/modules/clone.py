@@ -26,7 +26,7 @@ from bot.helper.telegram_helper.message_utils import (anno_checker,
                                                       delete_links,
                                                       deleteMessage,
                                                       editMessage, forcesub,
-                                                      message_filter,
+                                                      isAdmin, message_filter,
                                                       sendDmMessage,
                                                       sendLogMessage,
                                                       sendMessage,
@@ -41,6 +41,7 @@ def _clone(message, bot):
     multi = 0
     msg_id = message.message_id
     c_index = 0
+    raw_url = None
     if len(args) > 1:
         link = args[1].strip()
         if link.strip().isdigit():
@@ -61,26 +62,26 @@ def _clone(message, bot):
         msg_ = 'Send Gdrive link along with command or by replying to the link by command' \
             f'\n\n<b>Multi links only by replying to first link/file:</b>\n<code>/{BotCommands.CloneCommand}</code> 10(number of links/files)'
         return sendMessage(msg_, bot, message)
-    if message_filter(bot, message, tag):
-        return
-    if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
-        raw_url = extract_link(link)
-        exist = DbManger().check_download(raw_url)
-        if exist:
-            _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
-            delete_links(bot, message)
-            return sendMessage(_msg, bot, message)
-    if forcesub(bot, message, tag):
-        return
-    if message.sender_chat:
+    if message.from_user.id in [1087968824, 136817688]:
         message.from_user.id = anno_checker(message)
         if not message.from_user.id:
             return
-    maxtask = config_dict['USER_MAX_TASKS']
-    if maxtask and not CustomFilters.owner_query(message.from_user.id) and check_user_tasks(message.from_user.id, maxtask):
-        return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
+    if not isAdmin(message):
+        if message_filter(bot, message, tag):
+            return
+        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
+            raw_url = extract_link(link)
+            exist = DbManger().check_download(raw_url)
+            if exist:
+                _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
+                delete_links(bot, message)
+                return sendMessage(_msg, bot, message)
+        if forcesub(bot, message, tag):
+            return
+        if (maxtask:= config_dict['USER_MAX_TASKS']) and check_user_tasks(message.from_user.id, maxtask):
+            return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
     time_out = 30
-    listner = [bot, message, c_index, time_out, time(), tag, link]
+    listner = [bot, message, c_index, time_out, time(), tag, link, raw_url]
     if len(CATEGORY_NAMES) > 1:
         if checked:= check_buttons():
             return sendMessage(checked, bot, message)
@@ -105,13 +106,12 @@ def _clone(message, bot):
 @new_thread
 def _auto_start_dl(msg, msg_id, time_out):
     sleep(time_out)
-    try:
-        info = btn_listener[msg_id]
-        del btn_listener[msg_id]
-        editMessage("Timed out! Task has been started.", msg)
-        start_clone(info)
-    except:
-        pass
+    if msg_id not in btn_listener:
+        return
+    info = btn_listener[msg_id]
+    del btn_listener[msg_id]
+    editMessage("Timed out! Task has been started.", msg)
+    start_clone(info)
 
 @new_thread
 def start_clone(listner):
@@ -120,6 +120,7 @@ def start_clone(listner):
     c_index = listner[2]
     tag = listner[5]
     link = listner[6]
+    raw_url = listner[7]
     logMessage = sendLogMessage(link, bot, message)
     if config_dict['ENABLE_DM'] and message.chat.type != 'private':
         dmMessage = sendDmMessage(link, bot, message)
@@ -155,6 +156,8 @@ def start_clone(listner):
         drive = GoogleDriveHelper(name, user_id=message.from_user.id)
         gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
         clone_status = CloneStatus(drive, size, message, gid, mode)
+        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS'] and raw_url:
+            DbManger().add_download_url(raw_url, tag)
         with download_dict_lock:
             download_dict[message.message_id] = clone_status
         sendStatusMessage(message, bot)
@@ -199,6 +202,8 @@ def start_clone(listner):
                 buttons.buildbutton("🔐 Drive Link", links_dict['durl'], 'header')
             sendMessage(f"{result + cc}", bot, logMessage, buttons.build_menu(2))
         delete_links(bot, message)
+        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS'] and raw_url:
+            DbManger().remove_download(raw_url)
         LOGGER.info(f"Cloning Done: {name}")
 
 @new_thread
@@ -209,10 +214,9 @@ def clone_confirm(update, context):
     data = query.data
     data = data.split()
     msg_id = int(data[2])
-    try:
-        listnerInfo = btn_listener[msg_id]
-    except KeyError:
+    if msg_id not in btn_listener:
         return editMessage('<b>Download has been cancelled or started already</b>', message)
+    listnerInfo = btn_listener[msg_id]
     if user_id != listnerInfo[1].from_user.id:
         return query.answer("You are not the owner of this download", show_alert=True)
     elif data[1] == 'scat':

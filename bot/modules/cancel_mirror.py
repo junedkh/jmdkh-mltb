@@ -14,33 +14,34 @@ from bot.helper.telegram_helper.message_utils import (anno_checker,
 
 
 def cancel_mirror(update, context):
-    if update.message.sender_chat:
-        update.message.from_user.id = anno_checker(update.message)
-        if not update.message.from_user.id:
+    message = update.message
+    if message.from_user.id in [1087968824, 136817688]:
+        message.from_user.id = anno_checker(message)
+        if not message.from_user.id:
             return
-    user_id = update.message.from_user.id
+    user_id = message.from_user.id
     if len(context.args) == 1:
         gid = context.args[0]
         dl = getDownloadByGid(gid)
         if not dl:
-            sendMessage(f"GID: <code>{gid}</code> Not Found.", context.bot, update.message)
+            sendMessage(f"GID: <code>{gid}</code> Not Found.", context.bot, message)
             return
-    elif mirror_message:= update.message.reply_to_message:
+    elif mirror_message:= message.reply_to_message:
         with download_dict_lock:
             dl = download_dict.get(mirror_message.message_id)
         if not dl:
-            return sendMessage("This is not an active task!", context.bot, update.message)
+            return sendMessage("This is not an active task!", context.bot, message)
     elif len(context.args) == 0:
         msg = f"Reply to an active Command message which was used to start the download" \
               f" or send <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
-        return sendMessage(msg, context.bot, update.message)
+        return sendMessage(msg, context.bot, message)
 
     if not CustomFilters.owner_query(user_id) and dl.message.from_user.id != user_id:
-        sendMessage("This task is not for you!", context.bot, update.message)
+        sendMessage("This task is not for you!", context.bot, message)
         return
 
     if dl.status() == MirrorStatus.STATUS_CONVERTING:
-        sendMessage("Converting... Can't cancel this task!", context.bot, update.message)
+        sendMessage("Converting... Can't cancel this task!", context.bot, message)
         return
 
     dl.download().cancel_download()
@@ -82,13 +83,18 @@ def cancel_all(status, info):
         editMessage(f"{user_id} Don't have any active task!", msg)
 
 def cancell_all_buttons(update, context):
+    message = update.message
     with download_dict_lock:
         count = len(download_dict)
     if count == 0:
-        return sendMessage("No active tasks!", context.bot, update.message)
-    user_id = update.message.from_user.id
+        return sendMessage("No active tasks!", context.bot, message)
+    if message.from_user.id in [1087968824, 136817688]:
+        message.from_user.id = anno_checker(message)
+        if not message.from_user.id:
+            return
+    user_id = message.from_user.id
     if CustomFilters.owner_query(user_id):
-        if reply_to:= update.message.reply_to_message:
+        if reply_to:= message.reply_to_message:
             user_id = reply_to.from_user.id
         elif context.args and context.args[0].lower() == 'all':
             user_id = None
@@ -96,10 +102,10 @@ def cancell_all_buttons(update, context):
             try:
                 user_id = int(context.args[0])
             except:
-                return sendMessage("Invalid Argument! Send Userid or reply", context.bot, update.message)
+                return sendMessage("Invalid Argument! Send Userid or reply", context.bot, message)
     if user_id and not getAllDownload('all', user_id):
-        return sendMessage(f"{user_id} Don't have any active task!", context.bot, update.message)
-    msg_id = update.message.message_id
+        return sendMessage(f"{user_id} Don't have any active task!", context.bot, message)
+    msg_id = message.message_id
     buttons = ButtonMaker()
     buttons.sbutton("Downloading", f"cnall {MirrorStatus.STATUS_DOWNLOADING} {msg_id}")
     buttons.sbutton("Uploading", f"cnall {MirrorStatus.STATUS_UPLOADING} {msg_id}")
@@ -110,8 +116,8 @@ def cancell_all_buttons(update, context):
     buttons.sbutton("Splitting", f"cnall {MirrorStatus.STATUS_SPLITTING} {msg_id}")
     buttons.sbutton("All", f"cnall all {msg_id}")
     buttons.sbutton("Close", f"cnall close {msg_id}")
-    bmgs = sendMessage('Choose tasks to cancel. You have 30 Secounds only', context.bot, update.message, buttons.build_menu(2))
-    cancel_listener[msg_id] = [user_id, bmgs, update.message]
+    bmgs = sendMessage('Choose tasks to cancel. You have 30 Secounds only', context.bot, message, buttons.build_menu(2))
+    cancel_listener[msg_id] = [user_id, bmgs, message]
     Thread(target=_auto_cancel, args=(bmgs, msg_id)).start()
 
 def cancel_all_update(update, context):

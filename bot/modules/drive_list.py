@@ -25,19 +25,20 @@ def common_btn(isRecur, msg_id):
     return buttons.build_menu(3)
 
 def list_buttons(update, context):
-    if update.message.sender_chat:
-        update.message.from_user.id = anno_checker(update.message)
-        if not update.message.from_user.id:
+    message = update.message
+    if message.from_user.id in [1087968824, 136817688]:
+        message.from_user.id = anno_checker(message)
+        if not message.from_user.id:
             return
-    user_id = update.message.from_user.id
-    msg_id = update.message.message_id
+    user_id = message.from_user.id
+    msg_id = message.message_id
     if len(context.args) == 0:
-        return sendMessage('Send a search key along with command', context.bot, update.message)
+        return sendMessage('Send a search key along with command', context.bot, message)
     isRecur = False
     button = common_btn(isRecur, msg_id)
-    query = update.message.text.split(" ", maxsplit=1)[1]
+    query = message.text.split(" ", maxsplit=1)[1]
     list_listener[msg_id] = [user_id, query, isRecur]
-    sendMessage('Choose option to list.', context.bot, update.message, button)
+    sendMessage('Choose option to list.', context.bot, message, button)
 
 def select_type(update, context):
     query = update.callback_query

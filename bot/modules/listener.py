@@ -66,7 +66,7 @@ class MirrorLeechListener:
             pass
 
     def onDownloadStart(self):
-        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
+        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS'] and self.raw_url:
             DbManger().add_download_url(self.raw_url, self.tag)
         if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             DbManger().add_incomplete_task(self.message.chat.id, self.message.link, self.tag)
@@ -230,7 +230,7 @@ class MirrorLeechListener:
             drive.upload(up_name, self.c_index)
 
     def onUploadComplete(self, link: str, size, files, folders, typ, name: str):
-        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
+        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS'] and self.raw_url:
             DbManger().remove_download(self.raw_url)
         if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             DbManger().rm_complete_task(self.message.link)
@@ -346,7 +346,7 @@ class MirrorLeechListener:
             self.clean()
         else:
             update_all_messages()
-        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
+        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS'] and self.raw_url:
             DbManger().remove_download(self.raw_url)
         if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             DbManger().rm_complete_task(self.message.link)

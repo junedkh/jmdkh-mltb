@@ -13,7 +13,7 @@ from bot.helper.telegram_helper.message_utils import (anno_checker,
 
 
 def change_category(update, context):
-    if update.message.sender_chat:
+    if update.message.from_user.id in [1087968824, 136817688]:
         update.message.from_user.id = anno_checker(update.message)
         if not update.message.from_user.id:
             return
