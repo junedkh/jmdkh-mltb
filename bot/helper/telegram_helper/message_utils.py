@@ -175,9 +175,12 @@ def sendLogMessage(text, bot, message):
         LOGGER.error(str(e))
         return
 
-def isAdmin(message):
+def isAdmin(message, user_id=None):
     if message.chat.type != message.chat.PRIVATE:
-        member = message.chat.get_member(message.from_user.id)
+        if user_id:
+            member = message.chat.get_member(user_id)
+        else:
+            member = message.chat.get_member(message.from_user.id)
         return member.status in [member.ADMINISTRATOR, member.CREATOR] or member.is_anonymous
 
 def forcesub(bot, message, tag):
@@ -229,14 +232,15 @@ def delete_links(bot, message):
 
 def anno_checker(message):
     user_id = message.from_user.id
+    msg_id = message.message_id
+    buttons = ButtonMaker()
     if user_id == 1087968824:
         _msg = "Group Anonymous Admin"
+        buttons.sbutton('Verify Anonymous', f'verify admin {msg_id}')
     elif user_id == 136817688:
         _msg = "Channel"
-    msg_id = message.message_id
+        buttons.sbutton('Verify Channel', f'verify channel {msg_id}')
     btn_listener[msg_id] = [True, None]
-    buttons = ButtonMaker()
-    buttons.sbutton('Verify', f'verify yes {msg_id}')
     buttons.sbutton('Cancel', f'verify no {msg_id}')
     sendMessage(f'{_msg} Verification\nIf you hit Verify! Your username and id will expose in bot logs!', message.bot, message, buttons.build_menu(2))
     user_id = None

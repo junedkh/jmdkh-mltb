@@ -4,7 +4,7 @@ from telegram.ext import CommandHandler
 
 from bot import LOGGER, dispatcher
 from bot.helper.ext_utils.bot_utils import is_gdrive_link
-from bot.helper.mirror_utils.upload_utils import gdriveTools
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (auto_delete_message,
@@ -21,7 +21,7 @@ def deletefile(update, context):
         link = ''
     if is_gdrive_link(link):
         LOGGER.info(link)
-        drive = gdriveTools.GoogleDriveHelper()
+        drive = GoogleDriveHelper()
         msg = drive.deletefile(link)
     else:
         msg = 'Send Gdrive link along with command or by replying to the link by command'

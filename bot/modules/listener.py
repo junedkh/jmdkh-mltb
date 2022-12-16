@@ -334,10 +334,8 @@ class MirrorLeechListener:
         if self.newDir:
             clean_download(self.newDir)
         with download_dict_lock:
-            try:
+            if self.uid in download_dict:
                 del download_dict[self.uid]
-            except Exception as e:
-                LOGGER.error(str(e))
             count = len(download_dict)
         if msg:
             msg += f"\n<b>Upload</b>: {self.mode}"

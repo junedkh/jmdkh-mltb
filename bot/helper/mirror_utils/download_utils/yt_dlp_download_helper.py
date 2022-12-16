@@ -241,20 +241,20 @@ class YoutubeDLHelper:
         if not limit_exceeded and (MAX_PLAYLIST:= config_dict['MAX_PLAYLIST']) \
                             and (self.is_playlist and self.listener.isLeech):
             if self.playlist_count > MAX_PLAYLIST:
-                limit_exceeded = f'Leech Playlist limit is {MAX_PLAYLIST}\n \
-                                    Your Playlist is {self.playlist_count}'
+                limit_exceeded = f'Leech Playlist limit is {MAX_PLAYLIST}\n'
+                limit_exceeded += f'Your Playlist is {self.playlist_count}'
         if not limit_exceeded and (YTDLP_LIMIT:= config_dict['YTDLP_LIMIT']):
             limit = YTDLP_LIMIT * 1024**3
             if self.__size > limit:
-                limit_exceeded = f'Ytldp limit is {get_readable_file_size(limit)}\nYour \
-                {"Playlist" if self.is_playlist else "Video"} size is \
-                {get_readable_file_size(self.__size)}'
+                limit_exceeded = f'Ytldp limit is {get_readable_file_size(limit)}\n'
+                limit_exceeded+= f'Your {"Playlist" if self.is_playlist else "Video"} size\n'
+                limit_exceeded+= f'is {get_readable_file_size(self.__size)}'
         if not limit_exceeded and (LEECH_LIMIT:= config_dict['LEECH_LIMIT']) and self.listener.isLeech:
             limit = LEECH_LIMIT * 1024**3
             if self.__size > limit:
-                limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}\nYour \
-                {"Playlist" if self.is_playlist else "Video"} size is \
-                {get_readable_file_size(self.__size)}'
+                limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}\n'
+                limit_exceeded += f'Your {"Playlist" if self.is_playlist else "Video"} size\n'
+                limit_exceeded += f'is {get_readable_file_size(self.__size)}'
         if limit_exceeded:
             return self.__onDownloadError(limit_exceeded)
         if STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']:
