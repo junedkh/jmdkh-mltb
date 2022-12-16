@@ -32,6 +32,17 @@ def add_gd_download(link, path, listener, newname):
             if gmsg:
                 msg = "File/Folder is already available in Drive.\nHere are the search results:"
                 return sendMessage(msg, listener.bot, listener.message, button)
+    limit_exceeded = ''
+    if not limit_exceeded and (GDRIVE_LIMIT:= config_dict['GDRIVE_LIMIT']):
+        limit = GDRIVE_LIMIT * 1024**3
+        if size > limit:
+            limit_exceeded = f'Google drive limit is {get_readable_file_size(limit)}'
+    if not limit_exceeded and (LEECH_LIMIT:= config_dict['LEECH_LIMIT']) and listener.isLeech:
+        limit = LEECH_LIMIT * 1024**3
+        if size > limit:
+            limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}'
+    if limit_exceeded:
+        return sendMessage(f'{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}.', listener.bot, listener.message)
     if STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']:
         arch = any([listener.extract, listener.isZip])
         acpt = check_storage_threshold(size, arch)
@@ -39,19 +50,6 @@ def add_gd_download(link, path, listener, newname):
             msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
             msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
             return sendMessage(msg, listener.bot, listener.message)
-    if GDRIVE_LIMIT:= config_dict['GDRIVE_LIMIT']:
-        limit = GDRIVE_LIMIT * 1024**3
-        mssg = f'Google drive limit is {get_readable_file_size(limit)}'
-        if size > limit:
-            msg = f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}.'
-            return sendMessage(msg, listener.bot, listener.message)
-    if LEECH_LIMIT:= config_dict['LEECH_LIMIT']:
-        if listener.isLeech:
-            limit = LEECH_LIMIT * 1024**3
-            mssg = f'Leech limit is {get_readable_file_size(limit)}'
-            if size > limit:
-                msg = f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}.'
-                return sendMessage(msg, listener.bot, listener.message)
     LOGGER.info(f"Download Name: {name}")
     drive = GoogleDriveHelper(name, path, size, listener, listener.message.from_user.id)
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))

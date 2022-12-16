@@ -272,16 +272,15 @@ def start_mirror_leech(extra, s_listener):
         gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive folder/file\n\n"
         gmsg += f"Use /{BotCommands.LeechCommand} to upload on telegram"
         return sendMessage(gmsg, bot, message)
-    tfile = link == 'telegram_file' or "https://api.telegram.org/file/" in link
-    if config_dict['ENABLE_DM'] and message.chat.type != 'private':
+    if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
         if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
             return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
-        dmMessage = sendDmMessage(link, bot, message, tfile)
+        dmMessage = sendDmMessage(link, bot, message)
         if not dmMessage:
             return
     else:
         dmMessage = None
-    logMessage = None if isLeech else sendLogMessage(link, bot, message, tfile)
+    logMessage = None if (isLeech and message.chat.type == message.chat.SUPERGROUP) else sendLogMessage(link, bot, message)
     listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url, c_index, dmMessage, logMessage)
     listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
     if isZip:

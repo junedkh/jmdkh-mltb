@@ -280,7 +280,7 @@ def start_ytdlp(extra, ytdlp_listener):
     if isLeech and config_dict['DISABLE_LEECH']:
         delete_links(bot, message)
         return sendMessage('Locked!', bot, message)
-    if config_dict['ENABLE_DM'] and message.chat.type != 'private':
+    if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
         if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
             return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
         dmMessage = sendDmMessage(link, bot, message)
@@ -288,7 +288,7 @@ def start_ytdlp(extra, ytdlp_listener):
             return
     else:
         dmMessage = None
-    logMessage = None if isLeech else sendLogMessage(link, bot, message)
+    logMessage = None if (isLeech and message.chat.type == message.chat.SUPERGROUP) else sendLogMessage(link, bot, message)
     listener = MirrorLeechListener(bot, message, isZip, isLeech=isLeech, pswd=pswd,
                                 tag=tag, raw_url=raw_url, c_index=c_index,
                                 dmMessage=dmMessage, logMessage=logMessage)

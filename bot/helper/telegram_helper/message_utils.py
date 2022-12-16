@@ -146,21 +146,13 @@ def sendStatusMessage(msg, bot):
         if not Interval:
             Interval.append(setInterval(config_dict['DOWNLOAD_STATUS_UPDATE_INTERVAL'], update_all_messages))
 
-def sendDmMessage(text, bot, message, forward=False):
+def sendDmMessage(text, bot, message):
     try:
-        if forward:
-            return bot.forward_message(message.from_user.id,
-                            from_chat_id=message.chat_id,
-                            message_id=message.reply_to_message.message_id,
-                            disable_notification=False)
-        return bot.sendMessage(message.from_user.id,
-                            reply_to_message_id=message.message_id,
-                            disable_notification=False,
-                            text=text)
+        return bot.sendMessage(message.from_user.id, disable_notification=False, text=message.link)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendDmMessage(text, bot, message, forward)
+        return sendDmMessage(text, bot, message)
     except Unauthorized:
         buttons = ButtonMaker()
         buttons.buildbutton("Start", f"{bot.link}?start=start")
@@ -170,22 +162,15 @@ def sendDmMessage(text, bot, message, forward=False):
         LOGGER.error(str(e))
         return
 
-def sendLogMessage(text, bot, message, forward=False):
+def sendLogMessage(text, bot, message):
     if not (log_chat := config_dict['LOG_CHAT']):
         return
     try:
-        if forward:
-            return bot.forward_message(log_chat,
-                            from_chat_id=message.chat_id,
-                            message_id=message.reply_to_message.message_id,
-                            disable_notification=False)
-        return bot.sendMessage(log_chat,
-                            disable_notification=False,
-                            text=text)
+        return bot.sendMessage(log_chat, disable_notification=False, text=message.link)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendLogMessage(text, bot, message, forward)
+        return sendLogMessage(text, bot, message)
     except Exception as e:
         LOGGER.error(str(e))
         return

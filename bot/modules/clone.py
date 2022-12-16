@@ -121,13 +121,13 @@ def start_clone(listner):
     tag = listner[5]
     link = listner[6]
     raw_url = listner[7]
-    logMessage = sendLogMessage(link, bot, message)
-    if config_dict['ENABLE_DM'] and message.chat.type != 'private':
+    if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
         dmMessage = sendDmMessage(link, bot, message)
         if not dmMessage:
             return
     else:
         dmMessage = None
+    logMessage = None if message.chat.type == message.chat.SUPERGROUP else sendLogMessage(link, bot, message)
     gd = GoogleDriveHelper(user_id=message.from_user.id)
     res, size, name, files = gd.helper(link)
     if res != "":

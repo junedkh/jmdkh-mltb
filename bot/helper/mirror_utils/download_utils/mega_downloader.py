@@ -181,6 +181,18 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
                     folder_api.removeListener(mega_listener)
                 return
     size = api.getSize(node)
+    limit_exceeded = ''
+    if not limit_exceeded and (MEGA_LIMIT:= config_dict['MEGA_LIMIT']):
+        limit = MEGA_LIMIT * 1024**3
+        if size > limit:
+            limit_exceeded = f'Failed, Mega limit is {get_readable_file_size(limit)}'
+    if not limit_exceeded and (LEECH_LIMIT:= config_dict['LEECH_LIMIT']) and listener.isLeech:
+        limit = LEECH_LIMIT * 1024**3
+        if size > limit:
+            limit_exceeded = f'Failed, Leech limit is {get_readable_file_size(limit)}'
+    if limit_exceeded:
+        listener.ismega.delete()
+        return sendMessage(f"{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}.", listener.bot, listener.message)
     if STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']:
         arch = any([listener.isZip, listener.extract])
         acpt = check_storage_threshold(size, arch)
@@ -189,19 +201,6 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
             msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
             listener.ismega.delete()
             return sendMessage(msg, listener.bot, listener.message)
-    if MEGA_LIMIT:= config_dict['MEGA_LIMIT']:
-        limit = MEGA_LIMIT * 1024**3
-        msg3 = f'Failed, Mega limit is {get_readable_file_size(limit)}'
-        if size > limit:
-            listener.ismega.delete()
-            return sendMessage(f"{msg3}.\nYour File/Folder size is {get_readable_file_size(size)}.", listener.bot, listener.message)    
-    if LEECH_LIMIT:= config_dict['LEECH_LIMIT']:
-        if listener.isLeech:
-            limit = LEECH_LIMIT * 1024**3
-            msg3 = f'Leech limit is {get_readable_file_size(limit)}'
-            if size > limit:
-                listener.ismega.delete()
-                return sendMessage(f"{msg3}.\nYour File/Folder size is {get_readable_file_size(size)}.", listener.bot, listener.message)
     with download_dict_lock:
         download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
     listener.onDownloadStart()

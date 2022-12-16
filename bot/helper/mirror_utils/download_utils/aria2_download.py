@@ -61,45 +61,51 @@ def __onDownloadStarted(api, gid):
                             listener.onDownloadError('File/Folder already available in Drive.\n')
                             api.remove([download], force=True, files=True, clean=True)
                             return sendMessage("Here are the search results:", listener.bot, listener.message, button)
-        sleep(1)
-        dl = getDownloadByGid(gid)
-        if dl and hasattr(dl, 'listener'):
-            listener = dl.listener()
-        else:
-            return
-        download = api.get_download(gid)
-        size = download.total_length
-        if STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']:
-            arch = any([listener.isZip, listener.extract])
-            acpt = check_storage_threshold(size, arch, True)
-            if not acpt:
-                msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
-                msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
-                listener.onDownloadError(msg)
+        if any([(DIRECT_LIMIT:= config_dict['DIRECT_LIMIT']),
+                (TORRENT_LIMIT:= config_dict['TORRENT_LIMIT']),
+                (LEECH_LIMIT:= config_dict['LEECH_LIMIT']),
+                (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD'])]):
+            sleep(1)
+            dl = getDownloadByGid(gid)
+            if dl and hasattr(dl, 'listener'):
+                listener = dl.listener()
+            else:
+                return
+            download = api.get_download(gid)
+            if download.total_length == 0:
+                start_time = time()
+                while time() - start_time <= 15:
+                    download = api.get_download(gid)
+                    download = download.live
+                    if download.followed_by_ids:
+                        download = api.get_download(download.followed_by_ids[0])
+                    if download.total_length > 0:
+                        break
+            limit_exceeded = ''
+            size = download.total_length
+            if DIRECT_LIMIT and not download.is_torrent and not limit_exceeded:
+                limit = DIRECT_LIMIT * 1024**3
+                if size > limit:
+                    limit_exceeded = f'Direct limit is {get_readable_file_size(limit)}'
+            if TORRENT_LIMIT and download.is_torrent and not limit_exceeded:
+                limit = TORRENT_LIMIT * 1024**3
+                if size > limit:
+                    limit_exceeded = f'Torrent limit is {get_readable_file_size(limit)}'
+            if LEECH_LIMIT and listener.isLeech and not limit_exceeded:
+                limit = LEECH_LIMIT * 1024**3
+                if size > limit:
+                    limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}'
+            if limit_exceeded:
+                listener.onDownloadError(f'{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}')
                 api.remove([download], force=True, files=True, clean=True)
                 return
-        if LEECH_LIMIT:= config_dict['LEECH_LIMIT']:
-            if listener.isLeech:
-                limit = LEECH_LIMIT * 1024**3
-                mssg = f'Leech limit is {get_readable_file_size(limit)}'
-                if size > limit:
-                    listener.onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
-                    api.remove([download], force=True, files=True, clean=True)
-                    return
-        if DIRECT_LIMIT:= config_dict['DIRECT_LIMIT']:
-            if not download.is_torrent:
-                limit = DIRECT_LIMIT * 1024**3
-                mssg = f'Direct limit is {get_readable_file_size(limit)}'
-                if size > limit:
-                    listener.onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
-                    api.remove([download], force=True, files=True, clean=True)
-                    return
-        if TORRENT_LIMIT:= config_dict['TORRENT_LIMIT']:
-            if download.is_torrent:
-                limit = TORRENT_LIMIT * 1024**3
-                mssg = f'Torrent limit is {get_readable_file_size(limit)}'
-                if size > limit:
-                    listener.onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
+            if STORAGE_THRESHOLD:
+                arch = any([listener.isZip, listener.extract])
+                acpt = check_storage_threshold(size, arch, True)
+                if not acpt:
+                    msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
+                    msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
+                    listener.onDownloadError(msg)
                     api.remove([download], force=True, files=True, clean=True)
                     return
     except Exception as e:

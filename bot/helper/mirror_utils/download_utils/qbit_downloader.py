@@ -187,6 +187,18 @@ def __size_checked(client, tor):
     try:
         listener = download.listener()
         size = tor.size
+        limit_exceeded = ''
+        if not limit_exceeded and (TORRENT_LIMIT:= config_dict['TORRENT_LIMIT']):
+            limit = TORRENT_LIMIT * 1024**3
+            if size > limit:
+                limit_exceeded = f'Torrent limit is {get_readable_file_size(limit)}'
+        if not limit_exceeded and (LEECH_LIMIT:= config_dict['LEECH_LIMIT']) and listener.isLeech:
+            limit = LEECH_LIMIT * 1024**3
+            if size > limit:
+                limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}'
+        if limit_exceeded:
+            fmsg = f"{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}"
+            return __onDownloadError(fmsg, client, tor)
         if STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']:
             arch = any([listener.isZip, listener.extract])
             acpt = check_storage_threshold(size, arch)
@@ -194,19 +206,6 @@ def __size_checked(client, tor):
                 msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
                 msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
                 return __onDownloadError(msg, client, tor)
-        if TORRENT_LIMIT:= config_dict['TORRENT_LIMIT']:
-            limit = TORRENT_LIMIT * 1024**3
-            mssg = f'Torrent limit is {get_readable_file_size(limit)}'
-            if size > limit:
-                fmsg = f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}"
-                return __onDownloadError(fmsg, client, tor)
-        if LEECH_LIMIT:= config_dict['LEECH_LIMIT']:
-            if listener.isLeech:
-                limit = LEECH_LIMIT * 1024**3
-                mssg = f'Leech limit is {get_readable_file_size(limit)}'
-                if size > limit:
-                    fmsg = f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}"
-                    return __onDownloadError(fmsg, client, tor)
     except:
         pass
 

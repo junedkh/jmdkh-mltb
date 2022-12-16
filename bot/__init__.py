@@ -514,14 +514,17 @@ def aria2c_init():
     try:
         info("Initializing Aria2c")
         link = "https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent"
-        dire = DOWNLOAD_DIR.rstrip("/")
-        aria2.add_uris([link], {'dir': dire})
-        sleep(3)
-        downloads = aria2.get_downloads()
-        sleep(15)
-        for dl in downloads:
-            if dl:
-                dl.remove(True, True)
+        dl = aria2.add_uris([link], {'dir': DOWNLOAD_DIR.rstrip("/")})
+        atepmt = 0
+        while atepmt <= 3:
+            dl = dl.live
+            if dl.followed_by_ids:
+                dl = dl.api.get_download(dl.followed_by_ids[0])
+                dl = dl.live
+            atepmt+= 1
+            sleep(8)
+        if dl.remove(True, True):
+            info('Aria2c initializing finished')
     except Exception as e:
         error(f"Aria2c initializing error: {e}")
 
