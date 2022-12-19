@@ -319,17 +319,17 @@ class MirrorLeechListener:
                 return
         self._clean_update()
 
-    def onDownloadError(self, error):
+    def onDownloadError(self, error, button=None):
         error = error.replace('<', ' ').replace('>', ' ')
         msg = f"{self.tag} your download has been stopped due to: {error}\n<b>Elapsed</b>: {get_readable_time(time() - self.message.date.timestamp())}"
-        self._clean_update(msg)
+        self._clean_update(msg, button)
 
     def onUploadError(self, error):
         e_str = error.replace('<', '').replace('>', '')
         msg = f"{self.tag} {e_str}\n<b>Elapsed</b>: {get_readable_time(time() - self.message.date.timestamp())}"
         self._clean_update(msg)
 
-    def _clean_update(self, msg=None):
+    def _clean_update(self, msg=None, button=None):
         clean_download(self.dir)
         if self.newDir:
             clean_download(self.newDir)
@@ -339,7 +339,7 @@ class MirrorLeechListener:
             count = len(download_dict)
         if msg:
             msg += f"\n<b>Upload</b>: {self.mode}"
-            sendMessage(msg, self.bot, self.message)
+            sendMessage(msg, self.bot, self.message, button)
         if count == 0:
             self.clean()
         else:

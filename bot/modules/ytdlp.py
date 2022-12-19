@@ -139,7 +139,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
     listener = [bot, message, isZip, isLeech, pswd, tag, link, raw_url]
     extra = [name, opt, qual, select, c_index, time()]
-    if len(CATEGORY_NAMES) > 1 and not isLeech:
+    if len(CATEGORY_NAMES) > 1 and not isLeech and multi == 0:
         if checked:= check_buttons():
             return sendMessage(checked, bot, message)
         time_out = 30

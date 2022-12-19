@@ -136,14 +136,14 @@ def __remove_torrent(client, hash_):
         if hash_ in SIZE_CHECKED:
             SIZE_CHECKED.remove(hash_)
 
-def __onDownloadError(err, client, tor):
+def __onDownloadError(err, client, tor, button=None):
     LOGGER.info(f"Cancelling Download: {tor.name}")
     client.torrents_pause(torrent_hashes=tor.hash)
     sleep(0.3)
     download = getDownloadByGid(tor.hash[:12])
     try:
         listener = download.listener()
-        listener.onDownloadError(err)
+        listener.onDownloadError(err, button)
     except:
         pass
     __remove_torrent(client, tor.hash)
@@ -177,8 +177,8 @@ def __stop_duplicate(client, tor):
             if qbname:
                 qbmsg, button = GoogleDriveHelper().drive_list(qbname, True)
                 if qbmsg:
-                    __onDownloadError("File/Folder is already available in Drive.\n", client, tor)
-                    return sendMessage("Here are the search results:", listener.bot, listener.message, button)
+                    __onDownloadError("File/Folder is already available in Drive.\nHere are the search results:\n", client, tor, button)
+                    return
     except:
         pass
 

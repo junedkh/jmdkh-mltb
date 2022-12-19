@@ -58,9 +58,9 @@ def __onDownloadStarted(api, gid):
                     if sname:
                         smsg, button = GoogleDriveHelper().drive_list(sname, True)
                         if smsg:
-                            listener.onDownloadError('File/Folder already available in Drive.\n')
+                            listener.onDownloadError('File/Folder already available in Drive.\nHere are the search results:\n', button)
                             api.remove([download], force=True, files=True, clean=True)
-                            return sendMessage("Here are the search results:", listener.bot, listener.message, button)
+                            return
         if any([(DIRECT_LIMIT:= config_dict['DIRECT_LIMIT']),
                 (TORRENT_LIMIT:= config_dict['TORRENT_LIMIT']),
                 (LEECH_LIMIT:= config_dict['LEECH_LIMIT']),

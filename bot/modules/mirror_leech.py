@@ -215,7 +215,7 @@ Number should be always before |newname or pswd:
             return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
     listener = [bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url]
     extras = [link, name, ratio, seed_time, c_index, time()]
-    if len(CATEGORY_NAMES) > 1 and not isLeech :
+    if len(CATEGORY_NAMES) > 1 and not isLeech and multi == 0:
         if checked:= check_buttons():
             return sendMessage(checked, bot, message)
         btn_listener[msg_id] = [listener, extras, time_out]

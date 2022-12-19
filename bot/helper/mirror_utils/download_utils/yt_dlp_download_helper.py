@@ -140,9 +140,9 @@ class YoutubeDLHelper:
     def __onDownloadComplete(self):
         self.listener.onDownloadComplete()
 
-    def __onDownloadError(self, error):
+    def __onDownloadError(self, error, button=None):
         self.__is_cancelled = True
-        self.listener.onDownloadError(error)
+        self.listener.onDownloadError(error, button)
 
     def extractMetaData(self, link, name, args, get_info=False):
         if args:
@@ -235,8 +235,8 @@ class YoutubeDLHelper:
             if sname:
                 smsg, button = GoogleDriveHelper().drive_list(name, True, True)
                 if smsg:
-                    self.__onDownloadError('File/Folder already available in Drive.\nHere are the search results:')
-                    return sendMessage(msg, self.listener.bot, self.listener.message, button)
+                    self.__onDownloadError('File/Folder already available in Drive.\nHere are the search results:\n', button)
+                    return
         limit_exceeded = ''
         if not limit_exceeded and (MAX_PLAYLIST:= config_dict['MAX_PLAYLIST']) \
                             and (self.is_playlist and self.listener.isLeech):
