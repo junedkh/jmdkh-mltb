@@ -268,9 +268,9 @@ def start_mirror_leech(extra, s_listener):
         return sendMessage('Locked!', bot, message)
     if not isZip and not extract and not isLeech and is_gdrive_link(link):
         gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
-        gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
-        gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive folder/file\n\n"
-        gmsg += f"Use /{BotCommands.LeechCommand} to upload on telegram"
+        gmsg += f"Use /{BotCommands.ZipMirrorCommand[0]} to make zip of Google Drive folder\n\n"
+        gmsg += f"Use /{BotCommands.UnzipMirrorCommand[0]} to extracts Google Drive archive folder/file\n\n"
+        gmsg += f"Use /{BotCommands.LeechCommand[0]} to upload on telegram"
         return sendMessage(gmsg, bot, message)
     if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
         if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
