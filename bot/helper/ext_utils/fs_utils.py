@@ -275,17 +275,16 @@ def get_media_streams(path):
 
     return is_video, is_audio
 
-def check_storage_threshold(size: int, arch=False, alloc=False):
-    STORAGE_THRESHOLD = config_dict['STORAGE_THRESHOLD']
+def check_storage_threshold(size, threshold, arch=False, alloc=False):
     if not alloc:
         if not arch:
-            if disk_usage(DOWNLOAD_DIR).free - size < STORAGE_THRESHOLD * 1024**3:
+            if disk_usage(DOWNLOAD_DIR).free - size < threshold:
                 return False
-        elif disk_usage(DOWNLOAD_DIR).free - (size * 2) < STORAGE_THRESHOLD * 1024**3:
+        elif disk_usage(DOWNLOAD_DIR).free - (size * 2) < threshold:
             return False
     elif not arch:
-        if disk_usage(DOWNLOAD_DIR).free < STORAGE_THRESHOLD * 1024**3:
+        if disk_usage(DOWNLOAD_DIR).free < threshold:
             return False
-    elif disk_usage(DOWNLOAD_DIR).free - size < STORAGE_THRESHOLD * 1024**3:
+    elif disk_usage(DOWNLOAD_DIR).free - size < threshold:
         return False
     return True

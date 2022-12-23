@@ -25,15 +25,15 @@ from bot.modules import (authorize, bot_settings, bt_select, cancel_mirror,
                          eval, mirror_leech, mirror_status, rmdb, rss,
                          save_message, search, shell, users_settings, ytdlp, anonymous)
 
-if path.exists('.git'):
-    last_commit = check_output(["git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'"], shell=True).decode()
-else:
-    last_commit = 'No UPSTREAM_REPO'
 
 def stats(update, context):
     total, used, free, disk = disk_usage('/')
     swap = swap_memory()
     memory = virtual_memory()
+    if path.exists('.git'):
+        last_commit = check_output(["git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'"], shell=True).decode()
+    else:
+        last_commit = 'No UPSTREAM_REPO'
     stats = f'<b>Commit Date</b>: {last_commit}\n\n'\
             f'<b>Bot Uptime</b>: {get_readable_time(time() - botStartTime)}\n'\
             f'<b>OS Uptime</b>: {get_readable_time(time() - boot_time())}\n\n'\

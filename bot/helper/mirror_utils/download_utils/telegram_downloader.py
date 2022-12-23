@@ -105,10 +105,11 @@ class TelegramDownloadHelper:
                         msg = "File/Folder is already available in Drive.\nHere are the search results:"
                         return sendMessage(msg, self.__listener.bot, self.__listener.message, button)
                 if STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']:
+                    limit = STORAGE_THRESHOLD * 1024**3
                     arch = any([self.__listener.isZip, self.__listener.extract])
-                    acpt = check_storage_threshold(size, arch)
+                    acpt = check_storage_threshold(size, limit, arch)
                     if not acpt:
-                        msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
+                        msg = f'You must leave {get_readable_file_size(limit)} free storage.'
                         msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
                         return sendMessage(msg, self.__listener.bot, self.__listener.message)
                 self.__onDownloadStart(name, size, media.file_unique_id)

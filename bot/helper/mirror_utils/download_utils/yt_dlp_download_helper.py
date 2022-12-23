@@ -227,6 +227,14 @@ class YoutubeDLHelper:
         self.extractMetaData(link, name, args)
         if self.__is_cancelled:
             return
+        if self.is_playlist:
+            self.opts['outtmpl'] = f"{dpath}/{self.name}/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"
+        elif not args:
+            self.opts['outtmpl'] = f"{dpath}/{self.name}"
+        else:
+            folder_name = self.name.rsplit('.', 1)[0]
+            self.opts['outtmpl'] = f"{dpath}/{folder_name}/{self.name}"
+            self.name = folder_name
         if config_dict['STOP_DUPLICATE'] and self.name != 'NA' and not self.listener.isLeech:
             LOGGER.info('Checking File/Folder if already in Drive...')
             sname = self.name
@@ -238,6 +246,12 @@ class YoutubeDLHelper:
                     self.__onDownloadError('File/Folder already available in Drive.\nHere are the search results:\n', button)
                     return
         limit_exceeded = ''
+        if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
+            limit = STORAGE_THRESHOLD * 1024**3
+            acpt = check_storage_threshold(self.__size, limit, self.listener.isZip)
+            if not acpt:
+                limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
+                limit_exceeded += f'\nYour File/Folder size is {get_readable_file_size(self.__size)}'
         if not limit_exceeded and (MAX_PLAYLIST:= config_dict['MAX_PLAYLIST']) \
                             and (self.is_playlist and self.listener.isLeech):
             if self.playlist_count > MAX_PLAYLIST:
@@ -257,20 +271,6 @@ class YoutubeDLHelper:
                 limit_exceeded += f'is {get_readable_file_size(self.__size)}'
         if limit_exceeded:
             return self.__onDownloadError(limit_exceeded)
-        if STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']:
-            acpt = check_storage_threshold(self.__size, self.listener.isZip)
-            if not acpt:
-                msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
-                msg += f'\nYour File/Folder size is {get_readable_file_size(self.__size)}'
-                return self.__onDownloadError(msg)
-        if self.is_playlist:
-            self.opts['outtmpl'] = f"{dpath}/{self.name}/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"
-        elif not args:
-            self.opts['outtmpl'] = f"{dpath}/{self.name}"
-        else:
-            folder_name = self.name.rsplit('.', 1)[0]
-            self.opts['outtmpl'] = f"{dpath}/{folder_name}/{self.name}"
-            self.name = folder_name
         self.__download(link, dpath)
 
     def cancel_download(self):

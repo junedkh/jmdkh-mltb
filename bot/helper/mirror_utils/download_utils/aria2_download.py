@@ -81,17 +81,23 @@ def __onDownloadStarted(api, gid):
                         download = api.get_download(download.followed_by_ids[0])
                     if download.total_length > 0:
                         break
-            limit_exceeded = ''
             size = download.total_length
-            if DIRECT_LIMIT and not download.is_torrent and not limit_exceeded:
+            limit_exceeded = ''
+            if not limit_exceeded and STORAGE_THRESHOLD:
+                limit = STORAGE_THRESHOLD * 1024**3
+                arch = any([listener.isZip, listener.extract])
+                acpt = check_storage_threshold(size, limit, arch, True)
+                if not acpt:
+                    limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
+            if not limit_exceeded and DIRECT_LIMIT and not download.is_torrent:
                 limit = DIRECT_LIMIT * 1024**3
                 if size > limit:
                     limit_exceeded = f'Direct limit is {get_readable_file_size(limit)}'
-            if TORRENT_LIMIT and download.is_torrent and not limit_exceeded:
+            if not limit_exceeded and TORRENT_LIMIT and download.is_torrent:
                 limit = TORRENT_LIMIT * 1024**3
                 if size > limit:
                     limit_exceeded = f'Torrent limit is {get_readable_file_size(limit)}'
-            if LEECH_LIMIT and listener.isLeech and not limit_exceeded:
+            if not limit_exceeded and LEECH_LIMIT and listener.isLeech:
                 limit = LEECH_LIMIT * 1024**3
                 if size > limit:
                     limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}'
@@ -99,15 +105,6 @@ def __onDownloadStarted(api, gid):
                 listener.onDownloadError(f'{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}')
                 api.remove([download], force=True, files=True, clean=True)
                 return
-            if STORAGE_THRESHOLD:
-                arch = any([listener.isZip, listener.extract])
-                acpt = check_storage_threshold(size, arch, True)
-                if not acpt:
-                    msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
-                    msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
-                    listener.onDownloadError(msg)
-                    api.remove([download], force=True, files=True, clean=True)
-                    return
     except Exception as e:
         LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")
 

@@ -33,6 +33,12 @@ def add_gd_download(link, path, listener, newname):
                 msg = "File/Folder is already available in Drive.\nHere are the search results:"
                 return sendMessage(msg, listener.bot, listener.message, button)
     limit_exceeded = ''
+    if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
+        limit = STORAGE_THRESHOLD * 1024**3
+        arch = any([listener.extract, listener.isZip])
+        acpt = check_storage_threshold(size, limit, arch)
+        if not acpt:
+            limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
     if not limit_exceeded and (GDRIVE_LIMIT:= config_dict['GDRIVE_LIMIT']):
         limit = GDRIVE_LIMIT * 1024**3
         if size > limit:
@@ -43,13 +49,6 @@ def add_gd_download(link, path, listener, newname):
             limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}'
     if limit_exceeded:
         return sendMessage(f'{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}.', listener.bot, listener.message)
-    if STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']:
-        arch = any([listener.extract, listener.isZip])
-        acpt = check_storage_threshold(size, arch)
-        if not acpt:
-            msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
-            msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
-            return sendMessage(msg, listener.bot, listener.message)
     LOGGER.info(f"Download Name: {name}")
     drive = GoogleDriveHelper(name, path, size, listener, listener.message.from_user.id)
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
