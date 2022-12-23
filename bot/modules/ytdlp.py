@@ -6,7 +6,7 @@ from requests import request
 from telegram.ext import CallbackQueryHandler, CommandHandler
 
 from bot import (CATEGORY_NAMES, DATABASE_URL, DOWNLOAD_DIR, IS_USER_SESSION,
-                 btn_listener, config_dict, dispatcher, user_data)
+                 LOGGER, btn_listener, config_dict, dispatcher, user_data)
 from bot.helper.ext_utils.bot_utils import (check_buttons, check_user_tasks,
                                             get_category_btns,
                                             get_readable_file_size, is_url,
@@ -234,6 +234,7 @@ def select_format(update, context):
                 b_name, tbr = qual.split('|')
                 qual = task_info[6][b_name][tbr][1]
         ydl = YoutubeDLHelper(listener)
+        LOGGER.info(f"Downloading with YT-DLP: {link}")
         Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, opt)).start()
         query.message.delete()
     del listener_dict[task_id]
@@ -317,6 +318,7 @@ def start_ytdlp(extra, ytdlp_listener):
             qual = config_dict['YT_DLP_QUALITY']
     if qual:
         playlist = 'entries' in result
+        LOGGER.info(f"Downloading with YT-DLP: {link}")
         Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{msg_id}', name, qual, playlist, opt)).start()
     else:
         buttons = ButtonMaker()
@@ -325,11 +327,11 @@ def start_ytdlp(extra, ytdlp_listener):
         formats_dict = {}
         if 'entries' in result:
             for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
-                video_format = f"bv*[height<={i}][ext=mp4]+ba[ext=m4a]/b[height<={i}]"
+                video_format = f"bv*[height<=?{i}][ext=mp4]+ba[ext=m4a]/b[height<=?{i}]"
                 b_data = f"{i}|mp4"
                 formats_dict[b_data] = video_format
                 buttons.sbutton(f"{i}-mp4", f"qu {msg_id} {b_data} t")
-                video_format = f"bv*[height<={i}][ext=webm]+ba/b[height<={i}]"
+                video_format = f"bv*[height<=?{i}][ext=webm]+ba/b[height<=?{i}]"
                 b_data = f"{i}|webm"
                 formats_dict[b_data] = video_format
                 buttons.sbutton(f"{i}-webm", f"qu {msg_id} {b_data} t")
@@ -342,6 +344,7 @@ def start_ytdlp(extra, ytdlp_listener):
             bmsg = sendMessage('Choose Playlist Videos Quality:', bot, message, YTBUTTONS)
         else:
             formats = result.get('formats')
+            is_m4a = False
             if formats is not None:
                 for frmt in formats:
                     if frmt.get('tbr'):
@@ -355,18 +358,21 @@ def start_ytdlp(extra, ytdlp_listener):
                         else:
                             size = 0
 
-                        if frmt.get('height'):
+                        if frmt.get('video_ext') == 'none' and frmt.get('acodec') != 'none':
+                            if frmt.get('audio_ext') == 'm4a':
+                                is_m4a = True
+                            b_name = f"{frmt['acodec']}-{frmt['ext']}"
+                            v_format = f"ba[format_id={format_id}]"
+                        elif frmt.get('height'):
                             height = frmt['height']
                             ext = frmt['ext']
                             fps = frmt['fps'] if frmt.get('fps') else ''
                             b_name = f"{height}p{fps}-{ext}"
                             if ext == 'mp4':
-                                v_format = f"bv*[format_id={format_id}]+ba[ext=m4a]/b[height={height}]"
+                                ba_ext = '[ext=m4a]' if is_m4a else ''
+                                v_format = f"bv*[format_id={format_id}]+ba{ba_ext}/b[height=?{height}]"
                             else:
-                                v_format = f"bv*[format_id={format_id}]+ba/b[height={height}]"
-                        elif frmt.get('video_ext') == 'none' and frmt.get('acodec') != 'none':
-                            b_name = f"{frmt['acodec']}-{frmt['ext']}"
-                            v_format = f"ba[format_id={format_id}]"
+                                v_format = f"bv*[format_id={format_id}]+ba/b[height=?{height}]"
                         else:
                             continue
 

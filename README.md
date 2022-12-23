@@ -22,8 +22,9 @@ In each single file there is a major change from base code, it's almost totaly d
 - Splitting
 - Thumbnail for each user
 - Set upload as document or as media for each user
-- 4GB file upload with premium account
+- 4GB file upload with premium account also available in DM feature
 - Upload all files to specific superGroup/channel.
+- Leech Split size and equal split size settings for each user
 ### Google
 - Stop duplicates for all tasks except yt-dlp tasks
 - Download from Google Drive
@@ -31,7 +32,6 @@ In each single file there is a major change from base code, it's almost totaly d
 - Search in multiple Drive folder/TeamDrive
 - Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method). Based on [Sreeraj](https://github.com/SVR666) searchX-bot.
 - Use Token.pickle if file not found with Service Account, for all Gdrive functions
-- List result in html file instead of telegraph or telegram message to avoid limits by [junedkh](https://github.com/junedkh)
 - Random Service Account for each task
 ### Status
 - Clone Status
@@ -47,6 +47,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Switch from youtube-dl to yt-dlp and fix all conflicts
 - Yt-dlp quality buttons
 - Ability to use specific yt-dlp option for each task
+- Custom default video quality for each user
 - Fix download progress
 ### Database
 - Mongo Database support
@@ -71,11 +72,13 @@ In each single file there is a major change from base code, it's almost totaly d
 - Docker image support for linux `amd64, arm64/v8, arm/v7, s390x`
 - Edit variables and overwrite the private files while bot running
 - Update bot at startup and with restart command using `UPSTREAM_REPO`
+- Improve Telegraph. Based on [Sreeraj](https://github.com/SVR666) loaderX-bot.
 - Mirror/Leech/Watch/Clone/Count/Del by reply
 - Mirror/Leech/Clone multi links/files with one command
 - Custom name for all links except torrents. For files you should add extension except yt-dlp links
 - Extensions Filter for the files to be uploaded/cloned
 - View Link button. Extra button to open index link in broswer instead of direct download for file
+- Queueing System
 - Almost all repository functions have been improved and many other details can't mention all of them
 - Many bugs have been fixed
 
@@ -195,8 +198,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds. `Str`
 - `EXTENSION_FILTER`: File extensions that won't upload/clone. Separate them by space. `Str`
 - `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and superGroup. Default is `False`. `Bool`
-- `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account). `Str`
-- `YT_DLP_QUALITY`: Default yt-dlp quality. Check all possible formats [HERE](https://github.com/yt-dlp/yt-dlp#filtering-formats). `Str`
+- `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account). `str`
+- `YT_DLP_QUALITY`: Default yt-dlp quality. Check all possible formats [HERE](https://github.com/yt-dlp/yt-dlp#filtering-formats). `str`
 
 ### Update
 - `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your bot from filled repository on each restart. `Str`.
@@ -207,8 +210,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `LEECH_SPLIT_SIZE`: Size of split in bytes. Default is `2GB`. Default is `4GB` if your account is premium. `Str`
 - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
-- `DUMP_CHAT`: Chat ID. Upload files to specific chat. `Str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot id or your id!
-- `USER_SESSION_STRING`: To download/upload from your telegram account. If you own premium account. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: You can't use bot in private chat. Use it with superGroup.
+- `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot id or your id!
+- `USER_SESSION_STRING`: To download/upload from your telegram account. If you own premium account. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: You can't use bot with private message. Use it with superGroup.
 
 ### qBittorrent/Aria2c
 - `BASE_URL`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this format `http://myip:port` (`http` and not `https`). `Str`
@@ -227,6 +230,11 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk). `Str`
 - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account. `Str`
 - `MEGA_PASSWORD`: Password for mega.nz account. `Str`
+
+### Queue System
+- `QUEUE_ALL`: Number of parallel tasks of downloads from (mega, telegram, yt-dlp, gdrive) + all uploads. For example if 20 task added and `QUEUE_ALL` is `8`, then the summation of uploading and downloading tasks are 8 and the rest in queue. `Int`. **NOTE**: if you want to fill `QUEUE_DOWNLOAD` or `QUEUE_UPLOAD`, then `QUEUE_ALL` value must be greater than or equal to the greatest one and less than or equal to summation of `QUEUE_UPLOAD` and `QUEUE_DOWNLOAD`.
+- `QUEUE_DOWNLOAD`: Number of parallel downloading tasks from mega, telegram, yt-dlp and gdrive. `Int`
+- `QUEUE_UPLOAD`: Number of all parallel uploading tasks. `Int`
 
 ### Buttons
 - `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`. Compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. Default is `False`. `Bool`
@@ -333,11 +341,11 @@ sudo docker stop id
 **NOTE**: If you want to use port other than 80, change it in [docker-compose.yml](docker-compose.yml) also.
 
 ```
-sudo apt install -y docker-compose
+sudo apt install docker-compose
 ```
 - Build and run Docker image or to view current running image:
 ```
-sudo docker-compose up -d
+sudo docker-compose up
 ```
 - After editing files with nano for example (nano start.sh):
 ```
@@ -485,7 +493,8 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 5. Press on connect, choose `Allow Acces From Anywhere` and press on `Add IP Address` without editing the ip, then create user.
 6. After creating user press on `Choose a connection`, then press on `Connect your application`. Choose `Driver` **python** and `version` **3.6 or later**.
 7. Copy your `connection string` and replace `<password>` with the password of your user, then press close.
------
+
+------
 
 ## Multi Drive List
 To use list from multi TD/folder. Run driveid.py in your terminal and follow it. It will generate **list_drives.txt** file or u can simply create `list_drives.txt` file in working directory and fill it, check below format:
@@ -499,6 +508,7 @@ TD1 root https://example.dev
 TD2 0AO1JDB1t3i5jUk9PVA https://example.dev
 ```
 -----
+
 ## Multi Category IDs
 
 ![image](https://graph.org/file/d8ed66fcb30116010b252.jpg)
@@ -532,7 +542,7 @@ ouo.io LYT0zBn1
 >exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io, adfoc.us, cutt.ly
 -----
 ### Extra Buttons
-- Four buttons are already added, Drive Link, Index Link, Log and View Link, You can add up to four extra buttons if you don't know what are the below entries.
+- Four buttons are already added, Drive Link, Index Link and View Link, You can add up to four extra buttons if you don't know what are the below entries.
 You can simply create `buttons.txt` file in working directory and fill it, check below format:
 ```
 button_name button_url
@@ -569,51 +579,6 @@ machine example.workers.dev password index_password
 Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts of different hosts can be added each separated by a new line.
 
 -----
-
-## Bot commands to be set in [@BotFather](https://t.me/BotFather)
-
-```
-mirror - or /m Mirror
-zipmirror - or /zm Mirror and upload as zip
-unzipmirror - or /uzm Mirror and extract files
-qbmirror - or /qm Mirror torrent using qBittorrent
-qbzipmirror - or /qzm Mirror torrent and upload as zip using qb
-qbunzipmirror - or /quzm Mirror torrent and extract files using qb
-leech - or /l Leech
-zipleech - or /zl Leech and upload as zip
-unzipleech - or /uzl Leech and extract files
-qbleech - or /ql Leech torrent using qBittorrent
-qbzipleech - or /qzl Leech torrent and upload as zip using qb
-qbunzipleech - or /quzl Leech torrent and extract using qb
-clone - Copy file/folder to Drive
-count - Count file/folder of Drive
-ytdl - or /y Mirror yt-dlp supported link
-ytdlzip - or /yz Mirror yt-dlp supported link as zip
-ytdlleech - or /yl Leech through yt-dlp supported link
-ytdlzipleech - or /yzl Leech yt-dlp support link as zip
-usetting - users settings
-bsetting - bot settings
-status - Get Mirror Status message
-catsel - select Category to upload only mirror
-btsel - select files from torrent
-rsslist - or /rl List all subscribed rss feed info
-rssget - or /rg Get specific No. of links from specific rss feed
-rsssub - or /rs Subscribe new rss feed
-rssunsub - or /rus Unsubscribe rss feed by title
-rssset - or /rst Rss Settings
-list - Search files in Drive
-search - Search for torrents with API
-cancel - Cancel a task
-cancelall - Cancel all tasks
-del - Delete file/folder from Drive
-log - Get the Bot Log
-shell - Run commands in Shell
-restart - Restart the Bot
-stats - Bot Usage Stats
-ping - Ping the Bot
-help - All cmds with description
-```
-------
 
 ## Donations
 

@@ -48,6 +48,10 @@ GLOBAL_EXTENSION_FILTER = ['.aria2']
 user_data = {}
 aria2_options = {}
 qbit_options = {}
+queued_dl = {}
+queued_up = {}
+non_queued_dl = set()
+non_queued_up = set()
 
 try:
     if bool(environ.get('_____REMOVE_THIS_LINE_____')):
@@ -58,6 +62,7 @@ except:
 
 download_dict_lock = Lock()
 status_reply_dict_lock = Lock()
+queue_dict_lock = Lock()
 # Key: update.effective_chat.id
 # Value: telegram.Message
 status_reply_dict = {}
@@ -70,6 +75,11 @@ rss_dict = {}
 # key: msg_id
 # value: [listener, extras, isNeedEngine, time_out]
 btn_listener = {}
+
+if path.exists('pyrogram.session'):
+    remove('pyrogram.session')
+if path.exists('pyrogram.session-journal'):
+    remove('pyrogram.session-journal')
 
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
 if len(BOT_TOKEN) == 0:
@@ -263,6 +273,15 @@ RSS_DELAY = 900 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
 TORRENT_TIMEOUT = environ.get('TORRENT_TIMEOUT', '')
 TORRENT_TIMEOUT = '' if len(TORRENT_TIMEOUT) == 0 else int(TORRENT_TIMEOUT)
 
+QUEUE_ALL = environ.get('QUEUE_ALL', '')
+QUEUE_ALL = '' if len(QUEUE_ALL) == 0 else int(QUEUE_ALL)
+
+QUEUE_DOWNLOAD = environ.get('QUEUE_DOWNLOAD', '')
+QUEUE_DOWNLOAD = '' if len(QUEUE_DOWNLOAD) == 0 else int(QUEUE_DOWNLOAD)
+
+QUEUE_UPLOAD = environ.get('QUEUE_UPLOAD', '')
+QUEUE_UPLOAD = '' if len(QUEUE_UPLOAD) == 0 else int(QUEUE_UPLOAD)
+
 INCOMPLETE_TASK_NOTIFIER = environ.get('INCOMPLETE_TASK_NOTIFIER', '')
 INCOMPLETE_TASK_NOTIFIER = INCOMPLETE_TASK_NOTIFIER.lower() == 'true'
 
@@ -387,6 +406,9 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                 'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                 'MEGA_PASSWORD': MEGA_PASSWORD,
                 'OWNER_ID': OWNER_ID,
+                'QUEUE_ALL': QUEUE_ALL,
+                'QUEUE_DOWNLOAD': QUEUE_DOWNLOAD,
+                'QUEUE_UPLOAD': QUEUE_UPLOAD,
                 'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                 'RSS_CHAT_ID': RSS_CHAT_ID,
                 'RSS_COMMAND': RSS_COMMAND,

@@ -8,16 +8,19 @@ from requests import utils as rutils
 
 from bot import (CATEGORY_INDEXS, DATABASE_URL, DOWNLOAD_DIR, LOGGER,
                  MAX_SPLIT_SIZE, SHORTENERES, Interval, aria2, config_dict,
-                 download_dict, download_dict_lock, status_reply_dict_lock,
-                 user_data)
+                 download_dict, download_dict_lock, non_queued_dl,
+                 non_queued_up, queue_dict_lock, queued_dl, queued_up,
+                 status_reply_dict_lock, user_data)
 from bot.helper.ext_utils.bot_utils import extra_btns, get_readable_time
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.fs_utils import (clean_download, clean_target,
                                            get_base_name, get_path_size,
                                            split_file)
+from bot.helper.ext_utils.queued_starter import start_from_queued
 from bot.helper.ext_utils.shortener import short_url
 from bot.helper.mirror_utils.status_utils.extract_status import ExtractStatus
+from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.mirror_utils.status_utils.split_status import SplitStatus
 from bot.helper.mirror_utils.status_utils.tg_upload_status import TgUploadStatus
 from bot.helper.mirror_utils.status_utils.upload_status import UploadStatus
@@ -54,6 +57,7 @@ class MirrorLeechListener:
         self.c_index = c_index
         self.dmMessage = dmMessage
         self.logMessage = logMessage
+        self.queuedUp = False
 
     def clean(self):
         try:
@@ -72,7 +76,6 @@ class MirrorLeechListener:
             DbManger().add_incomplete_task(self.message.chat.id, self.message.link, self.tag)
 
     def onDownloadComplete(self):
-        user_dict = user_data.get(self.message.from_user.id, False)
         with download_dict_lock:
             download = download_dict[self.uid]
             name = str(download.name()).replace('/', '')
@@ -82,6 +85,11 @@ class MirrorLeechListener:
             name = listdir(self.dir)[-1]
         m_path = f'{self.dir}/{name}'
         size = get_path_size(m_path)
+        with queue_dict_lock:
+            if self.uid in non_queued_dl:
+                non_queued_dl.remove(self.uid)
+        start_from_queued()
+        user_dict = user_data.get(self.message.from_user.id, False)
         if self.isZip:
             if self.seed and self.isLeech:
                 self.newDir = f"{self.dir}10000"
@@ -208,6 +216,31 @@ class MirrorLeechListener:
                             else:
                                 m_size.append(f_size)
                                 o_files.append(file_)
+        up_limit = config_dict['QUEUE_UPLOAD']
+        all_limit = config_dict['QUEUE_ALL']
+        added_to_queue = False
+        with queue_dict_lock:
+            dl = len(non_queued_dl)
+            up = len(non_queued_up)
+            if (all_limit and dl + up >= all_limit and (not up_limit or up >= up_limit)) or (up_limit and up >= up_limit):
+                added_to_queue = True
+                LOGGER.info(f"Added to Queue/Upload: {name}")
+                queued_up[self.uid] = [self]
+        if added_to_queue:
+            with download_dict_lock:
+                download_dict[self.uid] = QueueStatus(name, size, gid, self, 'Up')
+                self.queuedUp = True
+            while self.queuedUp:
+                sleep(1)
+                continue
+            with download_dict_lock:
+                if self.uid not in download_dict.keys():
+                    return
+            LOGGER.info(f'Start from Queued/Upload: {name}')
+        with queue_dict_lock:
+            non_queued_up.add(self.uid)
+
+        if self.isLeech:
             size = get_path_size(up_dir)
             for s in m_size:
                 size = size - s
@@ -269,6 +302,9 @@ class MirrorLeechListener:
             if self.seed:
                 if self.newDir:
                     clean_target(self.newDir)
+                with queue_dict_lock:
+                    if self.uid in non_queued_up:
+                        non_queued_up.remove(self.uid)
                 return
         else:
             if SHORTENERES:
@@ -316,6 +352,9 @@ class MirrorLeechListener:
                     clean_target(f"{self.dir}/{name}")
                 elif self.newDir:
                     clean_target(self.newDir)
+                with queue_dict_lock:
+                    if self.uid in non_queued_up:
+                        non_queued_up.remove(self.uid)
                 return
         self._clean_update()
 
@@ -348,4 +387,16 @@ class MirrorLeechListener:
             DbManger().remove_download(self.raw_url)
         if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             DbManger().rm_complete_task(self.message.link)
+        with queue_dict_lock:
+            if self.uid in queued_dl:
+                del queued_dl[self.uid]
+            if self.uid in non_queued_dl:
+                non_queued_dl.remove(self.uid)
+            if self.uid in queued_up:
+                del queued_up[self.uid]
+            if self.uid in non_queued_up:
+                non_queued_up.remove(self.uid)
+
+        self.queuedUp = False
+        start_from_queued()
         delete_links(self.bot, self.message)

@@ -59,8 +59,8 @@ def _clone(message, bot):
         else:
             tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
     if not is_gdrive_link(link) or (link.strip().isdigit() and multi == 0):
-        msg_ = 'Send Gdrive link along with command or by replying to the link by command' \
-            f'\n\n<b>Multi links only by replying to first link/file:</b>\n<code>/{BotCommands.CloneCommand}</code> 10(number of links/files)'
+        msg_ = "Send Gdrive link along with command or by replying to the link by command\n"
+        msg_ += "\n<b>Multi links only by replying to first link:</b>\n<code>/cmd</code> 10(number of links)"
         return sendMessage(msg_, bot, message)
     if message.from_user.id in [1087968824, 136817688]:
         message.from_user.id = anno_checker(message)

@@ -71,6 +71,9 @@ class TgUploader:
                     sleep(1)
         if self.__listener.seed and not self.__listener.newDir:
             clean_unwanted(self.__path)
+        if self.__total_files == 0:
+            self.__listener.onUploadError('No files to upload. Make sure if you filled USER_SESSION_STRING then you should use supergroup. In case you filled EXTENSION_FILTER then check if all file have this extension')
+            return
         if self.__total_files <= self.__corrupted:
             self.__listener.onUploadError('Files Corrupted. Check logs!')
             return

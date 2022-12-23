@@ -113,6 +113,8 @@ def cancell_all_buttons(update, context):
     buttons.sbutton("Cloning", f"cnall {MirrorStatus.STATUS_CLONING} {msg_id}")
     buttons.sbutton("Extracting", f"cnall {MirrorStatus.STATUS_EXTRACTING} {msg_id}")
     buttons.sbutton("Archiving", f"cnall {MirrorStatus.STATUS_ARCHIVING} {msg_id}")
+    buttons.sbutton("QueuedDl", f"canall {MirrorStatus.STATUS_QUEUEDL}")
+    buttons.sbutton("QueuedUp", f"canall {MirrorStatus.STATUS_QUEUEUP}")
     buttons.sbutton("Splitting", f"cnall {MirrorStatus.STATUS_SPLITTING} {msg_id}")
     buttons.sbutton("All", f"cnall all {msg_id}")
     buttons.sbutton("Close", f"cnall close {msg_id}")

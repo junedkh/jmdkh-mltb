@@ -5,12 +5,14 @@ from threading import Event
 
 from mega import MegaApi, MegaError, MegaListener, MegaRequest, MegaTransfer
 
-from bot import LOGGER, config_dict, download_dict, download_dict_lock
+from bot import (LOGGER, config_dict, download_dict, download_dict_lock,
+                 non_queued_dl, non_queued_up, queue_dict_lock, queued_dl)
 from bot.helper.ext_utils.bot_utils import (get_mega_link_type,
                                             get_readable_file_size)
 from bot.helper.ext_utils.fs_utils import (check_storage_threshold,
                                            get_base_name)
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
+from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import (sendMessage,
                                                       sendStatusMessage)
@@ -134,16 +136,14 @@ class AsyncExecutor:
         self.continue_event.wait()
 
 
-def add_mega_download(mega_link: str, path: str, listener, name: str):
+def add_mega_download(mega_link, path, listener, name, from_queue=False):
     MEGA_API_KEY = config_dict['MEGA_API_KEY']
-    MEGA_EMAIL_ID = config_dict['MEGA_EMAIL_ID']
-    MEGA_PASSWORD = config_dict['MEGA_PASSWORD']
     executor = AsyncExecutor()
     api = MegaApi(MEGA_API_KEY, None, None, 'mirror-leech-telegram-bot')
     folder_api = None
     mega_listener = MegaAppListener(executor.continue_event, listener)
     api.addListener(mega_listener)
-    if MEGA_EMAIL_ID and MEGA_PASSWORD:
+    if (MEGA_EMAIL_ID:= config_dict['MEGA_EMAIL_ID']) and (MEGA_PASSWORD:= config_dict['MEGA_PASSWORD']):
         executor.do(api.login, (MEGA_EMAIL_ID, MEGA_PASSWORD))
     if get_mega_link_type(mega_link) == "file":
         executor.do(api.getPublicNode, (mega_link,))
@@ -199,15 +199,41 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
     if limit_exceeded:
         listener.ismega.delete()
         return sendMessage(f"{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}.", listener.bot, listener.message)
+    gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=8))
+    all_limit = config_dict['QUEUE_ALL']
+    dl_limit = config_dict['QUEUE_DOWNLOAD']
+    if all_limit or dl_limit:
+        added_to_queue = False
+        with queue_dict_lock:
+            dl = len(non_queued_dl)
+            up = len(non_queued_up)
+            if (all_limit and dl + up >= all_limit and (not dl_limit or dl >= dl_limit)) or (dl_limit and dl >= dl_limit):
+                added_to_queue = True
+                queued_dl[listener.uid] = ['mega', mega_link, path, listener, name]
+        if added_to_queue:
+            LOGGER.info(f"Added to Queue/Download: {mname}")
+            with download_dict_lock:
+                download_dict[listener.uid] = QueueStatus(mname, size, gid, listener, 'Dl')
+            listener.ismega.delete()
+            listener.onDownloadStart()
+            sendStatusMessage(listener.message, listener.bot)
+            api.removeListener(mega_listener)
+            if folder_api is not None:
+                folder_api.removeListener(mega_listener)
+            return
     with download_dict_lock:
         download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
-    listener.onDownloadStart()
+    with queue_dict_lock:
+        non_queued_dl.add(listener.uid)
     makedirs(path)
-    gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=8))
-    mname = name or node.getName()
     mega_listener.setValues(mname, size, gid)
-    listener.ismega.delete()
-    sendStatusMessage(listener.message, listener.bot)
+    if not from_queue:
+        listener.ismega.delete()
+        listener.onDownloadStart()
+        sendStatusMessage(listener.message, listener.bot)
+        LOGGER.info(f"Download from Mega: {mname}")
+    else:
+        LOGGER.info(f'Start Queued Download from Mega: {mname}')
     executor.do(api.startDownload, (node, path, name, None, False, None))
     api.removeListener(mega_listener)
     if folder_api:
