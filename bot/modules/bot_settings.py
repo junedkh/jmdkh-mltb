@@ -586,8 +586,6 @@ def edit_variable(update, context, omsg, key):
     elif value.isdigit() and key != 'FSUB_IDS':
         value = int(value)
     config_dict[key] = value
-    if key == 'SET_COMMANDS':
-        set_commands(context.bot)
     update_buttons(omsg, 'var')
     update.message.delete()
     if DATABASE_URL:
@@ -596,6 +594,8 @@ def edit_variable(update, context, omsg, key):
         initiate_search_tools()
     elif key in ['QUEUE_ALL', 'QUEUE_DOWNLOAD', 'QUEUE_UPLOAD']:
         start_from_queued()
+    elif key == 'SET_COMMANDS':
+        set_commands(context.bot)
 
 def edit_aria(update, context, omsg, key):
     handler_dict[omsg.chat.id] = False
