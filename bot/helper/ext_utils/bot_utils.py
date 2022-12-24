@@ -325,7 +325,7 @@ def update_user_ldata(id_, key, value):
         user_data[id_] = {key: value}
 
 def set_commands(bot):
-    if config_dict['SET_COMMANDS']:
+    if config_dict['SET_COMMANDS'] is True:
         bot.set_my_commands([
         (f'{BotCommands.MirrorCommand[0]}', f'or /{BotCommands.MirrorCommand[1]} Mirror'),
         (f'{BotCommands.LeechCommand[0]}', f'or /{BotCommands.LeechCommand[1]} Leech'),
@@ -355,5 +355,5 @@ def set_commands(bot):
         (f'{BotCommands.UserSetCommand}', 'Users settings'),
         (f'{BotCommands.HelpCommand}', 'Get detailed help'),
             ])
-    else:
+    elif config_dict['SET_COMMANDS'] is False:
         bot.delete_my_commands()

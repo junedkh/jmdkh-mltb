@@ -1,4 +1,3 @@
-from json import loads as jsonloads
 from logging import getLogger
 from os import listdir, path
 from random import SystemRandom
@@ -317,9 +316,6 @@ class YoutubeDLHelper:
                 varg = True
             elif varg.lower() == 'false':
                 varg = False
-            elif varg.startswith('(') and varg.endswith(')'):
-                varg = varg.replace('(', '').replace(')', '')
-                varg = tuple(map(int, varg.split(',')))
-            elif varg.startswith('{') and varg.endswith('}'):
-                varg = jsonloads(varg)
+            elif varg.startswith(('{', '[', '(')) and varg.endswith(('}', ']', ')')):
+                varg = eval(varg)
             self.opts[karg] = varg

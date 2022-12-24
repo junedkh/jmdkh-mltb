@@ -1,5 +1,4 @@
 from io import FileIO
-from json import loads as jsnloads
 from logging import ERROR, getLogger
 from os import listdir, makedirs
 from os import path as ospath
@@ -316,7 +315,7 @@ class GoogleDriveHelper:
                 self.__status, response = drive_file.next_chunk()
             except HttpError as err:
                 if err.resp.get('content-type', '').startswith('application/json'):
-                    reason = jsnloads(err.content).get('error').get('errors')[0].get('reason')
+                    reason = eval(err.content).get('error').get('errors')[0].get('reason')
                     if reason not in [
                         'userRateLimitExceeded',
                         'dailyLimitExceeded',
@@ -446,7 +445,7 @@ class GoogleDriveHelper:
             return self.__service.files().copy(fileId=file_id, body=body, supportsAllDrives=True).execute()
         except HttpError as err:
             if err.resp.get('content-type', '').startswith('application/json'):
-                reason = jsnloads(err.content).get('error').get('errors')[0].get('reason')
+                reason = eval(err.content).get('error').get('errors')[0].get('reason')
                 if reason not in ['userRateLimitExceeded', 'dailyLimitExceeded']:
                     raise err
                 if config_dict['USE_SERVICE_ACCOUNTS']:
@@ -808,7 +807,7 @@ class GoogleDriveHelper:
                 self.__status, done = downloader.next_chunk()
             except HttpError as err:
                 if err.resp.get('content-type', '').startswith('application/json'):
-                    reason = jsnloads(err.content).get('error').get('errors')[0].get('reason')
+                    reason = eval(err.content).get('error').get('errors')[0].get('reason')
                     if reason not in [
                         'downloadQuotaExceeded',
                         'dailyLimitExceeded',
