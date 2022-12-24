@@ -50,3 +50,9 @@ class QueueStatus:
             self.__listener.onDownloadError('task have been removed from queue/download')
         else:
             self.__listener.onUploadError('task have been removed from queue/upload')
+
+    def engine(self):
+        return "Queue System v1.0"
+
+    def mode(self):
+        return self.__listener.mode
