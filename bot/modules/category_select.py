@@ -4,59 +4,72 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 
 from bot import (CATEGORY_NAMES, btn_listener, dispatcher, download_dict,
                  download_dict_lock)
-from bot.helper.ext_utils.bot_utils import (MirrorStatus, get_category_btns,
+from bot.helper.ext_utils.bot_utils import (MirrorStatus, get_readable_time,
                                             getDownloadByGid, new_thread)
 from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (anno_checker,
                                                       editMessage, sendMessage)
 
 
+def _get_category_btns(time_out, msg_id, c_index):
+    text = '<b>Select the category where you want to upload</b>'
+    text += f'\n<b>Upload</b>: to Drive in {CATEGORY_NAMES[c_index]} folder'
+    text += f'<u>\n\nYou have {get_readable_time(time_out)} to select the mode</u>'
+    button = ButtonMaker()
+    for i, _name in enumerate(CATEGORY_NAMES):
+        button.sbutton(f'{_name}{" ✅" if _name == CATEGORY_NAMES[c_index] else ""}', f'change scat {msg_id} {i}')
+    button.sbutton('Cancel', f"change cancel {msg_id}", 'footer')
+    button.sbutton(f'Done ({get_readable_time(time_out)})', f'change done {msg_id}', 'footer')
+    return text, button.build_menu(3)
+
 def change_category(update, context):
-    if update.message.from_user.id in [1087968824, 136817688]:
-        update.message.from_user.id = anno_checker(update.message)
-        if not update.message.from_user.id:
+    message = update.message
+    if message.from_user.id in [1087968824, 136817688]:
+        message.from_user.id = anno_checker(message)
+        if not message.from_user.id:
             return
-    user_id = update.message.from_user.id
+    user_id = message.from_user.id
     if len(context.args) == 1:
         gid = context.args[0]
         dl = getDownloadByGid(gid)
         if not dl:
-            sendMessage(f"GID: <code>{gid}</code> Not Found.", context.bot, update.message)
+            sendMessage(f"GID: <code>{gid}</code> Not Found.", context.bot, message)
             return
-    elif update.message.reply_to_message:
-        mirror_message = update.message.reply_to_message
+    elif message.reply_to_message:
+        mirror_message = message.reply_to_message
         with download_dict_lock:
             if mirror_message.message_id in download_dict:
                 dl = download_dict[mirror_message.message_id]
             else:
                 dl = None
         if not dl:
-            sendMessage("This is not an active task!", context.bot, update.message)
+            sendMessage("This is not an active task!", context.bot, message)
             return
     elif len(context.args) == 0:
         msg = "Reply to an active /{cmd} which was used to start the download or add gid along with {cmd}\n\n" \
             "This command mainly for change category incase you decided to change category from already added donwload. " \
             "But you can always use /{mir} with to select category before download start."
-        sendMessage(msg.format_map({'cmd': BotCommands.CategorySelect,'mir': BotCommands.MirrorCommand[0]}), context.bot, update.message)
+        sendMessage(msg.format_map({'cmd': BotCommands.CategorySelect,'mir': BotCommands.MirrorCommand[0]}), context.bot, message)
         return
 
     if not CustomFilters.owner_query(user_id) and dl.message.from_user.id != user_id:
-        sendMessage("This task is not for you!", context.bot, update.message)
+        sendMessage("This task is not for you!", context.bot, message)
         return
-    if dl.status() not in [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_PAUSED, MirrorStatus.STATUS_WAITING]:
-        sendMessage(f'Task should be on {MirrorStatus.STATUS_DOWNLOADING} or {MirrorStatus.STATUS_PAUSED} or {MirrorStatus.STATUS_WAITING}', context.bot, update.message)
+    if dl.status() not in [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_PAUSED, MirrorStatus.STATUS_QUEUEDL]:
+        sendMessage(f'Task should be on {MirrorStatus.STATUS_DOWNLOADING} or {MirrorStatus.STATUS_PAUSED} or {MirrorStatus.STATUS_QUEUEDL}', context.bot, message)
         return
     listener = dl.listener() if dl and hasattr(dl, 'listener') else None
     if listener and len(CATEGORY_NAMES) > 1 and not listener.isLeech:
-        msg_id = update.message.message_id
+        msg_id = message.message_id
         time_out = 30
         btn_listener[msg_id] = [dl.gid(), time_out, time(), listener, listener.c_index]
-        text, btns = get_category_btns('change', time_out, msg_id, listener.c_index)
-        engine = sendMessage(text, context.bot, update.message, btns)
+        text, btns = _get_category_btns(time_out, msg_id, listener.c_index)
+        engine = sendMessage(text, context.bot, message, btns)
         _auto_select(engine, msg_id, time_out)
     else:
-        sendMessage("Can not change Category for this task!", context.bot, update.message)
+        sendMessage("Can not change Category for this task!", context.bot, message)
 
 @new_thread
 def _auto_select(msg, msg_id, time_out):
@@ -122,7 +135,7 @@ def confirm_category(update, context):
         listener.mode = mode
         return editMessage(f"Task updated.\n\n<b>Upload</b>: {mode}", message)
     time_out = categoryInfo[1] - (time() - categoryInfo[2])
-    text, btns = get_category_btns('change', time_out, msg_id, c_index)
+    text, btns = _get_category_btns(time_out, msg_id, listener.c_index)
     editMessage(text, message, btns)
 
 confirm_category_handler = CallbackQueryHandler(confirm_category, pattern="change")

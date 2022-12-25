@@ -509,10 +509,7 @@ def get_buttons(key=None, edit_type=None):
         buttons.sbutton('Empty String', f"botset emptyqbit {key}")
         buttons.sbutton('Close', "botset close")
         msg = f'Send a valid value for {key}. Timeout: 60 sec'
-    if key is None:
-        button = buttons.build_menu(1)
-    else:
-        button = buttons.build_menu(2)
+    button = buttons.build_menu(1) if key is None else buttons.build_menu(2)
     return msg, button
 
 def update_buttons(message, key=None, edit_type=None):

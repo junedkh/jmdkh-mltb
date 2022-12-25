@@ -87,7 +87,7 @@ def get_confirm(update, context):
     else:
         query.answer(text="Not in download state anymore! Keep this message to resume the seed if seed enabled!", show_alert=True)
         return
-    if user_id != listener.message.from_user.id:
+    if user_id != listener.message.from_user.id and not CustomFilters.owner_query(user_id):
         query.answer(text="This task is not for you!", show_alert=True)
     elif data[1] == "pin":
         query.answer(text=data[3], show_alert=True)

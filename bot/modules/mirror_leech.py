@@ -6,15 +6,13 @@ from threading import Thread
 from time import sleep, time
 
 from requests import request
-from telegram.ext import CallbackQueryHandler, CommandHandler
+from telegram.ext import CommandHandler
 
 from bot import (CATEGORY_NAMES, DATABASE_URL, DOWNLOAD_DIR, IS_USER_SESSION,
-                 LOGGER, btn_listener, config_dict, dispatcher)
-from bot.helper.ext_utils.bot_utils import (check_buttons, check_user_tasks,
-                                            get_category_btns,
-                                            get_content_type, is_gdrive_link,
-                                            is_magnet, is_mega_link, is_url,
-                                            new_thread)
+                 LOGGER, config_dict, dispatcher)
+from bot.helper.ext_utils.bot_utils import (check_user_tasks, get_content_type,
+                                            is_gdrive_link, is_magnet,
+                                            is_mega_link, is_url)
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.jmdkh_utils import extract_link
@@ -23,13 +21,14 @@ from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_
 from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_utils.download_utils.mega_downloader import add_mega_download
 from bot.helper.mirror_utils.download_utils.qbit_downloader import add_qb_torrent
-from bot.helper.mirror_utils.download_utils.telegram_downloader import  TelegramDownloadHelper
+from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import (anno_checker, chat_restrict,
-                                                      delete_links, isAdmin,
+from bot.helper.telegram_helper.message_utils import (anno_checker,
+                                                      chat_restrict,
+                                                      delete_links,
                                                       editMessage, forcesub,
-                                                      message_filter,
+                                                      isAdmin, message_filter,
                                                       sendDmMessage,
                                                       sendLogMessage,
                                                       sendMessage)
@@ -37,7 +36,6 @@ from bot.modules.listener import MirrorLeechListener
 
 
 def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False):
-    msg_id = message.message_id
     mesg = message.text.split('\n')
     message_args = mesg[0].split(maxsplit=1)
     index = 1
@@ -50,7 +48,6 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
     tfile = False
     raw_url = None
     c_index = 0
-    time_out = 30
     maxtask = config_dict['USER_MAX_TASKS']
     if len(message_args) > 1:
         args = mesg[0].split(maxsplit=3)
@@ -136,20 +133,27 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                         return
                     if (maxtask:= config_dict['USER_MAX_TASKS']) and check_user_tasks(message.from_user.id, maxtask):
                         return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
-                link = 'telegram_file'
-                listener = [bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url]
-                extras = [link, name, ratio, seed_time, c_index, time()]
-                if len(CATEGORY_NAMES) > 1 and not isLeech:
-                    if checked:= check_buttons():
-                        return sendMessage(checked, bot, message)
-                    btn_listener[msg_id] = [listener, extras, time_out]
+                    if isLeech and config_dict['DISABLE_LEECH']:
+                        delete_links(bot, message)
+                        return sendMessage('Locked!', bot, message)
+                    if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
+                        if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
+                            return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
+                        dmMessage = sendDmMessage(link, bot, message)
+                        if not dmMessage:
+                            return
+                    else:
+                        dmMessage = None
+                    logMessage = None if (isLeech and message.chat.type == message.chat.SUPERGROUP) else sendLogMessage(link, bot, message)
+                    listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url, c_index, dmMessage, logMessage)
+                    listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
+                    if isZip:
+                        listener.mode += ' as Zip'
+                    elif extract:
+                        listener.mode += ' as Unzip'
                     chat_restrict(message)
-                    text, btns = get_category_btns('mir', time_out, msg_id, c_index)
-                    engine = sendMessage(text, bot, message, btns)
-                    _auto_start_dl(engine, msg_id, time_out)
-                else:
-                    chat_restrict(message)
-                    start_mirror_leech(extras, listener)
+                    Thread(target=TelegramDownloadHelper(listener).add_download, args=(message, f'{DOWNLOAD_DIR}{listener.uid}/', name)).start()
+                    return
                 if multi > 1:
                     sleep(4)
                     nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
@@ -194,6 +198,7 @@ Number should be always before |newname or pswd:
 3. You can add this those options <b>d, s and multi</b> randomly. Ex: <code>/{cmd}</code> d:1:20 s 10 <b>or</b> <code>/{cmd}</code> s 10 d:0.5:100
 4. Commands that start with <b>qb</b> are ONLY for torrents.
 '''
+        delete_links(bot, message)
         return sendMessage(help_msg.format_map({'cmd': BotCommands.MirrorCommand[0]}), bot, message)
     if message.from_user.id in [1087968824, 136817688]:
         message.from_user.id = anno_checker(message)
@@ -213,65 +218,9 @@ Number should be always before |newname or pswd:
             return
         if (maxtask:= config_dict['USER_MAX_TASKS']) and check_user_tasks(message.from_user.id, maxtask):
             return sendMessage(f"Your tasks limit exceeded for {maxtask} tasks", bot, message)
-    listener = [bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url]
-    extras = [link, name, ratio, seed_time, c_index, time()]
-    if len(CATEGORY_NAMES) > 1 and not isLeech and multi == 0:
-        if checked:= check_buttons():
-            return sendMessage(checked, bot, message)
-        btn_listener[msg_id] = [listener, extras, time_out]
-        text, btns = get_category_btns('mir', time_out, msg_id, c_index)
-        chat_restrict(message)
-        engine = sendMessage(text, bot, message, btns)
-        _auto_start_dl(engine, msg_id, time_out)
-    else:
-        chat_restrict(message)
-        start_mirror_leech(extras, listener)
-    if multi > 1:
-        sleep(4)
-        nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-        msg = message.text.split(maxsplit=mi+1)
-        msg[mi] = f"{multi - 1}"
-        nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
-        nextmsg.from_user.id = message.from_user.id
-        sleep(4)
-        Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech)).start()
-
-@new_thread
-def _auto_start_dl(msg, msg_id, time_out):
-    sleep(time_out)
-    if msg_id not in btn_listener:
-        return
-    info = btn_listener[msg_id]
-    del btn_listener[msg_id]
-    start_mirror_leech(info[1], info[0])
-    editMessage("Timed out! Task has been started.", msg)
-
-def start_mirror_leech(extra, s_listener):
-    bot = s_listener[0]
-    message = s_listener[1]
-    isZip = s_listener[2]
-    extract = s_listener[3]
-    isQbit = s_listener[4]
-    isLeech = s_listener[5]
-    pswd = s_listener[6]
-    tag = s_listener[7]
-    select = s_listener[8]
-    seed = s_listener[9]
-    raw_url = s_listener[10]
-    link = extra[0]
-    name = extra[1]
-    ratio = extra[2]
-    seed_time = extra[3]
-    c_index = int(extra[4])
-    if isLeech and config_dict['DISABLE_LEECH']:
-        delete_links(bot, message)
-        return sendMessage('Locked!', bot, message)
-    if not isZip and not extract and not isLeech and is_gdrive_link(link):
-        gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
-        gmsg += f"Use /{BotCommands.ZipMirrorCommand[0]} to make zip of Google Drive folder\n\n"
-        gmsg += f"Use /{BotCommands.UnzipMirrorCommand[0]} to extracts Google Drive archive folder/file\n\n"
-        gmsg += f"Use /{BotCommands.LeechCommand[0]} to upload on telegram"
-        return sendMessage(gmsg, bot, message)
+        if isLeech and config_dict['DISABLE_LEECH']:
+            delete_links(bot, message)
+            return sendMessage('Locked!', bot, message)
     if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
         if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
             return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
@@ -282,14 +231,12 @@ def start_mirror_leech(extra, s_listener):
         dmMessage = None
     logMessage = None if (isLeech and message.chat.type == message.chat.SUPERGROUP) else sendLogMessage(link, bot, message)
     listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url, c_index, dmMessage, logMessage)
+    chat_restrict(message)
     listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
     if isZip:
         listener.mode += ' as Zip'
     elif extract:
         listener.mode += ' as Unzip'
-    if link == 'telegram_file':
-        Thread(target=TelegramDownloadHelper(listener).add_download, args=(message, f'{DOWNLOAD_DIR}{listener.uid}/', name)).start()
-        return
     LOGGER.info(link)
     if not is_mega_link(link) and not isQbit and not is_magnet(link) \
         and not is_gdrive_link(link) and not link.endswith('.torrent'):
@@ -333,7 +280,14 @@ def start_mirror_leech(extra, s_listener):
             msg = "qBittorrent for torrents only. if you are trying to dowload torrent then report."
             return sendMessage(msg, bot, message)
     if is_gdrive_link(link):
-        Thread(target=add_gd_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name)).start()
+        if not any([isZip, extract, isLeech]):
+            gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
+            gmsg += f"Use /{BotCommands.ZipMirrorCommand[0]} to make zip of Google Drive folder\n\n"
+            gmsg += f"Use /{BotCommands.UnzipMirrorCommand[0]} to extracts Google Drive archive folder/file"
+            delete_links(bot, message)
+            sendMessage(gmsg, bot, message)
+        else:
+            Thread(target=add_gd_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name)).start()
     elif is_mega_link(link):
         listener.ismega = sendMessage("💡 <b>Mega link this might take a minutes</b>", bot, message)
         Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)).start()
@@ -349,40 +303,16 @@ def start_mirror_leech(extra, s_listener):
         else:
             auth = ''
         Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name, auth, ratio, seed_time)).start()
+    if multi > 1:
+        sleep(4)
+        nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
+        msg = message.text.split(maxsplit=mi+1)
+        msg[mi] = f"{multi - 1}"
+        nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
+        nextmsg.from_user.id = message.from_user.id
+        sleep(4)
+        Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech)).start()
 
-@new_thread
-def mir_confirm(update, context):
-    query = update.callback_query
-    user_id = query.from_user.id
-    message = query.message
-    data = query.data
-    data = data.split()
-    msg_id = int(data[2])
-    if msg_id not in btn_listener:
-        return editMessage('<b>Download has been cancelled or started already</b>', message)
-    listnerInfo = btn_listener[msg_id]
-    listener = listnerInfo[0]
-    extra = listnerInfo[1]
-    if user_id != listener[1].from_user.id and not CustomFilters.owner_query(user_id):
-        return query.answer("You are not the owner of this download", show_alert=True)
-    elif data[1] == 'scat':
-        c_index = int(data[3])
-        if extra[4] == c_index:
-            return query.answer(f"{CATEGORY_NAMES[c_index]} is Selected Already", show_alert=True)
-        query.answer()
-        extra[4] = c_index
-    elif data[1] == 'cancel':
-        query.answer()
-        del btn_listener[msg_id]
-        return editMessage('<b>Download has been cancelled</b>', message)
-    elif data[1] == 'start':
-        query.answer()
-        del btn_listener[msg_id]
-        message.delete()
-        return start_mirror_leech(extra, listener)
-    time_out = listnerInfo[2] - (time() - extra[5])
-    text, btns = get_category_btns('mir', time_out, msg_id, extra[4])
-    editMessage(text, message, btns)
 
 def mirror(update, context):
     _mirror_leech(context.bot, update.message)
@@ -448,7 +378,6 @@ qb_unzip_leech_handler = CommandHandler(BotCommands.QbUnzipLeechCommand, qb_unzi
 qb_zip_leech_handler = CommandHandler(BotCommands.QbZipLeechCommand, qb_zip_leech,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 
-mir_handler = CallbackQueryHandler(mir_confirm, pattern="mir")
 
 dispatcher.add_handler(mirror_handler)
 dispatcher.add_handler(unzip_mirror_handler)
@@ -462,4 +391,3 @@ dispatcher.add_handler(zip_leech_handler)
 dispatcher.add_handler(qb_leech_handler)
 dispatcher.add_handler(qb_unzip_leech_handler)
 dispatcher.add_handler(qb_zip_leech_handler)
-dispatcher.add_handler(mir_handler)

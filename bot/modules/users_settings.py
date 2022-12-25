@@ -274,7 +274,7 @@ Check all available formatting options <a href="https://core.telegram.org/bots/a
         buttons = ButtonMaker()
         if user_dict and user_dict.get('split_size'):
             buttons.sbutton("Reset Split Size", f"userset {user_id} rlss")
-        if not user_dict and config_dict['EQUAL_SPLITS'] or user_dict and user_dict.get('equal_splits'):
+        if not user_dict and config_dict['EQUAL_SPLITS'] or user_dict and user_dict.get('equal_splits', False):
             buttons.sbutton("Disable Equal Splits", f"userset {user_id} esplits")
         else:
             buttons.sbutton("Enable Equal Splits", f"userset {user_id} esplits")
@@ -316,11 +316,16 @@ Check all available formatting options <a href="https://core.telegram.org/bots/a
         query.message.reply_to_message.delete()
 
 def send_users_settings(update, context):
-    msg = ''.join(f'<code>{u}</code>: {escape(str(d))}\n\n' for u, d in user_data.items())
+    msg = f'{len(user_data)} users save there setting'
+    for user, data in user_data.items():
+        msg += f'\n\n<code>{user}</code>:'
+        for key, value in data.items():
+            msg += f'\n<b>{key}</b>: <code>{escape(str(value))}</code>'
+        if len(msg.encode()) > 4000:
+            sendMessage(msg, context.bot, update.message)
+            msg = ''
     if msg:
         sendMessage(msg, context.bot, update.message)
-    else:
-        sendMessage('No users data!', context.bot, update.message)
 
 users_settings_handler = CommandHandler(BotCommands.UsersCommand, send_users_settings,
                                             filters=CustomFilters.owner_filter | CustomFilters.sudo_user)

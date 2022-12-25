@@ -9,7 +9,7 @@ from urllib.request import urlopen
 from psutil import cpu_percent, disk_usage, virtual_memory
 from requests import request
 
-from bot import (BUTTON_NAMES, BUTTON_URLS, CATEGORY_NAMES, DOWNLOAD_DIR,
+from bot import (BUTTON_NAMES, BUTTON_URLS, DOWNLOAD_DIR,
                  botStartTime, btn_listener, config_dict, download_dict,
                  download_dict_lock, user_data)
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -202,17 +202,6 @@ def _get_readable_message_btns(msg, bmsg):
     buttons.sbutton(">>", "status nex")
     button = buttons.build_menu(3)
     return msg + bmsg, button
-
-def get_category_btns(query_data, time_out, msg_id, c_index):
-    text = '<b>Select the category where you want to upload</b>'
-    text += f'\n<b>Upload</b>: to Drive in {CATEGORY_NAMES[c_index]} folder'
-    text += f'<u>\n\nYou have {get_readable_time(time_out)} to select the mode</u>'
-    button = ButtonMaker()
-    for i, _name in enumerate(CATEGORY_NAMES):
-        button.sbutton(f'{_name}{" ✅" if _name == CATEGORY_NAMES[c_index] else ""}', f'{query_data} scat {msg_id} {i}')
-    button.sbutton('Cancel', f"{query_data} cancel {msg_id}", 'footer')
-    button.sbutton(f'Start ({get_readable_time(time_out)})', f'{query_data} start {msg_id}', 'footer')
-    return text, button.build_menu(3)
 
 def extra_btns(buttons):
     if BUTTON_NAMES and BUTTON_URLS:
