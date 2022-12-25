@@ -164,7 +164,8 @@ def main():
                         if len(msg.encode()) > 4000:
                             if 'Restarted Successfully!' in msg and cid == chat_id:
                                 try:
-                                    bot.editMessageText(msg, chat_id, msg_id)
+                                    bot.editMessageText('Restarted Successfully!', chat_id, msg_id)
+                                    bot.sendMessage(chat_id, msg, reply_to_message_id=msg_id)
                                 except:
                                     pass
                                 remove(".restartmsg")
@@ -176,7 +177,8 @@ def main():
                             msg = ''
                 if 'Restarted Successfully!' in msg and cid == chat_id:
                     try:
-                        bot.editMessageText(msg, chat_id, msg_id)
+                        bot.editMessageText('Restarted Successfully!', chat_id, msg_id)
+                        bot.sendMessage(chat_id, msg, reply_to_message_id=msg_id)
                     except:
                         pass
                     remove(".restartmsg")
