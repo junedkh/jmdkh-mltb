@@ -1,4 +1,4 @@
-from time import sleep, time
+from time import time
 
 from telegram.ext import CallbackQueryHandler, CommandHandler
 
@@ -49,29 +49,10 @@ def change_category(update, context):
         sendMessage(f'Task should be on {MirrorStatus.STATUS_DOWNLOADING} or {MirrorStatus.STATUS_PAUSED} or {MirrorStatus.STATUS_QUEUEDL}', context.bot, message)
         return
     listener = dl.listener() if dl and hasattr(dl, 'listener') else None
-    if listener and len(CATEGORY_NAMES) > 1 and not listener.isLeech:
-        msg_id = message.message_id
-        time_out = 30
-        btn_listener[msg_id] = [time_out, time(), listener, listener.c_index]
-        text, btns = get_category_btns(time_out, msg_id, listener.c_index)
-        engine = sendMessage(text, context.bot, message, btns)
-        _auto_select(engine, msg_id, time_out)
+    if listener:
+        listener.selectCategory()
     else:
         sendMessage("Can not change Category for this task!", context.bot, message)
-
-@new_thread
-def _auto_select(msg, msg_id, time_out):
-    sleep(time_out)
-    if msg_id in btn_listener:
-        listener = btn_listener[msg_id][2]
-        del btn_listener[msg_id]
-        mode = f'Drive {CATEGORY_NAMES[listener.c_index]}'
-        if listener.isZip:
-            mode += ' as Zip'
-        elif listener.extract:
-            mode += ' as Unzip'
-        listener.mode = mode
-        editMessage(f"Timed out! Task has been set.\n\n<b>Upload</b>: {mode}", msg)
 
 @new_thread
 def confirm_category(update, context):
