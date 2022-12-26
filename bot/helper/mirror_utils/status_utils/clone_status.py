@@ -13,6 +13,8 @@ class CloneStatus:
         self.__gid = gid
         self.message = message
         self.__mode = mode
+        self.source = self.__source()
+        self.engine = engine_
 
     def processed_bytes(self):
         return self.__obj.transferred_size
@@ -60,10 +62,7 @@ class CloneStatus:
     def download(self):
         return self.__obj
 
-    def engine(self):
-        return engine_
-
-    def source(self):
+    def __source(self):
         reply_to = self.message.reply_to_message
         return reply_to.from_user.username or reply_to.from_user.id if reply_to and \
             not reply_to.from_user.is_bot else self.message.from_user.username \

@@ -136,24 +136,23 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                     if isLeech and config_dict['DISABLE_LEECH']:
                         delete_links(bot, message)
                         return sendMessage('Locked!', bot, message)
-                    if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
-                        if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
-                            return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
-                        dmMessage = sendDmMessage(link, bot, message)
-                        if not dmMessage:
-                            return
-                    else:
-                        dmMessage = None
-                    logMessage = None if (isLeech and message.chat.type == message.chat.SUPERGROUP) else sendLogMessage(link, bot, message)
-                    listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url, c_index, dmMessage, logMessage)
-                    listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
-                    if isZip:
-                        listener.mode += ' as Zip'
-                    elif extract:
-                        listener.mode += ' as Unzip'
-                    chat_restrict(message)
-                    Thread(target=TelegramDownloadHelper(listener).add_download, args=(message, f'{DOWNLOAD_DIR}{listener.uid}/', name)).start()
-                    return
+                if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
+                    if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
+                        return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
+                    dmMessage = sendDmMessage(link, bot, message)
+                    if not dmMessage:
+                        return
+                else:
+                    dmMessage = None
+                logMessage = None if (isLeech and message.chat.type == message.chat.SUPERGROUP) else sendLogMessage(link, bot, message)
+                listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url, c_index, dmMessage, logMessage)
+                listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
+                if isZip:
+                    listener.mode += ' as Zip'
+                elif extract:
+                    listener.mode += ' as Unzip'
+                chat_restrict(message)
+                Thread(target=TelegramDownloadHelper(listener).add_download, args=(message, f'{DOWNLOAD_DIR}{listener.uid}/', name)).start()
                 if multi > 1:
                     sleep(4)
                     nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})

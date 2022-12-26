@@ -25,6 +25,8 @@ class QbDownloadStatus:
         self.__info = get_download(self.__client, self.__hash)
         self.seeding = seeding
         self.message = listener.message
+        self.source = self.__source()
+        self.engine = engine_
 
     def __update(self):
         self.__info = get_download(self.__client, self.__hash)
@@ -117,10 +119,7 @@ class QbDownloadStatus:
             self.__listener.onDownloadError('Download stopped by user!')
             self.__client.torrents_delete(torrent_hashes=self.__hash, delete_files=True)
 
-    def engine(self):
-        return engine_
-
-    def source(self):
+    def __source(self):
         reply_to = self.message.reply_to_message
         return reply_to.from_user.username or reply_to.from_user.id if reply_to and \
             not reply_to.from_user.is_bot else self.message.from_user.username \

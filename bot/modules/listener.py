@@ -6,12 +6,13 @@ from time import sleep, time
 
 from requests import utils as rutils
 
-from bot import (CATEGORY_INDEXS, DATABASE_URL, DOWNLOAD_DIR, LOGGER,
-                 MAX_SPLIT_SIZE, SHORTENERES, Interval, aria2, config_dict,
-                 download_dict, download_dict_lock, non_queued_dl,
-                 non_queued_up, queue_dict_lock, queued_dl, queued_up,
-                 status_reply_dict_lock, user_data)
-from bot.helper.ext_utils.bot_utils import extra_btns, get_readable_time
+from bot import (CATEGORY_INDEXS, CATEGORY_NAMES, DATABASE_URL, DOWNLOAD_DIR,
+                 LOGGER, MAX_SPLIT_SIZE, SHORTENERES, Interval, aria2,
+                 btn_listener, config_dict, download_dict, download_dict_lock,
+                 non_queued_dl, non_queued_up, queue_dict_lock, queued_dl,
+                 queued_up, status_reply_dict_lock, user_data)
+from bot.helper.ext_utils.bot_utils import (extra_btns, get_category_btns,
+                                            get_readable_time)
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.fs_utils import (clean_download, clean_target,
@@ -30,7 +31,7 @@ from bot.helper.mirror_utils.upload_utils.pyrogramEngine import TgUploader
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import (delete_all_messages,
                                                       delete_links,
-                                                      sendMessage,
+                                                      editMessage, sendMessage,
                                                       update_all_messages)
 
 
@@ -68,6 +69,24 @@ class MirrorLeechListener:
             delete_all_messages()
         except:
             pass
+
+    def selectCategory(self):
+        if len(CATEGORY_NAMES) <= 1 or self.isLeech:
+            return
+        btn_listener[self.uid] = [30, time(), self, self.c_index]
+        text, btns = get_category_btns(30, self.uid, self.c_index)
+        engine = sendMessage(text, self.bot, self.message, btns)
+        start_time = time()
+        while self.uid in btn_listener:
+            if time() - start_time >= 30:
+                del btn_listener[self.uid]
+                mode = f'Drive {CATEGORY_NAMES[self.c_index]}'
+                if self.isZip:
+                    mode += ' as Zip'
+                elif self.extract:
+                    mode += ' as Unzip'
+                self.mode = mode
+                editMessage(f"Timed out! Task has been set.\n\n<b>Upload</b>: {mode}", engine)
 
     def onDownloadStart(self):
         if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS'] and self.raw_url:

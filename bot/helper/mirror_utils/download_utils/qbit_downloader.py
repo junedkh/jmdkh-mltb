@@ -79,6 +79,7 @@ def add_qb_torrent(link, path, listener, ratio, seed_time):
             sendMessage("This is an unsupported/invalid link.", listener.bot, listener.message)
             __remove_torrent(client, ext_hash)
             return
+        listener.selectCategory()
         tor_info = tor_info[0]
         ext_hash = tor_info.hash
         with download_dict_lock:

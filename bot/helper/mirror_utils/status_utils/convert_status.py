@@ -8,6 +8,8 @@ class ConvertStatus:
         self.__size = size
         self.__listener = listener
         self.message = self.__listener.message
+        self.source = self.__source()
+        self.engine = "ffmpeg"
 
     def gid(self):
         return self.__gid
@@ -36,10 +38,7 @@ class ConvertStatus:
     def download(self):
         return self
 
-    def engine(self):
-        return "ffmpeg"
-
-    def source(self):
+    def __source(self):
         reply_to = self.message.reply_to_message
         return reply_to.from_user.username or reply_to.from_user.id if reply_to and \
             not reply_to.from_user.is_bot else self.message.from_user.username \

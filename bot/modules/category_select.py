@@ -4,25 +4,13 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 
 from bot import (CATEGORY_NAMES, btn_listener, dispatcher, download_dict,
                  download_dict_lock)
-from bot.helper.ext_utils.bot_utils import (MirrorStatus, get_readable_time,
+from bot.helper.ext_utils.bot_utils import (MirrorStatus, get_category_btns,
                                             getDownloadByGid, new_thread)
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (anno_checker,
                                                       editMessage, sendMessage)
 
-
-def _get_category_btns(time_out, msg_id, c_index):
-    text = '<b>Select the category where you want to upload</b>'
-    text += f'\n<b>Upload</b>: to Drive in {CATEGORY_NAMES[c_index]} folder'
-    text += f'<u>\n\nYou have {get_readable_time(time_out)} to select the mode</u>'
-    button = ButtonMaker()
-    for i, _name in enumerate(CATEGORY_NAMES):
-        button.sbutton(f'{_name}{" ✅" if _name == CATEGORY_NAMES[c_index] else ""}', f'change scat {msg_id} {i}')
-    button.sbutton('Cancel', f"change cancel {msg_id}", 'footer')
-    button.sbutton(f'Done ({get_readable_time(time_out)})', f'change done {msg_id}', 'footer')
-    return text, button.build_menu(3)
 
 def change_category(update, context):
     message = update.message
@@ -64,8 +52,8 @@ def change_category(update, context):
     if listener and len(CATEGORY_NAMES) > 1 and not listener.isLeech:
         msg_id = message.message_id
         time_out = 30
-        btn_listener[msg_id] = [dl.gid(), time_out, time(), listener, listener.c_index]
-        text, btns = _get_category_btns(time_out, msg_id, listener.c_index)
+        btn_listener[msg_id] = [time_out, time(), listener, listener.c_index]
+        text, btns = get_category_btns(time_out, msg_id, listener.c_index)
         engine = sendMessage(text, context.bot, message, btns)
         _auto_select(engine, msg_id, time_out)
     else:
@@ -75,12 +63,9 @@ def change_category(update, context):
 def _auto_select(msg, msg_id, time_out):
     sleep(time_out)
     if msg_id in btn_listener:
-        info = btn_listener[msg_id]
+        listener = btn_listener[msg_id][2]
         del btn_listener[msg_id]
-        listener = info[3]
         mode = f'Drive {CATEGORY_NAMES[listener.c_index]}'
-        if listener.isLeech:
-            mode = 'Leech'
         if listener.isZip:
             mode += ' as Zip'
         elif listener.extract:
@@ -100,7 +85,7 @@ def confirm_category(update, context):
         categoryInfo = btn_listener[msg_id]
     except KeyError:
         return editMessage('<b>Old Task</b>', message)
-    listener = categoryInfo[3]
+    listener = categoryInfo[2]
     if user_id != listener.message.from_user.id and not CustomFilters.owner_query(user_id):
         query.answer("This task is not for you!", show_alert=True)
     elif data[1] == 'scat':
@@ -111,10 +96,8 @@ def confirm_category(update, context):
         listener.c_index = c_index
     elif data[1] == 'cancel':
         query.answer()
-        listener.c_index = categoryInfo[4]
+        listener.c_index = categoryInfo[3]
         mode = f'Drive {CATEGORY_NAMES[listener.c_index]}'
-        if listener.isLeech:
-            mode = 'Telegram'
         if listener.isZip:
             mode += ' as Zip'
         elif listener.extract:
@@ -126,16 +109,15 @@ def confirm_category(update, context):
         query.answer()
         del btn_listener[msg_id]
         mode = f'Drive {CATEGORY_NAMES[listener.c_index]}'
-        if listener.isLeech:
-            mode = 'Telegram'
         if listener.isZip:
             mode += ' as Zip'
         elif listener.extract:
             mode += ' as Unzip'
         listener.mode = mode
-        return editMessage(f"Task updated.\n\n<b>Upload</b>: {mode}", message)
-    time_out = categoryInfo[1] - (time() - categoryInfo[2])
-    text, btns = _get_category_btns(time_out, msg_id, listener.c_index)
+        message.delete()
+        return
+    time_out = categoryInfo[0] - (time() - categoryInfo[1])
+    text, btns = get_category_btns(time_out, msg_id, listener.c_index)
     editMessage(text, message, btns)
 
 confirm_category_handler = CallbackQueryHandler(confirm_category, pattern="change")

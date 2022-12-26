@@ -16,6 +16,8 @@ class ExtractStatus:
         self.__uid = self.__listener.uid
         self.__start_time = time()
         self.message = self.__listener.message
+        self.source = self.__source()
+        self.engine = '7z'
 
     def gid(self):
         return self.__gid
@@ -68,11 +70,8 @@ class ExtractStatus:
         if self.__listener.suproc:
             self.__listener.suproc.kill()
         self.__listener.onUploadError('extracting stopped by user!')
-    
-    def engine(self):
-        return "7z"
 
-    def source(self):
+    def __source(self):
         reply_to = self.message.reply_to_message
         return reply_to.from_user.username or reply_to.from_user.id if reply_to and \
             not reply_to.from_user.is_bot else self.message.from_user.username \

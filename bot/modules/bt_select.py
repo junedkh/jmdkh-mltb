@@ -44,7 +44,7 @@ def select(update, context):
     if not CustomFilters.owner_query(user_id) and dl.message.from_user.id != user_id:
         sendMessage("This task is not for you!", context.bot, message)
         return
-    if dl.status() not in [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_PAUSED, MirrorStatus.STATUS_WAITING]:
+    if dl.status() not in [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_PAUSED, MirrorStatus.STATUS_QUEUEDL]:
         sendMessage('Task should be in download or pause (incase message deleted by wrong) or queued (status incase you used torrent file)!', context.bot, message)
         return
     if dl.name().startswith('[METADATA]'):

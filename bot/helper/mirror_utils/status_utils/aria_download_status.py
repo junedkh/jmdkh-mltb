@@ -22,6 +22,8 @@ class AriaDownloadStatus:
         self.start_time = 0
         self.seeding = seeding
         self.message = listener.message
+        self.source = self.__source()
+        self.engine = engine_
 
     def __update(self):
         self.__download = self.__download.live
@@ -117,10 +119,7 @@ class AriaDownloadStatus:
             self.__listener.onDownloadError('Download stopped by user!')
             aria2.remove([self.__download], force=True, files=True)
 
-    def engine(self):
-        return engine_
-
-    def source(self):
+    def __source(self):
         reply_to = self.message.reply_to_message
         return reply_to.from_user.username or reply_to.from_user.id if reply_to and \
             not reply_to.from_user.is_bot else self.message.from_user.username \
