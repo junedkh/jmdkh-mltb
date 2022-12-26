@@ -126,7 +126,8 @@ NOTE: Try each command without any argument to see more detalis.
 /{BotCommands.UsersCommand}: show users settings (Only Owner & Sudo).
 /{BotCommands.AddSudoCommand}: Add sudo user (Only Owner).
 /{BotCommands.RmSudoCommand}: Remove sudo users (Only Owner).
-/{BotCommands.RestartCommand}: Restart and update the bot (Only Owner & Sudo).
+/{BotCommands.RestartCommand[0]}: Restart and update the bot (Only Owner & Sudo).
+/{BotCommands.RestartCommand[1]}: Restart all bots and update the bot (Only Owner & Sudo).
 /{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports (Only Owner & Sudo).
 /{BotCommands.ShellCommand}: Run shell commands (Only Owner).
 /{BotCommands.EvalCommand}: Run Python Code Line | Lines (Only Owner).
