@@ -221,6 +221,7 @@ class YoutubeDLHelper:
             self.opts['ignoreerrors'] = True
             self.is_playlist = True
         self.gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
+        self.listener.selectCategory()
         self.__onDownloadStart(from_queue)
         if qual.startswith('ba/b-'):
             mp3_info = qual.split('-')
@@ -275,7 +276,6 @@ class YoutubeDLHelper:
                 limit_exceeded += f'is {get_readable_file_size(self.__size)}'
         if limit_exceeded:
             return self.__onDownloadError(limit_exceeded)
-        self.listener.selectCategory()
         all_limit = config_dict['QUEUE_ALL']
         dl_limit = config_dict['QUEUE_DOWNLOAD']
         if all_limit or dl_limit:
