@@ -13,7 +13,6 @@ from bot.helper.ext_utils.bot_utils import (check_buttons, check_user_tasks,
                                             new_thread)
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.jmdkh_utils import extract_link
-from bot.helper.ext_utils.shortener import short_url
 from bot.helper.mirror_utils.status_utils.clone_status import CloneStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -132,12 +131,12 @@ def start_clone(listner):
     link = listner[6]
     raw_url = listner[7]
     if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
-        dmMessage = sendDmMessage(link, bot, message)
+        dmMessage = sendDmMessage(bot, message)
         if not dmMessage:
             return
     else:
         dmMessage = None
-    logMessage = None if message.chat.type == message.chat.SUPERGROUP else sendLogMessage(link, bot, message)
+    logMessage = sendLogMessage(bot, message)
     gd = GoogleDriveHelper(user_id=message.from_user.id)
     res, size, name, files = gd.helper(link)
     if res != "":
@@ -191,13 +190,10 @@ def start_clone(listner):
     else:
         buttons = ButtonMaker()
         if not config_dict['DISABLE_DRIVE_LINK']:
-            durl = short_url(links_dict['durl'])
-            buttons.buildbutton("🔐 Drive Link", durl)
+            buttons.buildbutton("🔐 Drive Link", links_dict['durl'])
         if index:= links_dict.get('index'):
-            index = short_url(index)
             buttons.buildbutton("🚀 Index Link", index)
         if view:= links_dict.get('view'):
-            view = short_url(view)
             buttons.buildbutton('💻 View Link', view)
         buttons = extra_btns(buttons)
         if dmMessage:

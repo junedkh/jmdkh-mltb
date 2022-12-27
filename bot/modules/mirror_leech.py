@@ -139,12 +139,12 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
                     if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
                         return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
-                    dmMessage = sendDmMessage(link, bot, message)
+                    dmMessage = sendDmMessage(bot, message)
                     if not dmMessage:
                         return
                 else:
                     dmMessage = None
-                logMessage = None if (isLeech and message.chat.type == message.chat.SUPERGROUP) else sendLogMessage(link, bot, message)
+                logMessage = sendLogMessage(bot, message)
                 listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url, c_index, dmMessage, logMessage)
                 listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
                 if isZip:
@@ -223,12 +223,12 @@ Number should be always before |newname or pswd:
     if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
         if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
             return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
-        dmMessage = sendDmMessage(link, bot, message)
+        dmMessage = sendDmMessage(bot, message)
         if not dmMessage:
             return
     else:
         dmMessage = None
-    logMessage = None if (isLeech and message.chat.type == message.chat.SUPERGROUP) else sendLogMessage(link, bot, message)
+    logMessage = sendLogMessage(bot, message)
     listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url, c_index, dmMessage, logMessage)
     chat_restrict(message)
     listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'

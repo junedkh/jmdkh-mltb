@@ -146,13 +146,13 @@ def sendStatusMessage(msg, bot):
         if not Interval:
             Interval.append(setInterval(config_dict['DOWNLOAD_STATUS_UPDATE_INTERVAL'], update_all_messages))
 
-def sendDmMessage(text, bot, message):
+def sendDmMessage(bot, message):
     try:
-        return bot.sendMessage(message.from_user.id, disable_notification=False, text=message.link)
+        return bot.sendMessage(message.from_user.id, disable_notification=True, text=message.link)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendDmMessage(text, bot, message)
+        return sendDmMessage(bot, message)
     except Unauthorized:
         buttons = ButtonMaker()
         buttons.buildbutton("Start", f"{bot.link}?start=start")
@@ -162,15 +162,15 @@ def sendDmMessage(text, bot, message):
         LOGGER.error(str(e))
         return
 
-def sendLogMessage(text, bot, message):
+def sendLogMessage(bot, message):
     if not (log_chat := config_dict['LOG_CHAT']):
         return
     try:
-        return bot.sendMessage(log_chat, disable_notification=False, text=message.link)
+        return bot.sendMessage(log_chat, disable_notification=True, text=message.link)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendLogMessage(text, bot, message)
+        return sendLogMessage(bot, message)
     except Exception as e:
         LOGGER.error(str(e))
         return
