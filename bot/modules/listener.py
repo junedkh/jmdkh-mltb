@@ -300,11 +300,15 @@ class MirrorLeechListener:
                 sendMessage(msg, self.bot, self.dmMessage)
                 msg += '<b>Files has been sent in your DM.</b>'
                 sendMessage(msg, self.bot, self.message)
+                if self.logMessage:
+                    sendMessage(msg, self.bot, self.logMessage)
             else:
                 fmsg = ''
                 for index, (link, name) in enumerate(files.items(), start=1):
                     fmsg += f"{index}. <a href='{link}'>{name}</a>\n"
                     if len(fmsg.encode() + msg.encode()) > 4000:
+                        if self.logMessage:
+                            sendMessage(msg + fmsg, self.bot, self.logMessage)
                         buttons = ButtonMaker()
                         buttons = extra_btns(buttons)
                         if self.message.chat.type != 'private':
@@ -313,6 +317,8 @@ class MirrorLeechListener:
                         sleep(1)
                         fmsg = ''
                 if fmsg != '':
+                    if self.logMessage:
+                        sendMessage(msg + fmsg, self.bot, self.logMessage)
                     buttons = ButtonMaker()
                     buttons = extra_btns(buttons)
                     if self.message.chat.type != 'private':
@@ -352,6 +358,11 @@ class MirrorLeechListener:
                     if config_dict['VIEW_LINK']:
                         share_urls = short_url(f'{INDEX_URL}/{url_path}?a=view')
                         buttons.buildbutton("💻 View Link", share_urls)
+            if self.logMessage:
+                if config_dict['DISABLE_DRIVE_LINK']:
+                    link = short_url(link)
+                    buttons.buildbutton("🔐 Drive Link", link, 'header')
+                sendMessage(msg, self.bot, self.logMessage, buttons.build_menu(2))
             buttons = extra_btns(buttons)
             if self.dmMessage:
                 sendMessage(msg, self.bot, self.dmMessage, buttons.build_menu(2))
@@ -361,11 +372,6 @@ class MirrorLeechListener:
                 if self.message.chat.type != 'private':
                     buttons.sbutton("Save This Message", 'save', 'footer')
                 sendMessage(msg, self.bot, self.message, buttons.build_menu(2))
-            if self.logMessage:
-                if config_dict['DISABLE_DRIVE_LINK']:
-                    link = short_url(link)
-                    buttons.buildbutton("🔐 Drive Link", link, 'header')
-                sendMessage(msg, self.bot, self.logMessage, buttons.build_menu(2))
             if self.seed:
                 if self.isZip:
                     clean_target(f"{self.dir}/{name}")
