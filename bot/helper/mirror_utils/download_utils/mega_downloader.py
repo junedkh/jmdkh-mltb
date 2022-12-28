@@ -181,6 +181,7 @@ def add_mega_download(mega_link, path, listener, name, from_queue=False):
                     folder_api.removeListener(mega_listener)
                 return
     size = api.getSize(node)
+    mname = name or node.getName()
     limit_exceeded = ''
     if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
         limit = STORAGE_THRESHOLD * 1024**3
