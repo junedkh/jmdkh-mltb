@@ -357,11 +357,6 @@ class MirrorLeechListener:
                     if config_dict['VIEW_LINK']:
                         share_urls = short_url(f'{INDEX_URL}/{url_path}?a=view')
                         buttons.buildbutton("💻 View Link", share_urls)
-            if self.logMessage:
-                if config_dict['DISABLE_DRIVE_LINK']:
-                    link = short_url(link)
-                    buttons.buildbutton("🔐 Drive Link", link, 'header')
-                sendMessage(msg, self.bot, self.logMessage, buttons.build_menu(2))
             buttons = extra_btns(buttons)
             if self.dmMessage:
                 sendMessage(msg, self.bot, self.dmMessage, buttons.build_menu(2))
@@ -371,6 +366,11 @@ class MirrorLeechListener:
                 if self.message.chat.type != 'private':
                     buttons.sbutton("Save This Message", 'save', 'footer')
                 sendMessage(msg, self.bot, self.message, buttons.build_menu(2))
+            if self.logMessage:
+                if config_dict['DISABLE_DRIVE_LINK']:
+                    link = short_url(link)
+                    buttons.buildbutton("🔐 Drive Link", link, 'header')
+                sendMessage(msg, self.bot, self.logMessage, buttons.build_menu(2))
             if self.seed:
                 if self.isZip:
                     clean_target(f"{self.dir}/{name}")

@@ -195,10 +195,6 @@ def start_clone(listner):
             buttons.buildbutton("🚀 Index Link", index)
         if view:= links_dict.get('view'):
             buttons.buildbutton('💻 View Link', view)
-        if logMessage:
-            if config_dict['DISABLE_DRIVE_LINK']:
-                buttons.buildbutton("🔐 Drive Link", links_dict['durl'], 'header')
-            sendMessage(f"{result + cc}", bot, logMessage, buttons.build_menu(2))
         buttons = extra_btns(buttons)
         if dmMessage:
             sendMessage(f"{result + cc}", bot, dmMessage, buttons.build_menu(2))
@@ -207,6 +203,10 @@ def start_clone(listner):
             if message.chat.type != 'private':
                 buttons.sbutton("Save This Message", 'save', 'footer')
             sendMessage(f"{result + cc}", bot, message, buttons.build_menu(2))
+        if logMessage:
+            if config_dict['DISABLE_DRIVE_LINK']:
+                buttons.buildbutton("🔐 Drive Link", links_dict['durl'], 'header')
+            sendMessage(f"{result + cc}", bot, logMessage, buttons.build_menu(2))
         delete_links(bot, message)
         if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS'] and raw_url:
             DbManger().remove_download(raw_url)
