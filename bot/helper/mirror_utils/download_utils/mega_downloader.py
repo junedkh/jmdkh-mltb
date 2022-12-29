@@ -181,7 +181,6 @@ def add_mega_download(mega_link, path, listener, name, from_queue=False):
                     folder_api.removeListener(mega_listener)
                 return
     size = api.getSize(node)
-    mname = name or node.getName()
     limit_exceeded = ''
     if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
         limit = STORAGE_THRESHOLD * 1024**3
@@ -200,6 +199,7 @@ def add_mega_download(mega_link, path, listener, name, from_queue=False):
     if limit_exceeded:
         listener.ismega.delete()
         return sendMessage(f"{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}.", listener.bot, listener.message)
+    mname = name or node.getName()
     listener.selectCategory()
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=8))
     all_limit = config_dict['QUEUE_ALL']

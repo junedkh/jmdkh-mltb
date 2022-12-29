@@ -242,6 +242,9 @@ def load_config():
     EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '')
     EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
 
+    MEDIA_GROUP = environ.get('MEDIA_GROUP', '')
+    MEDIA_GROUP = MEDIA_GROUP.lower() == 'true'
+
     IGNORE_PENDING_REQUESTS = environ.get('IGNORE_PENDING_REQUESTS', '')
     IGNORE_PENDING_REQUESTS = IGNORE_PENDING_REQUESTS.lower() == 'true'
 
@@ -383,6 +386,7 @@ def load_config():
                    'INDEX_URL': INDEX_URL,
                    'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
                    'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
+                   'MEDIA_GROUP': MEDIA_GROUP,
                    'MEGA_API_KEY': MEGA_API_KEY,
                    'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                    'MEGA_PASSWORD': MEGA_PASSWORD,

@@ -76,10 +76,9 @@ rss_dict = {}
 # value: [listener, extras, isNeedEngine, time_out]
 btn_listener = {}
 
-if path.exists('pyrogram.session'):
-    remove('pyrogram.session')
-if path.exists('pyrogram.session-journal'):
-    remove('pyrogram.session-journal')
+for file_ in ['pyrogram.session', 'pyrogram.session-journal', 'rss_session.session', 'rss_session.session-journal']:
+    if path.exists(file_):
+        remove(file_)
 
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
 if len(BOT_TOKEN) == 0:
@@ -309,6 +308,9 @@ AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
 EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '')
 EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
 
+MEDIA_GROUP = environ.get('MEDIA_GROUP', '')
+MEDIA_GROUP = MEDIA_GROUP.lower() == 'true'
+
 SERVER_PORT = environ.get('SERVER_PORT', '')
 if len(SERVER_PORT) == 0:
     SERVER_PORT = 80
@@ -402,6 +404,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                 'INDEX_URL': INDEX_URL,
                 'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
                 'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
+                'MEDIA_GROUP': MEDIA_GROUP,
                 'MEGA_API_KEY': MEGA_API_KEY,
                 'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                 'MEGA_PASSWORD': MEGA_PASSWORD,

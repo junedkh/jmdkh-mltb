@@ -117,7 +117,7 @@ class MirrorLeechListener:
                 path_ = f"{m_path}.zip"
             with download_dict_lock:
                 download_dict[self.uid] = ZipStatus(name, size, gid, self)
-            LEECH_SPLIT_SIZE = (user_dict and user_dict.get('split_size')) or config_dict['LEECH_SPLIT_SIZE']
+            LEECH_SPLIT_SIZE = user_dict and user_dict.get('split_size') or config_dict['LEECH_SPLIT_SIZE']
             if self.pswd:
                 if self.isLeech and int(size) > LEECH_SPLIT_SIZE:
                     LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path_}.0*')
@@ -206,7 +206,7 @@ class MirrorLeechListener:
             o_files = []
             if not self.isZip:
                 checked = False
-                LEECH_SPLIT_SIZE = (user_dict and user_dict.get('split_size')) or config_dict['LEECH_SPLIT_SIZE']
+                LEECH_SPLIT_SIZE = user_dict and user_dict.get('split_size') or config_dict['LEECH_SPLIT_SIZE']
                 for dirpath, _, files in walk(up_dir, topdown=False):
                     for file_ in files:
                         f_path = path.join(dirpath, file_)
@@ -251,7 +251,6 @@ class MirrorLeechListener:
                 self.queuedUp = True
             while self.queuedUp:
                 sleep(1)
-                continue
             with download_dict_lock:
                 if self.uid not in download_dict.keys():
                     return
@@ -269,7 +268,7 @@ class MirrorLeechListener:
             with download_dict_lock:
                 download_dict[self.uid] = tg_upload_status
             update_all_messages()
-            tg.upload(o_files)
+            tg.upload(o_files, m_size)
         else:
             up_path = f'{up_dir}/{up_name}'
             size = get_path_size(up_path)
