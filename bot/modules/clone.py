@@ -80,8 +80,7 @@ def _clone(message, bot):
             return
         if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
             raw_url = extract_link(link)
-            exist = DbManger().check_download(raw_url)
-            if exist:
+            if exist := DbManger().check_download(raw_url):
                 _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
                 delete_links(bot, message)
                 return sendMessage(_msg, bot, message)

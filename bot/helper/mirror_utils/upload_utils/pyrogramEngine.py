@@ -1,3 +1,4 @@
+from copy import copy
 from logging import ERROR, getLogger
 from os import path as ospath
 from os import remove, rename, walk
@@ -9,9 +10,10 @@ from PIL import Image
 from pyrogram.errors import FloodWait, RPCError
 from pyrogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
                             InputMediaDocument, InputMediaVideo)
+from telegram import InputMediaDocument as ptbInputMediaDocument
+from telegram import InputMediaVideo as ptbInputMediaVideo
 
-from bot import (GLOBAL_EXTENSION_FILTER, IS_USER_SESSION, app, config_dict,
-                 user_data)
+from bot import GLOBAL_EXTENSION_FILTER, app, config_dict, user_data
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.ext_utils.fs_utils import (clean_unwanted, get_media_info,
                                            get_media_streams, take_ss)
@@ -195,18 +197,13 @@ class TgUploader:
                     else:
                         self.__in_media_group = True
 
-            if self.__listener.dmMessage and self.__sent_DMmsg:
+            if not self.__in_media_group and self.__sent_DMmsg:
                 sleep(1)
-                if IS_USER_SESSION:
-                    self.__sent_DMmsg = self.__listener.bot.copy_message(
-                    chat_id=self.__listener.message.from_user.id,
-                    from_chat_id=self.__sent_msg.chat.id,
-                    message_id=self.__sent_msg.id,
-                    reply_to_message_id=self.__sent_DMmsg['message_id'])
-                else:
-                    self.__sent_DMmsg = self.__sent_msg.copy(
-                        chat_id=self.__sent_DMmsg.chat.id,
-                        reply_to_message_id=self.__sent_DMmsg.id)
+                __ptb = self.__sent_DMmsg.reply_copy(
+                from_chat_id=self.__sent_msg.chat.id,
+                reply_to_message_id=self.__sent_DMmsg.message_id,
+                message_id=self.__sent_msg.id)
+                self.__sent_DMmsg.message_id = __ptb['message_id']
         except FloodWait as f:
             LOGGER.warning(str(f))
             sleep(f.value)
@@ -249,11 +246,9 @@ class TgUploader:
         if DUMP_CHAT:= config_dict['DUMP_CHAT']:
             msg = self.__listener.message.text if self.__listener.isPrivate else self.__listener.message.link
             self.__sent_msg = app.send_message(DUMP_CHAT, msg, disable_web_page_preview=True)
-            if self.__listener.dmMessage and IS_USER_SESSION:
-                self.__sent_DMmsg = {'message_id' : self.__listener.dmMessage.message_id}
-            elif self.__listener.dmMessage:
-                self.__sent_DMmsg = app.get_messages(self.__listener.message.from_user.id, self.__listener.dmMessage.message_id)
-        elif self.__listener.dmMessage and not IS_USER_SESSION:
+            if self.__listener.dmMessage:
+                self.__sent_DMmsg = copy(self.__listener.dmMessage)
+        elif self.__listener.dmMessage:
             self.__sent_msg = app.get_messages(self.__listener.message.from_user.id, self.__listener.dmMessage.message_id)
             self.__sent_DMmsg = None
         else:
@@ -273,17 +268,34 @@ class TgUploader:
             rlist.append(input_media)
         return rlist
 
+    def __get_ptb_input_media(self, pname, key):
+        rlist = []
+        for msg in self.__media_dict[key][pname]:
+            if key == 'videos':
+                input_media = ptbInputMediaVideo(media=msg.video.file_id, caption=msg.caption)
+            else:
+                input_media = ptbInputMediaDocument(media=msg.document.file_id, caption=msg.caption)
+            rlist.append(input_media)
+        return rlist
+
     def __send_media_group(self, pname, key, msgs):
         msgs_list = msgs[0].reply_to_message.reply_media_group(
             media=self.__get_input_media(pname, key),
             disable_notification=True)
         for msg in msgs:
             msg.delete()
-        del self.__media_dict[key][pname]
         if not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
             for m in msgs_list:
                 self.__msgs_dict[m.link] = f'{m.caption} (Grouped)'
         self.__sent_msg = msgs_list[-1]
+        if self.__sent_DMmsg:
+            msgs_list = self.__sent_DMmsg.reply_media_group(
+                self.__get_ptb_input_media(pname, key),
+                reply_to_message_id=self.__sent_DMmsg.message_id,
+                disable_notification=True
+            )
+            self.__sent_DMmsg = msgs_list[-1]
+        del self.__media_dict[key][pname]
 
     @property
     def speed(self):
