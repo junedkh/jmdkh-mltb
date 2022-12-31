@@ -357,15 +357,15 @@ class MirrorLeechListener:
                     if config_dict['VIEW_LINK']:
                         share_urls = short_url(f'{INDEX_URL}/{url_path}?a=view')
                         buttons.buildbutton("💻 View Link", share_urls)
-            buttons = extra_btns(buttons)
+            __btns = extra_btns(buttons)
             if self.dmMessage:
-                sendMessage(msg, self.bot, self.dmMessage, buttons.build_menu(2))
+                sendMessage(msg, self.bot, self.dmMessage, __btns.build_menu(2))
                 msg += '\n\n<b>Links has been sent in your DM.</b>'
                 sendMessage(msg, self.bot, self.message)
             else:
                 if self.message.chat.type != 'private':
-                    buttons.sbutton("Save This Message", 'save', 'footer')
-                sendMessage(msg, self.bot, self.message, buttons.build_menu(2))
+                    __btns.sbutton("Save This Message", 'save', 'footer')
+                sendMessage(msg, self.bot, self.message, __btns.build_menu(2))
             if self.logMessage:
                 if config_dict['DISABLE_DRIVE_LINK']:
                     link = short_url(link)

@@ -166,7 +166,7 @@ def sendLogMessage(bot, message):
     if not (log_chat := config_dict['LOG_CHAT']):
         return
     try:
-        return bot.sendMessage(log_chat, disable_notification=True, text=message.link)
+        return bot.sendMessage(log_chat, disable_notification=True, text=message.link or message.text)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
