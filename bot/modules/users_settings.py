@@ -64,7 +64,7 @@ def get_user_settings(from_user):
     if user_dict and user_dict.get('lprefix'):
         lprefix = user_dict['lprefix']
     else:
-        lprefix = 'None'
+        lprefix = config_dict['LEECH_FILENAME_PREFIX'] or 'None'
     text = f"<u>Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n"\
             f"Leech Type is <b>{ltype}</b>\n"\
             f"Custom Thumbnail <b>{thumbmsg}</b>\n"\

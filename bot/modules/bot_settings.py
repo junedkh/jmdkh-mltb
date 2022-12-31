@@ -120,6 +120,10 @@ def load_config():
     if len(RSS_COMMAND) == 0:
         RSS_COMMAND = ''
 
+    LEECH_FILENAME_PREFIX = environ.get('LEECH_FILENAME_PREFIX', '')
+    if len(LEECH_FILENAME_PREFIX) == 0:
+        LEECH_FILENAME_PREFIX = ''
+
     SEARCH_PLUGINS = environ.get('SEARCH_PLUGINS', '')
     if len(SEARCH_PLUGINS) == 0:
         SEARCH_PLUGINS = ''
@@ -385,6 +389,7 @@ def load_config():
                    'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
                    'INDEX_URL': INDEX_URL,
                    'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
+                   'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
                    'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
                    'MEDIA_GROUP': MEDIA_GROUP,
                    'MEGA_API_KEY': MEGA_API_KEY,

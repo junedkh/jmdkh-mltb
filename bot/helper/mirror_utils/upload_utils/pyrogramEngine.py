@@ -44,6 +44,7 @@ class TgUploader:
         self.__button = None
         self.__in_media_group = False
         self.__media_dict = {'videos': {}, 'documents': {}}
+        self.__sent_DMmsg = None
         self.__msg_to_reply()
         self.__user_settings()
 
@@ -238,7 +239,7 @@ class TgUploader:
         user_dict = user_data.get(user_id, False)
         self.__as_doc = user_dict and user_dict.get('as_doc', False) or config_dict['AS_DOCUMENT']
         self.__media_group = user_dict and user_dict.get('media_group', False) or config_dict['MEDIA_GROUP']
-        self.__lprefix = user_dict and user_dict.get('lprefix', False) or None
+        self.__lprefix = user_dict and user_dict.get('lprefix', False) or config_dict['LEECH_FILENAME_PREFIX']
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 
@@ -250,10 +251,8 @@ class TgUploader:
                 self.__sent_DMmsg = copy(self.__listener.dmMessage)
         elif self.__listener.dmMessage:
             self.__sent_msg = app.get_messages(self.__listener.message.from_user.id, self.__listener.dmMessage.message_id)
-            self.__sent_DMmsg = None
         else:
             self.__sent_msg = app.get_messages(self.__listener.message.chat.id, self.__listener.uid)
-            self.__sent_DMmsg = None
         if self.__listener.message.chat.type != 'private' and not self.__listener.dmMessage:
             self.__button = InlineKeyboardMarkup([[InlineKeyboardButton(text='Save Message', callback_data="save")]])
 
