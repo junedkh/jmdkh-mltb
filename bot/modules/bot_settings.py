@@ -944,10 +944,8 @@ def edit_bot_settings(update, context):
         value = config_dict[data[2]]
         if len(str(value)) > 200:
             query.answer()
-            filename = f"{data[2]}.txt"
-            with open(filename, 'w', encoding='utf-8') as f:
-                f.write(f'{value}')
-            sendFile(context.bot, message, filename)
+            fileName = f"{data[2]}.txt"
+            sendFile(context.bot, message, value, fileName, data[2])
             return
         elif value and data[2] not in ['SEARCH_LIMIT', 'STATUS_LIMIT'] and data[2].endswith(('_THRESHOLD', '_LIMIT')):
             value = float(value)

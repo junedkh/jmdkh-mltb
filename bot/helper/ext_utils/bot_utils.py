@@ -10,8 +10,8 @@ from psutil import cpu_percent, disk_usage, virtual_memory
 from requests import request
 
 from bot import (BUTTON_NAMES, BUTTON_URLS, CATEGORY_NAMES, DOWNLOAD_DIR,
-                 botStartTime, btn_listener, config_dict, download_dict,
-                 download_dict_lock, user_data)
+                 botStartTime, config_dict, download_dict, download_dict_lock,
+                 user_data)
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
@@ -247,10 +247,6 @@ def turn(data):
 def check_user_tasks(user_id, maxtask):
     if tasks:= getAllDownload(MirrorStatus.STATUS_DOWNLOADING, user_id, False):
         return len(tasks) >= maxtask
-
-def check_buttons():
-    if len(btn_listener) >= 3:
-        return 'Sorry, I can only handle 3 tasks at a time.'
 
 def get_readable_time(seconds: int) -> str:
     result = ''

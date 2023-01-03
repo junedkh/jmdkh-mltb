@@ -202,7 +202,7 @@ class TgUploader:
                 sleep(1)
                 __ptb = self.__sent_DMmsg.reply_copy(
                 from_chat_id=self.__sent_msg.chat.id,
-                reply_to_message_id=self.__sent_DMmsg.message_id,
+                quote=True,
                 message_id=self.__sent_msg.id)
                 self.__sent_DMmsg.message_id = __ptb['message_id']
         except FloodWait as f:
@@ -236,10 +236,10 @@ class TgUploader:
 
     def __user_settings(self):
         user_id = self.__listener.message.from_user.id
-        user_dict = user_data.get(user_id, False)
-        self.__as_doc = user_dict and user_dict.get('as_doc', False) or config_dict['AS_DOCUMENT']
-        self.__media_group = user_dict and user_dict.get('media_group', False) or config_dict['MEDIA_GROUP']
-        self.__lprefix = user_dict and user_dict.get('lprefix', False) or config_dict['LEECH_FILENAME_PREFIX']
+        user_dict = user_data.get(user_id, {})
+        self.__as_doc = user_dict.get('as_doc') or config_dict['AS_DOCUMENT']
+        self.__media_group = user_dict.get('media_group') or config_dict['MEDIA_GROUP']
+        self.__lprefix = user_dict.get('lprefix') or config_dict['LEECH_FILENAME_PREFIX']
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 
@@ -280,6 +280,7 @@ class TgUploader:
     def __send_media_group(self, pname, key, msgs):
         msgs_list = msgs[0].reply_to_message.reply_media_group(
             media=self.__get_input_media(pname, key),
+            quote=True,
             disable_notification=True)
         for msg in msgs:
             msg.delete()
@@ -290,7 +291,7 @@ class TgUploader:
         if self.__sent_DMmsg:
             msgs_list = self.__sent_DMmsg.reply_media_group(
                 self.__get_ptb_input_media(pname, key),
-                reply_to_message_id=self.__sent_DMmsg.message_id,
+                quote=True,
                 disable_notification=True
             )
             self.__sent_DMmsg = msgs_list[-1]

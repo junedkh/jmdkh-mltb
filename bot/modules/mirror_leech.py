@@ -36,6 +36,9 @@ from bot.modules.listener import MirrorLeechListener
 
 
 def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False):
+    if not isLeech and not config_dict['GDRIVE_ID']:
+        sendMessage('GDRIVE_ID not Provided!', bot, message)
+        return
     mesg = message.text.split('\n')
     message_args = mesg[0].split(maxsplit=1)
     index = 1
@@ -65,9 +68,9 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 seed = True
                 index += 1
                 dargs = x.split(':')
-                ratio = dargs[1] if dargs[1] else None
+                ratio = dargs[1] or None
                 if len(dargs) == 3:
-                    seed_time = dargs[2] if dargs[2] else None
+                    seed_time = dargs[2] or None
             elif x.isdigit():
                 multi = int(x)
                 mi = index
@@ -78,12 +81,21 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 if link.startswith(("|", "pswd:")):
                     link = ''
 
+    def __run_multi():
+        if multi > 1:
+            sleep(4)
+            nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
+                                                   'message_id': message.reply_to_message.message_id + 1})
+            msg = message.text.split(maxsplit=mi+1)
+            msg[mi] = f"{multi - 1}"
+            nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
+            nextmsg.from_user.id = message.from_user.id
+            sleep(4)
+            Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech)).start()
+
     name = mesg[0].split('|', maxsplit=1)
     if len(name) > 1:
-        if 'pswd:' in name[0]:
-            name = ''
-        else:
-            name = name[1].split('pswd:')[0].strip()
+        name = '' if 'pswd:' in name[0] else name[1].split('pswd:')[0].strip()
     else:
         name = ''
 
@@ -153,15 +165,7 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                     listener.mode += ' as Unzip'
                 chat_restrict(message)
                 Thread(target=TelegramDownloadHelper(listener).add_download, args=(message, f'{DOWNLOAD_DIR}{listener.uid}/', name)).start()
-                if multi > 1:
-                    sleep(4)
-                    nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-                    msg = message.text.split(maxsplit=mi+1)
-                    msg[mi] = f"{multi - 1}"
-                    nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
-                    nextmsg.from_user.id = message.from_user.id
-                    sleep(4)
-                    Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech)).start()
+                __run_multi()
                 return
             else:
                 tfile = True
@@ -198,13 +202,15 @@ Number should be always before |newname or pswd:
 4. Commands that start with <b>qb</b> are ONLY for torrents.
 '''
         delete_links(bot, message)
-        return sendMessage(help_msg.format_map({'cmd': BotCommands.MirrorCommand[0]}), bot, message)
+        sendMessage(help_msg.format_map({'cmd': BotCommands.MirrorCommand[0]}), bot, message)
+        return
     if message.from_user.id in [1087968824, 136817688]:
         message.from_user.id = anno_checker(message)
         if not message.from_user.id:
             return
     if not isAdmin(message):
         if message_filter(bot, message, tag):
+            __run_multi()
             return
         if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
             raw_url = extract_link(link, tfile)
@@ -212,7 +218,9 @@ Number should be always before |newname or pswd:
             if exist:
                 _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
                 delete_links(bot, message)
-                return sendMessage(_msg, bot, message)
+                sendMessage(_msg, bot, message)
+                __run_multi()
+                return
         if forcesub(bot, message, tag):
             return
         if (maxtask:= config_dict['USER_MAX_TASKS']) and check_user_tasks(message.from_user.id, maxtask):
@@ -250,7 +258,9 @@ Number should be always before |newname or pswd:
                 LOGGER.info(str(e))
                 if str(e).startswith('ERROR:'):
                     delete_links(bot, message)
-                    return editMessage(escape(str(e)), _tempmsg)
+                    editMessage(escape(str(e)), _tempmsg)
+                    __run_multi()
+                    return
             _tempmsg.delete()
     elif isQbit and not is_magnet(link):
         if link.endswith('.torrent') or "https://api.telegram.org/file/" in link:
@@ -262,7 +272,9 @@ Number should be always before |newname or pswd:
                 resp = request('GET', link, timeout=10, headers = {'user-agent': 'Wget/1.12'})
                 if resp.status_code != 200:
                     delete_links(bot, message)
-                    return sendMessage(f"{tag} ERROR: link got HTTP response: {resp.status_code}", bot, message)
+                    sendMessage(f"{tag} ERROR: link got HTTP response: {resp.status_code}", bot, message)
+                    __run_multi()
+                    return
                 file_name = str(time()).replace(".", "") + ".torrent"
                 with open(file_name, "wb") as t:
                     t.write(resp.content)
@@ -274,10 +286,14 @@ Number should be always before |newname or pswd:
                 else:
                     LOGGER.error(str(e))
                     delete_links(bot, message)
-                    return sendMessage(f"{tag} {error}", bot, message)
+                    sendMessage(f"{tag} {error}", bot, message)
+                    __run_multi()
+                    return
         else:
             msg = "qBittorrent for torrents only. if you are trying to dowload torrent then report."
-            return sendMessage(msg, bot, message)
+            sendMessage(msg, bot, message)
+            __run_multi()
+            return
     if is_gdrive_link(link):
         if not any([isZip, extract, isLeech]):
             gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
@@ -302,15 +318,7 @@ Number should be always before |newname or pswd:
         else:
             auth = ''
         Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name, auth, ratio, seed_time)).start()
-    if multi > 1:
-        sleep(4)
-        nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-        msg = message.text.split(maxsplit=mi+1)
-        msg[mi] = f"{multi - 1}"
-        nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
-        nextmsg.from_user.id = message.from_user.id
-        sleep(4)
-        Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech)).start()
+    __run_multi()
 
 
 def mirror(update, context):

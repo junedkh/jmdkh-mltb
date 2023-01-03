@@ -28,6 +28,9 @@ from bot.modules.listener import MirrorLeechListener
 listener_dict = {}
 
 def _ytdl(bot, message, isZip=False, isLeech=False):
+    if not isLeech and not config_dict['GDRIVE_ID']:
+        sendMessage('GDRIVE_ID not Provided!', bot, message)
+        return
     mssg = message.text
     msg_id = message.message_id
     qual = ''
@@ -58,6 +61,18 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
                 else:
                     link = split(r"opt:|pswd:|\|", link)[0]
                     link = link.strip()
+
+    def __run_multi():
+        if multi > 1:
+            sleep(4)
+            nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
+                                                   'message_id': message.reply_to_message.message_id + 1})
+            ymsg = mssg.split(maxsplit=mi+1)
+            ymsg[mi] = f"{multi - 1}"
+            nextmsg = sendMessage(" ".join(ymsg), bot, nextmsg)
+            nextmsg.from_user.id = message.from_user.id
+            sleep(4)
+            Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech)).start()
 
     name = mssg.split('|', maxsplit=1)
     if len(name) > 1:
@@ -124,6 +139,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     user_id = message.from_user.id
     if not isAdmin(message):
         if message_filter(bot, message, tag):
+            __run_multi()
             return
         if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
             raw_url = extract_link(link)
@@ -131,7 +147,9 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             if exist:
                 _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
                 delete_links(bot, message)
-                return sendMessage(_msg, bot, message)
+                sendMessage(_msg, bot, message)
+                __run_multi()
+                return
         if forcesub(bot, message, tag):
             return
         if (maxtask:= config_dict['USER_MAX_TASKS']) and check_user_tasks(message.from_user.id, maxtask):
@@ -163,18 +181,21 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     except Exception as e:
         delete_links(bot, message)
         msg = str(e).replace('<', ' ').replace('>', ' ')
-        return sendMessage(f"{tag} {msg}", bot, message)
+        sendMessage(f"{tag} {msg}", bot, message)
+        __run_multi()
+        return
     if not select:
-        user_dict = user_data.get(user_id, False)
+        YTQ = config_dict['YT_DLP_QUALITY']
+        user_dict = user_data.get(user_id, {})
         if 'format:' in opt:
             opts = opt.split('|')
             for f in opts:
                 if f.startswith('format:'):
                     qual = f.split('format:', 1)[1]
-        elif user_dict and user_dict.get('yt_ql', False):
+        elif user_dict.get('yt_ql'):
             qual = user_dict['yt_ql']
-        elif config_dict['YT_DLP_QUALITY']:
-            qual = config_dict['YT_DLP_QUALITY']
+        elif not user_dict and YTQ or 'yt_ql' not in user_dict and YTQ:
+            qual = YTQ
     if qual:
         playlist = 'entries' in result
         LOGGER.info(f"Downloading with YT-DLP: {link}")
@@ -257,15 +278,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             bmsg = sendMessage('Choose Video quality\n\n<i>This Will Cancel Automatically in <u>2 Minutes</u></i>', bot, message, YTBUTTONS)
 
         Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
-    if multi > 1:
-        sleep(4)
-        nextmsg = type('nextmsg', (object,), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-        ymsg = mssg.split(maxsplit=mi+1)
-        ymsg[mi] = f"{multi - 1}"
-        nextmsg = sendMessage(" ".join(ymsg), bot, nextmsg)
-        nextmsg.from_user.id = message.from_user.id
-        sleep(4)
-        Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech)).start()
+    __run_multi()
 
 def _qual_subbuttons(task_id, b_name, msg):
     buttons = ButtonMaker()

@@ -7,8 +7,8 @@ from telegram.ext import CallbackQueryHandler, CommandHandler
 
 from bot import (CATEGORY_NAMES, DATABASE_URL, LOGGER, Interval, btn_listener,
                  config_dict, dispatcher, download_dict, download_dict_lock)
-from bot.helper.ext_utils.bot_utils import (check_buttons, check_user_tasks,
-                                            extra_btns, get_readable_file_size,
+from bot.helper.ext_utils.bot_utils import (check_user_tasks, extra_btns,
+                                            get_readable_file_size,
                                             get_readable_time, is_gdrive_link,
                                             new_thread)
 from bot.helper.ext_utils.db_handler import DbManger
@@ -44,6 +44,9 @@ def _get_category_btns(time_out, msg_id, c_index):
     return text, button.build_menu(3)
 
 def _clone(message, bot):
+    if not config_dict['GDRIVE_ID']:
+        sendMessage('GDRIVE_ID not Provided!', bot, message)
+        return
     args = message.text.split()
     reply_to = message.reply_to_message
     link = ''
@@ -60,6 +63,19 @@ def _clone(message, bot):
             tag = f"@{message.from_user.username}"
         else:
             tag = message.from_user.mention_html(message.from_user.first_name)
+
+    def __run_multi():
+        if multi > 1:
+            sleep(4)
+            nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
+                                                   'message_id': message.reply_to_message.message_id + 1})
+            cmsg = message.text.split()
+            cmsg[1] = f"{multi - 1}"
+            nextmsg = sendMessage(" ".join(cmsg), bot, nextmsg)
+            nextmsg.from_user.id = message.from_user.id
+            sleep(4)
+            Thread(target=_clone, args=(nextmsg, bot)).start()
+
     if reply_to:
         if len(link) == 0:
             link = reply_to.text.split(maxsplit=1)[0].strip()
@@ -77,13 +93,16 @@ def _clone(message, bot):
             return
     if not isAdmin(message):
         if message_filter(bot, message, tag):
+            __run_multi()
             return
         if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS']:
             raw_url = extract_link(link)
             if exist := DbManger().check_download(raw_url):
                 _msg = f'<b>Download is already added by {exist["tag"]}</b>\n\nCheck the download status in @{exist["botname"]}\n\n<b>Link</b>: <code>{exist["_id"]}</code>'
                 delete_links(bot, message)
-                return sendMessage(_msg, bot, message)
+                sendMessage(_msg, bot, message)
+                __run_multi()
+                return
         if forcesub(bot, message, tag):
             return
         if (maxtask:= config_dict['USER_MAX_TASKS']) and check_user_tasks(message.from_user.id, maxtask):
@@ -91,8 +110,6 @@ def _clone(message, bot):
     time_out = 30
     listner = [bot, message, c_index, time_out, time(), tag, link, raw_url]
     if len(CATEGORY_NAMES) > 1:
-        if checked:= check_buttons():
-            return sendMessage(checked, bot, message)
         text, btns = _get_category_btns(time_out, msg_id, c_index)
         btn_listener[msg_id] = listner
         chat_restrict(message)
@@ -101,15 +118,7 @@ def _clone(message, bot):
     else:
         chat_restrict(message)
         start_clone(listner)
-    if multi > 1:
-        sleep(4)
-        nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-        cmsg = message.text.split()
-        cmsg[1] = f"{multi - 1}"
-        nextmsg = sendMessage(" ".join(cmsg), bot, nextmsg)
-        nextmsg.from_user.id = message.from_user.id
-        sleep(4)
-        Thread(target=_clone, args=(nextmsg, bot)).start()
+    __run_multi()
 
 @new_thread
 def _auto_start_dl(msg, msg_id, time_out):

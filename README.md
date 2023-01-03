@@ -542,7 +542,7 @@ urlshortx.com 91fc872f9882144c27eecdc22d16f7369766f297
 ouo.io LYT0zBn1
 ```
 - Supported URL Shorteners:
->exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io, adfoc.us, cutt.ly
+>exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com, ouo.io, cutt.ly
 -----
 ### Extra Buttons
 - Four buttons are already added, Drive Link, Index Link and View Link, You can add up to four extra buttons if you don't know what are the below entries.

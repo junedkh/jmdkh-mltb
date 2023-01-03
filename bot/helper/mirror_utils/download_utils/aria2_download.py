@@ -72,6 +72,7 @@ def __onDownloadStarted(api, gid):
             else:
                 return
             download = api.get_download(gid)
+            download = download.live
             if download.total_length == 0:
                 start_time = time()
                 while time() - start_time <= 15:
