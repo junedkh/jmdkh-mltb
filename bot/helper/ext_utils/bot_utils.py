@@ -346,7 +346,7 @@ def set_commands(bot):
         (f'{BotCommands.BtSelectCommand}', 'Select files to download only torrents'),
         (f'{BotCommands.CategorySelect}', 'Select category to upload only mirror'),
         (f'{BotCommands.CancelMirror}', 'Cancel a Task'),
-        (f'{BotCommands.CancelAllCommand}', 'Cancel all tasks which added by you'),
+        (f'{BotCommands.CancelAllCommand[0]}', f'Cancel all tasks which added by you or {BotCommands.CancelAllCommand[1]} to in bots.'),
         (f'{BotCommands.ListCommand}', 'Search in Drive'),
         (f'{BotCommands.SearchCommand}', 'Search in Torrent'),
         (f'{BotCommands.UserSetCommand}', 'Users settings'),
