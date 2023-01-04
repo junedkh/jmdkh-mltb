@@ -203,14 +203,14 @@ def start_clone(listner):
             buttons.buildbutton("🚀 Index Link", index)
         if view:= links_dict.get('view'):
             buttons.buildbutton('💻 View Link', view)
-        __btns = extra_btns(buttons)
+        buttons = extra_btns(buttons)
         if dmMessage:
-            sendMessage(f"{result + cc}", bot, dmMessage, __btns.build_menu(2))
+            sendMessage(f"{result + cc}", bot, dmMessage, buttons.build_menu(2))
             sendMessage(f"{result + cc}\n\n<b>Links has been sent in your DM.</b>", bot, message)
         else:
             if message.chat.type != 'private':
-                __btns.sbutton("Save This Message", 'save', 'footer')
-            sendMessage(f"{result + cc}", bot, message, __btns.build_menu(2))
+                buttons.sbutton("Save This Message", 'save', 'footer')
+            sendMessage(f"{result + cc}", bot, message, buttons.build_menu(2))
         if logMessage:
             if config_dict['DISABLE_DRIVE_LINK']:
                 buttons.buildbutton("🔐 Drive Link", links_dict['durl'], 'header')

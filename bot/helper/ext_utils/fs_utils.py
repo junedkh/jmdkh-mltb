@@ -52,7 +52,7 @@ def start_cleanup():
         rmtree(DOWNLOAD_DIR)
     except:
         pass
-    makedirs(DOWNLOAD_DIR)
+    makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 def clean_all():
     aria2.remove_all(True)
@@ -242,14 +242,19 @@ def get_media_streams(path):
 
     is_video = False
     is_audio = False
+    is_image = False
 
     mime_type = get_mime_type(path)
     if mime_type.startswith('audio'):
         is_audio = True
-        return is_video, is_audio
+        return is_video, is_audio, is_image
+
+    if mime_type.startswith('image'):
+        is_image = True
+        return is_video, is_audio, is_image
 
     if path.endswith('.bin') or not mime_type.startswith('video') and not mime_type.endswith('octet-stream'):
-        return is_video, is_audio
+        return is_video, is_audio, is_image
 
     try:
         result = check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
@@ -257,12 +262,12 @@ def get_media_streams(path):
     except Exception as e:
         if not mime_type.endswith('octet-stream'):
             LOGGER.error(f'{e}. Mostly file not found!')
-        return is_video, is_audio
+        return is_video, is_audio, is_image
 
     fields = eval(result).get('streams')
     if fields is None:
         LOGGER.error(f"get_media_streams: {result}")
-        return is_video, is_audio
+        return is_video, is_audio, is_image
 
     for stream in fields:
         if stream.get('codec_type') == 'video':
@@ -270,7 +275,7 @@ def get_media_streams(path):
         elif stream.get('codec_type') == 'audio':
             is_audio = True
 
-    return is_video, is_audio
+    return is_video, is_audio, is_image
 
 def check_storage_threshold(size, threshold, arch=False, alloc=False):
     if not alloc:

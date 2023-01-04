@@ -49,10 +49,8 @@ def get_user_settings(from_user):
     MG = config_dict['MEDIA_GROUP']
     if not user_dict and MG or user_dict.get('media_group') or 'media_group' not in user_dict and MG:
         media_group = 'Enabled'
-        buttons.sbutton("Disable Media Group", f"userset {user_id} mgroup")
     else:
         media_group = 'Disabled'
-        buttons.sbutton("Enable Media Group", f"userset {user_id} mgroup")
 
     buttons.sbutton("YT-DLP Quality", f"userset {user_id} ytq")
     YQ = config_dict['YT_DLP_QUALITY']
@@ -215,7 +213,7 @@ def edit_user_settings(update, context):
         handler_dict[user_id] = True
         buttons = ButtonMaker()
         buttons.sbutton("Back", f"userset {user_id} back")
-        if user_dict.get('yt_ql'):
+        if user_dict.get('yt_ql') or config_dict['YT_DLP_QUALITY']:
             buttons.sbutton("Remove YT-DLP Quality", f"userset {user_id} rytq", 'header')
         buttons.sbutton("Close", f"userset {user_id} close")
         rmsg = f'''
@@ -251,7 +249,8 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         handler_dict[user_id] = True
         buttons = ButtonMaker()
         buttons.sbutton("Back", f"userset {user_id} back")
-        if user_dict.get('lprefix'):
+        LP = config_dict['LEECH_FILENAME_PREFIX']
+        if not user_dict and LP or user_dict.get('lprefix') or 'lprefix' not in user_dict and LP:
             buttons.sbutton("Remove Leech Prefix", f"userset {user_id} rlpre", 'header')
         buttons.sbutton("Close", f"userset {user_id} close")
         rmsg = f'''
@@ -293,10 +292,16 @@ Check all available formatting options <a href="https://core.telegram.org/bots/a
         buttons = ButtonMaker()
         if user_dict.get('split_size'):
             buttons.sbutton("Reset Split Size", f"userset {user_id} rlss")
-        if not user_dict and config_dict['EQUAL_SPLITS'] or user_dict.get('equal_splits'):
+        ES = config_dict['EQUAL_SPLITS']
+        if not user_dict and ES or user_dict.get('equal_splits') or 'equal_splits' not in user_dict and ES:
             buttons.sbutton("Disable Equal Splits", f"userset {user_id} esplits")
         else:
             buttons.sbutton("Enable Equal Splits", f"userset {user_id} esplits")
+        MG = config_dict['MEDIA_GROUP']
+        if not user_dict and MG or user_dict.get('media_group') or 'media_group' not in user_dict and MG:
+            buttons.sbutton("Disable Media Group", f"userset {user_id} mgroup")
+        else:
+            buttons.sbutton("Enable Media Group", f"userset {user_id} mgroup")
         buttons.sbutton("Back", f"userset {user_id} back")
         buttons.sbutton("Close", f"userset {user_id} close")
         __msg = "Send Leech split size don't add unit, the default unit is <b>GB</b>\n"
@@ -328,6 +333,7 @@ Check all available formatting options <a href="https://core.telegram.org/bots/a
             DbManger().update_user_data(user_id)
     elif data[2] == 'mgroup':
         query.answer()
+        handler_dict[user_id] = False
         update_user_ldata(user_id, 'media_group', not bool(user_dict.get('media_group')))
         update_user_settings(message, query.from_user)
         if DATABASE_URL:

@@ -35,7 +35,7 @@ from bot.helper.telegram_helper.message_utils import (anno_checker,
 from bot.modules.listener import MirrorLeechListener
 
 
-def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False):
+def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir={}):
     if not isLeech and not config_dict['GDRIVE_ID']:
         sendMessage('GDRIVE_ID not Provided!', bot, message)
         return
@@ -48,12 +48,13 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
     seed = False
     multi = 0
     link = ''
+    folder_name = ''
     tfile = False
     raw_url = None
     c_index = 0
     maxtask = config_dict['USER_MAX_TASKS']
     if len(message_args) > 1:
-        args = mesg[0].split(maxsplit=3)
+        args = mesg[0].split(maxsplit=4)
         for x in args:
             x = x.strip()
             if x in ['|', 'pswd:']:
@@ -74,24 +75,40 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
             elif x.isdigit():
                 multi = int(x)
                 mi = index
+            elif x.startswith('m:'):
+                marg = x.split('m:', 1)
+                if len(marg) > 1:
+                    folder_name = f"/{marg[-1]}"
+                    if not sameDir:
+                        sameDir = set()
+                    sameDir.add(message.message_id)
         if multi == 0:
             message_args = mesg[0].split(maxsplit=index)
             if len(message_args) > index:
                 link = message_args[index].strip()
                 if link.startswith(("|", "pswd:")):
                     link = ''
+        if len(folder_name) > 0:
+            seed = False
+            ratio = None
+            seed_time = None
 
     def __run_multi():
-        if multi > 1:
-            sleep(4)
-            nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
-                                                   'message_id': message.reply_to_message.message_id + 1})
-            msg = message.text.split(maxsplit=mi+1)
-            msg[mi] = f"{multi - 1}"
-            nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
-            nextmsg.from_user.id = message.from_user.id
-            sleep(4)
-            Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech)).start()
+        if multi <= 1:
+            return
+        sleep(4)
+        nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
+                                               'message_id': message.reply_to_message.message_id + 1})
+        msg = message.text.split(maxsplit=mi+1)
+        msg[mi] = f"{multi - 1}"
+        nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
+        if len(folder_name) > 0:
+            sameDir.add(nextmsg.message_id)
+        nextmsg.from_user.id = message.from_user.id
+        sleep(4)
+        Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech, sameDir)).start()
+
+    dl_path = f'{DOWNLOAD_DIR}{message.message_id}{folder_name}'
 
     name = mesg[0].split('|', maxsplit=1)
     if len(name) > 1:
@@ -157,14 +174,14 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 else:
                     dmMessage = None
                 logMessage = sendLogMessage(bot, message)
-                listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url, c_index, dmMessage, logMessage)
+                listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, sameDir, raw_url, c_index, dmMessage, logMessage)
                 listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
                 if isZip:
                     listener.mode += ' as Zip'
                 elif extract:
                     listener.mode += ' as Unzip'
                 chat_restrict(message)
-                Thread(target=TelegramDownloadHelper(listener).add_download, args=(message, f'{DOWNLOAD_DIR}{listener.uid}/', name)).start()
+                Thread(target=TelegramDownloadHelper(listener).add_download, args=(message, f'{dl_path}/', name)).start()
                 __run_multi()
                 return
             else:
@@ -176,6 +193,10 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
 
 <b>By replying to link/file:</b>
 <code>/{cmd}</code> |newname pswd: xx(zip/unzip)
+
+<b>Multi links within same upload directory only by replying to first link/file:</b>
+<code>/cmd</code> 10(number of links/files) m:folder_name
+Number and m:folder_name should be always before |newname or pswd:
 
 <b>Direct link authorization:</b>
 <code>/{cmd}</code> link |newname pswd: xx(zip/unzip)
@@ -237,7 +258,10 @@ Number should be always before |newname or pswd:
     else:
         dmMessage = None
     logMessage = sendLogMessage(bot, message)
-    listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, raw_url, c_index, dmMessage, logMessage)
+    listener = MirrorLeechListener(bot, message,
+                                isZip, extract, isQbit, isLeech,
+                                pswd, tag, select, seed, sameDir,
+                                raw_url, c_index, dmMessage, logMessage)
     chat_restrict(message)
     listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
     if isZip:
@@ -302,12 +326,12 @@ Number should be always before |newname or pswd:
             delete_links(bot, message)
             sendMessage(gmsg, bot, message)
         else:
-            Thread(target=add_gd_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name)).start()
+            Thread(target=add_gd_download, args=(link, dl_path, listener, name)).start()
     elif is_mega_link(link):
         listener.ismega = sendMessage("💡 <b>Mega link this might take a minutes</b>", bot, message)
-        Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)).start()
+        Thread(target=add_mega_download, args=(link, f'{dl_path}/', listener, name)).start()
     elif isQbit and (is_magnet(link) or path.exists(link)):
-        Thread(target=add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, ratio, seed_time)).start()
+        Thread(target=add_qb_torrent, args=(link, dl_path, listener, ratio, seed_time)).start()
     else:
         mesg = message.text.split('\n')
         if len(mesg) > 1:
@@ -317,7 +341,7 @@ Number should be always before |newname or pswd:
             auth = "Basic " + b64encode(auth.encode()).decode('ascii')
         else:
             auth = ''
-        Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name, auth, ratio, seed_time)).start()
+        Thread(target=add_aria2c_download, args=(link, dl_path, listener, name, auth, ratio, seed_time)).start()
     __run_multi()
 
 
