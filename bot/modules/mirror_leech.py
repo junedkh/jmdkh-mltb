@@ -268,7 +268,7 @@ Number should be always before |newname or pswd:
         listener.mode += ' as Zip'
     elif extract:
         listener.mode += ' as Unzip'
-    LOGGER.info(link)
+    LOGGER.info(f"{link} added by: {message.from_user.id}")
     if not is_mega_link(link) and not isQbit and not is_magnet(link) \
         and not is_gdrive_link(link) and not link.endswith('.torrent'):
         content_type = get_content_type(link)

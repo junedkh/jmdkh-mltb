@@ -215,7 +215,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             qual = YTQ
     if qual:
         playlist = 'entries' in result
-        LOGGER.info(f"Downloading with YT-DLP: {link}")
+        LOGGER.info(f"Downloading with YT-DLP: {link} added by : {user_id}")
         Thread(target=ydl.add_download, args=(link, dl_path, name, qual, playlist, opt)).start()
     else:
         buttons = ButtonMaker()
@@ -369,7 +369,7 @@ def select_format(update, context):
                 b_name, tbr = qual.split('|')
                 qual = task_info[6][b_name][tbr][1]
         ydl = YoutubeDLHelper(listener)
-        LOGGER.info(f"Downloading with YT-DLP: {link}")
+        LOGGER.info(f"Downloading with YT-DLP: {link} added by : {user_id}")
         Thread(target=ydl.add_download, args=(link, dl_path, name, qual, playlist, opt)).start()
         query.message.delete()
     del listener_dict[task_id]
