@@ -319,8 +319,8 @@ def load_config():
     SET_COMMANDS = environ.get('SET_COMMANDS', '')
     SET_COMMANDS = SET_COMMANDS.lower() == 'true'
 
-    ENABLE_DM = environ.get('ENABLE_DM', '')
-    ENABLE_DM = ENABLE_DM.lower() == 'true'
+    DM_MODE = environ.get('DM_MODE', '')
+    DM_MODE = DM_MODE.lower() if DM_MODE.lower() in ['leech', 'mirror', 'all'] else ''
 
     DELETE_LINKS = environ.get('DELETE_LINKS', '')
     DELETE_LINKS = DELETE_LINKS.lower() == 'true'
@@ -438,7 +438,7 @@ def load_config():
                    'DISABLE_DRIVE_LINK': DISABLE_DRIVE_LINK,
                    'SET_COMMANDS': SET_COMMANDS,
                    'DISABLE_LEECH': DISABLE_LEECH,
-                   'ENABLE_DM': ENABLE_DM,
+                   'DM_MODE': DM_MODE,
                    'DELETE_LINKS': DELETE_LINKS})
 
     if DATABASE_URL:
@@ -592,6 +592,8 @@ def edit_variable(update, context, omsg, key):
             CATEGORY_INDEXS[0] = value
         else:
             CATEGORY_INDEXS.insert(0, value)
+    elif key == 'DM_MODE':
+        value = value.lower() if value.lower() in ['leech', 'mirror', 'all'] else ''
     elif key not in ['SEARCH_LIMIT', 'STATUS_LIMIT'] and key.endswith(('_THRESHOLD', '_LIMIT')):
         value = float(value)
     elif value.isdigit() and key != 'FSUB_IDS':

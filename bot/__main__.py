@@ -53,7 +53,7 @@ def stats(update, context):
     sendMessage(stats, context.bot, update.message)
 
 def start(update, context):
-    if config_dict['ENABLE_DM']:
+    if config_dict['DM_MODE']:
         start_string = 'Bot Started.\n' \
                     'Now I will send your files or links here.\n'
     else:

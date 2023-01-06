@@ -379,8 +379,8 @@ DISABLE_LEECH = DISABLE_LEECH.lower() == 'true'
 SET_COMMANDS = environ.get('SET_COMMANDS', '')
 SET_COMMANDS = SET_COMMANDS.lower() == 'true'
 
-ENABLE_DM = environ.get('ENABLE_DM', '')
-ENABLE_DM = ENABLE_DM.lower() == 'true'
+DM_MODE = environ.get('DM_MODE', '')
+DM_MODE = DM_MODE.lower() if DM_MODE.lower() in ['leech', 'mirror', 'all'] else ''
 
 DELETE_LINKS = environ.get('DELETE_LINKS', '')
 DELETE_LINKS = DELETE_LINKS.lower() == 'true'
@@ -456,7 +456,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                 'DISABLE_DRIVE_LINK': DISABLE_DRIVE_LINK,
                 'SET_COMMANDS': SET_COMMANDS,
                 'DISABLE_LEECH': DISABLE_LEECH,
-                'ENABLE_DM': ENABLE_DM,
+                'DM_MODE': DM_MODE,
                 'DELETE_LINKS': DELETE_LINKS}
 
 if GDRIVE_ID:

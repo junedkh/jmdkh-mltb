@@ -277,7 +277,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `SET_COMMANDS`: To set bot commands automatically on every startup. Default is `False`. `Bool`
   - **Note**: You can set commands manually according to your needs few commands are available [here](#bot-commands-to-be-set-in-botfatherhttpstmebotfather)
 - `DISABLE_LEECH`: It will disable leech functionality. Default is `False`. `Bool`
-- `ENABLE_DM`: If enabled then bot will send Mirrored/Leeched files in user's DM. Default is `False`. `Bool`
+- `DM_MODE`: If then bot will send Mirrored/Leeched files in user's DM. Default is `off`. `Str`
+  - **Note**: if value is `Mirror` it will send only mirrored files in DM. if value is `Leech` so it will send leeched files in DM. if value is `all` it will send Mirrored/Leeched files in DM
 - `DELETE_LINKS`: It will delete links on download start. Default is `False`. `Bool`
 - `LOG_CHAT`: Fill chat_id of the group/channel. It will send mirror/clone links in the log chat. `Int`
   - **Note**: Bot should be added in the log chat as admin.

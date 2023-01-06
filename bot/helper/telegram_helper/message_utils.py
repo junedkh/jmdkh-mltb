@@ -5,8 +5,9 @@ from pyrogram.errors import FloodWait
 from telegram import ChatPermissions
 from telegram.error import RetryAfter, Unauthorized
 
-from bot import (LOGGER, Interval, bot, btn_listener, config_dict, rss_session,
-                 status_reply_dict, status_reply_dict_lock)
+from bot import (IS_USER_SESSION, LOGGER, Interval, bot, btn_listener,
+                 config_dict, rss_session, status_reply_dict,
+                 status_reply_dict_lock)
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
@@ -145,18 +146,20 @@ def sendStatusMessage(msg, bot):
         if not Interval:
             Interval.append(setInterval(config_dict['DOWNLOAD_STATUS_UPDATE_INTERVAL'], update_all_messages))
 
-def sendDmMessage(bot, message):
+def sendDmMessage(bot, message, dmMode, isLeech=False):
+    if dmMode == 'mirror' and isLeech or dmMode == 'leech' and not isLeech:
+        return
     try:
         return bot.sendMessage(message.from_user.id, disable_notification=True, text=message.link)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendDmMessage(bot, message)
+        return sendDmMessage(bot, message, isLeech)
     except Unauthorized:
         buttons = ButtonMaker()
         buttons.buildbutton("Start", f"{bot.link}?start=start")
         sendMessage("<b>You didn't START the bot in DM</b>", bot, message, buttons.build_menu(1))
-        return
+        return 'BotNotStarted'
     except Exception as e:
         LOGGER.error(str(e))
         return

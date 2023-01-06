@@ -174,11 +174,11 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         if isLeech and config_dict['DISABLE_LEECH']:
             delete_links(bot, message)
             return sendMessage('Locked!', bot, message)
-    if config_dict['ENABLE_DM'] and message.chat.type == message.chat.SUPERGROUP:
+    if (dmMode:=config_dict['DM_MODE']) and message.chat.type == message.chat.SUPERGROUP:
         if isLeech and IS_USER_SESSION and not config_dict['DUMP_CHAT']:
-            return sendMessage('ENABLE_DM and User Session need DUMP_CHAT', bot, message)
-        dmMessage = sendDmMessage(bot, message)
-        if not dmMessage:
+            return sendMessage('DM_MODE and User Session need DUMP_CHAT', bot, message)
+        dmMessage = sendDmMessage(bot, message, dmMode, isLeech)
+        if dmMessage == 'BotNotStarted':
             return
     else:
         dmMessage = None
