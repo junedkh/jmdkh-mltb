@@ -244,15 +244,16 @@ class TgUploader:
     def __user_settings(self):
         user_id = self.__listener.message.from_user.id
         user_dict = user_data.get(user_id, {})
-        self.__as_doc = user_dict.get('as_doc') or config_dict['AS_DOCUMENT']
-        self.__media_group = user_dict.get('media_group') or config_dict['MEDIA_GROUP']
-        self.__lprefix = user_dict.get('lprefix') or config_dict['LEECH_FILENAME_PREFIX']
+        self.__as_doc = user_dict.get('as_doc') or 'as_doc' not in user_dict and config_dict['AS_DOCUMENT']
+        self.__media_group = user_dict.get('media_group') or 'media_group' not in user_dict and config_dict['MEDIA_GROUP']
+        self.__lprefix = user_dict.get('lprefix') or 'lprefix' not in user_dict and config_dict['LEECH_FILENAME_PREFIX']
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 
     def __msg_to_reply(self):
         if DUMP_CHAT:= config_dict['DUMP_CHAT']:
-            msg = self.__listener.message.text if self.__listener.isPrivate else self.__listener.message.link
+            msg = self.__listener.message.text if self.__listener.isPrivate else f'<b><a href="{self.__listener.message.link}">Source</a></b>'
+            msg = f'{msg}\n\n<b>#cc</b>: {self.__listener.tag} (<code>{self.__listener.message.from_user.id}</code>)'
             self.__sent_msg = app.send_message(DUMP_CHAT, msg, disable_web_page_preview=True)
             if self.__listener.dmMessage:
                 self.__sent_DMmsg = copy(self.__listener.dmMessage)
@@ -260,7 +261,7 @@ class TgUploader:
             self.__sent_msg = app.get_messages(self.__listener.message.from_user.id, self.__listener.dmMessage.message_id)
         else:
             self.__sent_msg = app.get_messages(self.__listener.message.chat.id, self.__listener.uid)
-        if self.__listener.message.chat.type != 'private' and not self.__listener.dmMessage:
+        if (self.__listener.message.chat.type != 'private' and config_dict['DUMP_CHAT']) or not self.__listener.dmMessage:
             self.__button = InlineKeyboardMarkup([[InlineKeyboardButton(text='Save Message', callback_data="save")]])
 
 

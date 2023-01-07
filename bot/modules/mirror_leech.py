@@ -173,7 +173,7 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                         return
                 else:
                     dmMessage = None
-                logMessage = sendLogMessage(bot, message)
+                logMessage = sendLogMessage(bot, message, link, tag)
                 listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, sameDir, raw_url, c_index, dmMessage, logMessage)
                 listener.mode = 'Leech' if isLeech else f'Drive {CATEGORY_NAMES[c_index]}'
                 if isZip:
@@ -257,7 +257,7 @@ Number should be always before |newname or pswd:
             return
     else:
         dmMessage = None
-    logMessage = sendLogMessage(bot, message)
+    logMessage = sendLogMessage(bot, message, link, tag)
     listener = MirrorLeechListener(bot, message,
                                 isZip, extract, isQbit, isLeech,
                                 pswd, tag, select, seed, sameDir,

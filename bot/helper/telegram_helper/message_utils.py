@@ -5,9 +5,8 @@ from pyrogram.errors import FloodWait
 from telegram import ChatPermissions
 from telegram.error import RetryAfter, Unauthorized
 
-from bot import (IS_USER_SESSION, LOGGER, Interval, bot, btn_listener,
-                 config_dict, rss_session, status_reply_dict,
-                 status_reply_dict_lock)
+from bot import (LOGGER, Interval, bot, btn_listener, config_dict, rss_session,
+                 status_reply_dict, status_reply_dict_lock)
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
@@ -164,15 +163,27 @@ def sendDmMessage(bot, message, dmMode, isLeech=False):
         LOGGER.error(str(e))
         return
 
-def sendLogMessage(bot, message):
+def sendLogMessage(bot, message, link, tag):
     if not (log_chat := config_dict['LOG_CHAT']):
         return
     try:
-        return bot.sendMessage(log_chat, disable_notification=True, text=message.link or message.text)
+        
+        if (reply_to := message.reply_to_message) or "https://api.telegram.org/file/" in link:
+            if reply_to.document or reply_to.video or reply_to.audio or reply_to.photo:
+                __forwared = reply_to.forward(log_chat)
+                __forwared.delete()
+                __temp = reply_to.copy(
+                    log_chat,
+                    caption=f'<b><a href="{message.link}">Source</a></b> | <b>#cc</b>: {tag} (<code>{message.from_user.id}</code>)'
+                )
+                __forwared.message_id = __temp['message_id']
+                return __forwared
+        msg = f'<b><a href="{message.link}">Source</a></b>: <code>{link}</code>\n\n<b>#cc</b>: {tag} (<code>{message.from_user.id}</code>)'
+        return bot.sendMessage(log_chat, disable_notification=True, text=msg)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendLogMessage(bot, message)
+        return sendLogMessage(bot, message, link, tag)
     except Exception as e:
         LOGGER.error(str(e))
         return

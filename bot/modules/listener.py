@@ -131,7 +131,7 @@ class MirrorLeechListener:
                 path_ = f"{m_path}.zip"
             with download_dict_lock:
                 download_dict[self.uid] = ZipStatus(name, size, gid, self)
-            LEECH_SPLIT_SIZE = user_dict.get('split_size') or config_dict['LEECH_SPLIT_SIZE']
+            LEECH_SPLIT_SIZE = user_dict.get('split_size', False) or config_dict['LEECH_SPLIT_SIZE']
             if self.pswd:
                 if self.isLeech and int(size) > LEECH_SPLIT_SIZE:
                     LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path_}.0*')
@@ -220,8 +220,8 @@ class MirrorLeechListener:
             o_files = []
             if not self.isZip:
                 checked = False
-                LEECH_SPLIT_SIZE = user_dict.get('split_size') or config_dict['LEECH_SPLIT_SIZE']
-                for dirpath, _, files in walk(up_dir, topdown=False):
+                LEECH_SPLIT_SIZE = user_dict.get('split_size', False) or config_dict['LEECH_SPLIT_SIZE']
+                for dirpath, subdir, files in walk(up_dir, topdown=False):
                     for file_ in files:
                         f_path = path.join(dirpath, file_)
                         f_size = path.getsize(f_path)
@@ -309,7 +309,9 @@ class MirrorLeechListener:
             msg += f"\n<b>Upload</b>: {self.mode}\n\n"
             if not files:
                 sendMessage(msg, self.bot, self.message)
-            elif self.dmMessage:
+                if self.logMessage:
+                    sendMessage(msg, self.bot, self.logMessage)
+            elif self.dmMessage and not config_dict['DUMP_CHAT']:
                 sendMessage(msg, self.bot, self.dmMessage)
                 msg += '<b>Files has been sent in your DM.</b>'
                 sendMessage(msg, self.bot, self.message)
@@ -419,6 +421,8 @@ class MirrorLeechListener:
         if msg:
             msg += f"\n<b>Upload</b>: {self.mode}"
             sendMessage(msg, self.bot, self.message, button)
+            if self.logMessage:
+                sendMessage(msg, self.bot, self.logMessage, button)
         if count == 0:
             self.clean()
         else:
