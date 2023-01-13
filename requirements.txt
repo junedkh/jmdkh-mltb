@@ -11,13 +11,13 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 gunicorn
-lk21
+git+https://github.com/zevtyardt/lk21.git
 lxml
 pillow
 psutil
 pybase64
 pymongo
-pyrogram
+Pyrogram==2.0.93
 python-dotenv
 python-magic
 python-telegram-bot==13.15
