@@ -72,7 +72,7 @@ def direct_link_generator(link: str):
         return krakenfiles(link)
     elif 'upload.ee' in domain:
         return uploadee(link)
-    elif 'terabox' in domain:
+    elif any(x in domain for x in ['terabox', 'nephobox']):
         return terabox(link)
     elif any(x in domain for x in fmed_list):
         return fembed(link)

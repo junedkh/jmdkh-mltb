@@ -131,13 +131,13 @@ def _auto_start_dl(msg, msg_id, time_out):
     start_clone(info)
 
 @new_thread
-def start_clone(listner):
-    bot = listner[0]
-    message = listner[1]
-    c_index = listner[2]
-    tag = listner[5]
-    link = listner[6]
-    raw_url = listner[7]
+def start_clone(listener):
+    bot = listener[0]
+    message = listener[1]
+    c_index = listener[2]
+    tag = listener[5]
+    link = listener[6]
+    raw_url = listener[7]
     if (dmMode:=config_dict['DM_MODE']) and message.chat.type == message.chat.SUPERGROUP:
         dmMessage = sendDmMessage(bot, message, dmMode)
         if dmMessage == 'BotNotStarted':
