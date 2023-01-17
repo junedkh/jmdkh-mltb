@@ -170,14 +170,14 @@ def sendLogMessage(bot, message, link, tag):
         
         if (reply_to := message.reply_to_message) or "https://api.telegram.org/file/" in link:
             if reply_to.document or reply_to.video or reply_to.audio or reply_to.photo:
-                __forwared = reply_to.forward(log_chat)
-                __forwared.delete()
+                __forwarded = reply_to.forward(log_chat)
+                __forwarded.delete()
                 __temp = reply_to.copy(
                     log_chat,
                     caption=f'<b><a href="{message.link}">Source</a></b> | <b>#cc</b>: {tag} (<code>{message.from_user.id}</code>)'
                 )
-                __forwared.message_id = __temp['message_id']
-                return __forwared
+                __forwarded.message_id = __temp['message_id']
+                return __forwarded
         msg = f'<b><a href="{message.link}">Source</a></b>: <code>{link}</code>\n\n<b>#cc</b>: {tag} (<code>{message.from_user.id}</code>)'
         return bot.sendMessage(log_chat, disable_notification=True, text=msg)
     except RetryAfter as r:

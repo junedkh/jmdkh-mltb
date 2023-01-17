@@ -37,7 +37,7 @@ def change_category(update, context):
             return
     elif len(context.args) == 0:
         msg = "Reply to an active /{cmd} which was used to start the download or add gid along with {cmd}\n\n" \
-            "This command mainly for change category incase you decided to change category from already added donwload. " \
+            "This command mainly for change category incase you decided to change category from already added download. " \
             "But you can always use /{mir} with to select category before download start."
         sendMessage(msg.format_map({'cmd': BotCommands.CategorySelect,'mir': BotCommands.MirrorCommand[0]}), context.bot, message)
         return
@@ -50,7 +50,7 @@ def change_category(update, context):
         return
     listener = dl.listener() if dl and hasattr(dl, 'listener') else None
     if listener:
-        listener.selectCategory()
+        listener.selectCategory(True)
     else:
         sendMessage("Can not change Category for this task!", context.bot, message)
 
@@ -78,7 +78,10 @@ def confirm_category(update, context):
     elif data[1] == 'cancel':
         query.answer()
         listener.c_index = categoryInfo[3]
-        mode = f'Drive {CATEGORY_NAMES[listener.c_index]}'
+        if listener.isClone:
+            mode = f'Clone {CATEGORY_NAMES[listener.c_index]}'
+        else:
+            mode = f'Drive {CATEGORY_NAMES[listener.c_index]}'
         if listener.isZip:
             mode += ' as Zip'
         elif listener.extract:
@@ -89,7 +92,10 @@ def confirm_category(update, context):
     elif data[1] == 'done':
         query.answer()
         del btn_listener[msg_id]
-        mode = f'Drive {CATEGORY_NAMES[listener.c_index]}'
+        if listener.isClone:
+            mode = f'Clone {CATEGORY_NAMES[listener.c_index]}'
+        else:
+            mode = f'Drive {CATEGORY_NAMES[listener.c_index]}'
         if listener.isZip:
             mode += ' as Zip'
         elif listener.extract:
