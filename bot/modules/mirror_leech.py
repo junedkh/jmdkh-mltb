@@ -175,7 +175,10 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 else:
                     dmMessage = None
                 logMessage = sendLogMessage(bot, message, link, tag)
-                listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, sameDir, raw_url, c_index, dmMessage, logMessage)
+                listener = MirrorLeechListener(bot, message,
+                                isZip, extract, isQbit, isLeech, isClone,
+                                pswd, tag, select, seed, sameDir,
+                                raw_url, c_index, dmMessage, logMessage)
                 chat_restrict(message)
                 Thread(target=TelegramDownloadHelper(listener).add_download, args=(message, f'{dl_path}/', name)).start()
                 __run_multi()
