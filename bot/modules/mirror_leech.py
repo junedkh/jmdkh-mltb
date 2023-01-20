@@ -184,8 +184,9 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 __run_multi()
                 return
             else:
-                tfile = True
-                link = file_.get_file().file_path
+                if not isClone:
+                    tfile = True
+                    link = file_.get_file().file_path
     if not is_url(link) and not is_magnet(link) or (link.isdigit() and multi == 0):
         help_msg = '''
 <code>/{cmd}</code> link |newname pswd: xx(zip/unzip)
