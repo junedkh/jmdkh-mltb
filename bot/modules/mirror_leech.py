@@ -142,7 +142,7 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 reply_text = reply_to.text.split(maxsplit=1)[0].strip()
                 if is_url(reply_text) or is_magnet(reply_text):
                     link = reply_to.text.strip()
-            elif isinstance(file_, list):
+            elif isinstance(file_, list) and not isClone:
                 link = file_[-1].get_file().file_path
             elif not isQbit and file_.mime_type != "application/x-bittorrent" and not isClone:
                 if message.from_user.id in [1087968824, 136817688]:
