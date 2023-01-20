@@ -492,7 +492,8 @@ def filepress(url):
             'id': raw.path.split('/')[-1],
             'method': 'publicDownlaod',
             }
-        res = cget('POST', f'{domain}/api/file/download/', headers={'Referer': domain}, json=json_data).json()
+        api = f'{raw.scheme}://api.{raw.netloc}/api/file/download/'
+        res = cget('POST', api, headers={'Referer': domain}, json=json_data).json()
         if 'data' not in res:
             raise DirectDownloadLinkException(f'ERROR: {res["statusText"]}')
         return f'https://drive.google.com/uc?id={res["data"]}&export=download'
