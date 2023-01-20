@@ -144,7 +144,7 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                     link = reply_to.text.strip()
             elif isinstance(file_, list):
                 link = file_[-1].get_file().file_path
-            elif not isQbit and file_.mime_type != "application/x-bittorrent":
+            elif not isQbit and file_.mime_type != "application/x-bittorrent" and not isClone:
                 if message.from_user.id in [1087968824, 136817688]:
                     message.from_user.id = anno_checker(message)
                     if not message.from_user.id:

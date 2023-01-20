@@ -491,7 +491,7 @@ def filepress(url):
             'id': url.split('/')[-1],
             'method': 'publicDownlaod',
             }
-        api = f'{raw.scheme}://api.{raw.netloc}/api/file/download/'
+        api = f'{raw.scheme}://api.{raw.netloc}/api/file/downlaod/'
         res = cget('POST', api, headers={'Referer': f'{raw.scheme}://{raw.netloc}'}, json=json_data).json()
         if 'data' not in res:
             raise DirectDownloadLinkException(f'ERROR: {res["statusText"]}')
