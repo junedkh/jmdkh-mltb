@@ -487,13 +487,12 @@ def filepress(url):
     cget = create_scraper().request
     try:
         raw = urlparse(url)
-        domain = f'{raw.scheme}://{raw.netloc}'
         json_data = {
-            'id': raw.path.split('/')[-1],
+            'id': url.split('/')[-1],
             'method': 'publicDownlaod',
             }
         api = f'{raw.scheme}://api.{raw.netloc}/api/file/download/'
-        res = cget('POST', api, headers={'Referer': domain}, json=json_data).json()
+        res = cget('POST', api, headers={'Referer': f'{raw.scheme}://{raw.netloc}'}, json=json_data).json()
         if 'data' not in res:
             raise DirectDownloadLinkException(f'ERROR: {res["statusText"]}')
         return f'https://drive.google.com/uc?id={res["data"]}&export=download'
