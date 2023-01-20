@@ -11,7 +11,7 @@ from telegram.ext import CommandHandler
 from bot import (DATABASE_URL, DOWNLOAD_DIR, IS_USER_SESSION, LOGGER,
                  config_dict, dispatcher)
 from bot.helper.ext_utils.bot_utils import (check_user_tasks, get_content_type,
-                                            is_gdrive_link, is_magnet, is_gdtot_link,
+                                            is_gdrive_link, is_magnet, is_Sharerlink,
                                             is_mega_link, is_url)
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
@@ -224,7 +224,7 @@ Number should be always before |newname or pswd:
         delete_links(bot, message)
         sendMessage(help_msg.format_map({'cmd': BotCommands.MirrorCommand[0]}), bot, message)
         return
-    if isClone and not is_gdrive_link(link) and not is_gdtot_link(link):
+    if isClone and not is_gdrive_link(link) and not is_Sharerlink(link):
         msg_ = "Send Gdrive link along with command or by replying to the link by command\n"
         msg_ += "\n<b>Multi links only by replying to first link:</b>\n<code>/cmd</code> 10(number of links)"
         return sendMessage(msg_, bot, message)

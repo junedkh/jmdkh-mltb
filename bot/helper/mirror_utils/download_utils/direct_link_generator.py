@@ -75,6 +75,10 @@ def direct_link_generator(link: str):
         return uploadee(link)
     elif 'gdtot' in domain:
         return gdtot(link)
+    elif 'filepress' in domain:
+        return filepress(link)
+    elif 'appdrive' in domain:
+        return appdrive(link)
     elif any(x in domain for x in ['terabox', 'nephobox']):
         return terabox(link)
     elif any(x in domain for x in fmed_list):
@@ -476,5 +480,46 @@ def gdtot(url):
         response = cget("POST", final_url, cookies=res.cookies, headers=headers, data=data).json()
         res = cget('GET', response["url"])
         return etree.HTML(res.content).xpath("//a[contains(@class,'btn')]/@href")[0]
+    except Exception as e:
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+
+def filepress(url):
+    cget = create_scraper().request
+    try:
+        raw = urlparse(url)
+        domain = f'{raw.scheme}://{raw.netloc}'
+        json_data = {
+            'id': raw.path.split('/')[-1],
+            'method': 'publicDownlaod',
+            }
+        res = cget('POST', f'{domain}/api/file/download/', headers={'Referer': domain}, json=json_data).json()
+        if 'data' not in res:
+            raise DirectDownloadLinkException(f'ERROR: {res["statusText"]}')
+        return f'https://drive.google.com/uc?id={res["data"]}&export=download'
+    except Exception as e:
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+
+def appdrive(url):
+    try:
+        cget = create_scraper().request
+        raw = urlparse(url)
+        res = cget('GET', url)
+        key = findall('"key",\s+"(.*?)"', res.text)[0]
+        ddl_btn = etree.HTML(res.content).xpath("//button[@id='drc']")
+    except Exception as e:
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+    if not ddl_btn:
+        raise DirectDownloadLinkException("ERROR: This link don't have direct download button")
+    headers = {
+        'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryi3pOrWU7hGYfwwL4',
+        'x-token': raw.netloc,
+    }
+    data = '------WebKitFormBoundaryi3pOrWU7hGYfwwL4\r\nContent-Disposition: form-data; name="action"\r\n\r\ndirect\r\n' \
+        f'------WebKitFormBoundaryi3pOrWU7hGYfwwL4\r\nContent-Disposition: form-data; name="key"\r\n\r\n{key}\r\n' \
+        '------WebKitFormBoundaryi3pOrWU7hGYfwwL4\r\nContent-Disposition: form-data; name="action_token"\r\n\r\n\r\n' \
+        '------WebKitFormBoundaryi3pOrWU7hGYfwwL4--\r\n'
+    try:
+        res = cget("POST", url, cookies=res.cookies, headers=headers, data=data).json()
+        return res["url"]
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
