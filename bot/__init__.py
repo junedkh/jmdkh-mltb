@@ -77,8 +77,7 @@ rss_dict = {}
 btn_listener = {}
 
 for file_ in ['pyrogram.session', 'pyrogram.session-journal',
-            'rss_session.session', 'rss_session.session-journal',
-            'buttons.txt', 'shorteners.txt', 'categories.txt']:
+            'rss_session.session', 'rss_session.session-journal']:
     if path.exists(file_):
         remove(file_)
 

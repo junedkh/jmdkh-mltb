@@ -50,7 +50,7 @@ def change_category(update, context):
         return
     listener = dl.listener() if dl and hasattr(dl, 'listener') else None
     if listener:
-        listener.selectCategory(True)
+        listener.selectCategory()
     else:
         sendMessage("Can not change Category for this task!", context.bot, message)
 

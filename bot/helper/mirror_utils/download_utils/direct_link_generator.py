@@ -77,9 +77,9 @@ def direct_link_generator(link: str):
         return gdtot(link)
     elif 'filepress' in domain:
         return filepress(link)
-    elif 'appdrive' in domain:
+    elif any(x in domain for x in ['appdrive', 'gdflix']):
         return appdrive(link)
-    elif any(x in domain for x in ['terabox', 'nephobox']):
+    elif any(x in domain for x in ['terabox', 'nephobox', '4funbox']):
         return terabox(link)
     elif any(x in domain for x in fmed_list):
         return fembed(link)
@@ -452,22 +452,52 @@ def terabox(url) -> str:
         raise DirectDownloadLinkException("ERROR: Can't download folder")
     return result['dlink']
 
+def filepress(url):
+    cget = create_scraper().request
+    try:
+        raw = urlparse(url)
+        json_data = {
+            'id': raw.path.split('/')[-1],
+            'method': 'publicDownlaod',
+            }
+        api = f'{raw.scheme}://api.{raw.netloc}/api/file/downlaod/'
+        res = cget('POST', api, headers={'Referer': f'{raw.scheme}://{raw.netloc}'}, json=json_data).json()
+        if 'data' not in res:
+            raise DirectDownloadLinkException(f'ERROR: {res["statusText"]}')
+        return f'https://drive.google.com/uc?id={res["data"]}&export=download'
+    except Exception as e:
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+
 def gdtot(url):
     cget = create_scraper().request
     try:
         res = cget('GET', f'https://gdbot.xyz/file/{url.split("/")[-1]}')
-        token_url = etree.HTML(res.content).xpath("//a[contains(@class,'inline-flex items-center justify-center')]/@href")[0]
-        token_page = cget('GET', token_url)
-        path = findall('\("(.*?)"\)', token_page.text)[0]
-        raw = urlparse(token_url)
-        final_url = f'{raw.scheme}://{raw.netloc}{path}'
-        res = cget('GET', final_url)
-        key = findall('"key",\s+"(.*?)"', res.text)[0]
-        ddl_btn = etree.HTML(res.content).xpath("//button[@id='drc']")
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-    if not ddl_btn:
-        raise DirectDownloadLinkException('ERROR: Something went wrong!')
+    token_url = etree.HTML(res.content).xpath("//a[contains(@class,'inline-flex items-center justify-center')]/@href")
+    if not token_url:
+        raise DirectDownloadLinkException('ERROR: Token page url not found')
+    token_url = token_url[0]
+    try:
+        token_page = cget('GET', token_url)
+    except Exception as e:
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__} with {token_url}')
+    path = findall('\("(.*?)"\)', token_page.text)
+    if not path:
+        raise DirectDownloadLinkException('ERROR: Cannot bypass this')
+    path = path[0]
+    raw = urlparse(token_url)
+    final_url = f'{raw.scheme}://{raw.netloc}{path}'
+    try:
+        res = cget('GET', final_url)
+    except Exception as e:
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__} with {final_url}')
+    key = findall('"key",\s+"(.*?)"', res.text)
+    if not key:
+        raise DirectDownloadLinkException("ERROR: Key not found!")
+    key = key[0]
+    if not etree.HTML(res.content).xpath("//button[@id='drc']"):
+        raise DirectDownloadLinkException("ERROR: This link don't have direct download button")
     headers = {
         'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryi3pOrWU7hGYfwwL4',
         'x-token': raw.netloc,
@@ -483,32 +513,18 @@ def gdtot(url):
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
 
-def filepress(url):
-    cget = create_scraper().request
-    try:
-        raw = urlparse(url)
-        json_data = {
-            'id': url.split('/')[-1],
-            'method': 'publicDownlaod',
-            }
-        api = f'{raw.scheme}://api.{raw.netloc}/api/file/downlaod/'
-        res = cget('POST', api, headers={'Referer': f'{raw.scheme}://{raw.netloc}'}, json=json_data).json()
-        if 'data' not in res:
-            raise DirectDownloadLinkException(f'ERROR: {res["statusText"]}')
-        return f'https://drive.google.com/uc?id={res["data"]}&export=download'
-    except Exception as e:
-        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-
 def appdrive(url):
     try:
         cget = create_scraper().request
         raw = urlparse(url)
         res = cget('GET', url)
-        key = findall('"key",\s+"(.*?)"', res.text)[0]
-        ddl_btn = etree.HTML(res.content).xpath("//button[@id='drc']")
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-    if not ddl_btn:
+    key = findall('"key",\s+"(.*?)"', res.text)
+    if not key:
+        raise DirectDownloadLinkException("ERROR: Key not found!")
+    key = key[0]
+    if not etree.HTML(res.content).xpath("//button[@id='drc']"):
         raise DirectDownloadLinkException("ERROR: This link don't have direct download button")
     headers = {
         'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryi3pOrWU7hGYfwwL4',
