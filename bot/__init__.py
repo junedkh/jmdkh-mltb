@@ -520,6 +520,7 @@ run(["qbittorrent-nox", "-d", "--profile=."])
 if not path.exists('.netrc'):
     run(["touch", ".netrc"])
 run(["cp", ".netrc", "/root/.netrc"])
+run(["chmod", "600", "/root/.netrc"])
 run(["chmod", "600", ".netrc"])
 run(["chmod", "+x", "aria.sh"])
 run("./aria.sh", shell=True)
