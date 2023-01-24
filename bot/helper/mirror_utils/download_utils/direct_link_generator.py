@@ -78,7 +78,7 @@ def direct_link_generator(link: str):
     elif 'filepress' in domain:
         return filepress(link)
     elif any(x in domain for x in ['appdrive', 'gdflix']):
-        return appdrive(link)
+        return sharer_scraper(link)
     elif any(x in domain for x in ['terabox', 'nephobox', '4funbox', 'mirrobox']):
         return terabox(link)
     elif any(x in domain for x in fmed_list):
@@ -472,17 +472,26 @@ def filepress(url):
 def gdtot(url):
     cget = create_scraper().request
     try:
-        url = cget('GET', url).url
-        p_url = urlparse(url)
-        res = cget("GET",f"{p_url.scheme}://{p_url.hostname}/ddl/{url.split('/')[-1]}")
+        res = cget('GET', f'https://gdbot.xyz/file/{url.split("/")[-1]}')
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-    if (drive_link := findall(r"myDl\('(.*?)'\)", res.text)) and "drive.google.com" in drive_link[0]:
-        return drive_link[0]
-    else:
-        raise DirectDownloadLinkException('ERROR: Drive Link not found')
+    token_url = etree.HTML(res.content).xpath("//a[contains(@class,'inline-flex items-center justify-center')]/@href")
+    if not token_url:
+        raise DirectDownloadLinkException('ERROR: Token page url not found')
+    token_url = token_url[0]
+    try:
+        token_page = cget('GET', token_url)
+    except Exception as e:
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__} with {token_url}')
+    path = findall('\("(.*?)"\)', token_page.text)
+    if not path:
+        raise DirectDownloadLinkException('ERROR: Cannot bypass this')
+    path = path[0]
+    raw = urlparse(token_url)
+    final_url = f'{raw.scheme}://{raw.hostname}{path}'
+    return sharer_scraper(final_url)
 
-def appdrive(url):
+def sharer_scraper(url):
     try:
         cget = create_scraper().request
         url = cget('GET', url).url
