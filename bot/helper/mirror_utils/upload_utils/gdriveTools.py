@@ -6,7 +6,7 @@ from os import remove
 from pickle import load as pload
 from random import randrange
 from re import search as re_search
-from time import sleep, time
+from time import time
 from urllib.parse import parse_qs, urlparse
 
 from google.oauth2 import service_account

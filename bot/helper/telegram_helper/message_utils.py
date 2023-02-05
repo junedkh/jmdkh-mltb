@@ -2,7 +2,6 @@ from io import BytesIO
 from time import sleep, time
 
 from pyrogram.errors import FloodWait
-from telegram import ChatPermissions
 from telegram.error import RetryAfter, Unauthorized
 
 from bot import (LOGGER, Interval, bot, btn_listener, categories, config_dict,
