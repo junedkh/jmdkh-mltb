@@ -101,7 +101,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Extract these filetypes
   > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
 - Direct links Supported:
-  > mediafire, letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com and solidfiles.com, linkbox.to, shrdsk.me (sharedisk.io), akmfiles.com, wetransfer.com, mdisk.me (with ytdl), terabox.com (you need to add cookies txt with name) [terabox.txt](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid)
+  > mediafire, letsupload.io, hxfile.co, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com and solidfiles.com, linkbox.to, shrdsk.me (sharedisk.io), akmfiles.com, wetransfer.com, mdisk.me (with ytdl), terabox.com (you need to add cookies txt with name) [terabox.txt](https://chrome.google.com/webstore/detail/get-cookiestxt/bgaddhkoddajcdgocldbbfleckgcbcid) and almost every anonfiles based sites
 
 ## By [Junedkh](https://github.com/junedkh)
 ### Repo is design for big groups
@@ -117,6 +117,7 @@ In each single file there is a major change inspire from base code by my friend 
 - YTDLP limits
 - Google drive limits
 - User task limits
+- Ratelimiter
 
 ### Group Features
 - Force subscribe module
@@ -265,9 +266,9 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `FSUB_IDS`: Fill chat_id of groups/channel you want to force subscribe. Separate them by space. `Int`
   - it will apply only for member
   - **Note**: Bot should be added in the filled chat_id as admin.
-- `USER_MAX_TASKS`: Maximum number of tasks for each group members at a time. `Int` 
-- `ENABLE_CHAT_RESTRICT`: To enable restriction when download started. `Bool`
-  - it will restrict the user for 1 minute.
+- `USER_MAX_TASKS`: Maximum number of tasks for each group members at a time. `Int`
+- `ENABLE_RATE_LIMITER`: To enable request limit 1 request per 1 second. `Bool`
+  - it will not accept any command/callback of user for 1 minute.
 - `ENABLE_MESSAGE_FILTER`: If enabled then bot will not download files with captions or forwarded. `Bool`
 - `STOP_DUPLICATE_TASKS`: To enable stop duplicate task across multiple bots. `Bool`
   - **Note**: All bot must have added same database link.

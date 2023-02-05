@@ -1,8 +1,7 @@
 from random import SystemRandom
 from string import ascii_letters, digits
 
-from bot import (CATEGORY_IDS, LOGGER, config_dict, download_dict,
-                 download_dict_lock)
+from bot import LOGGER, config_dict, download_dict, download_dict_lock
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.mirror_utils.status_utils.clone_status import CloneStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -30,7 +29,7 @@ def start_clone(link, listener):
     listener.onDownloadStart()
     if files <= 20:
         msg = sendMessage(f"Cloning: <code>{link}</code>", listener.bot, listener.message)
-        gd.clone(link, CATEGORY_IDS[listener.c_index])
+        gd.clone(link, listener.drive_id or config_dict['GDRIVE_ID'])
         deleteMessage(listener.bot, msg)
     else:
         gd.name = name
@@ -39,4 +38,4 @@ def start_clone(link, listener):
         with download_dict_lock:
             download_dict[listener.uid] = clone_status
         sendStatusMessage(listener.message, listener.bot)
-        gd.clone(link, CATEGORY_IDS[listener.c_index])
+        gd.clone(link, listener.drive_id or config_dict['GDRIVE_ID'])

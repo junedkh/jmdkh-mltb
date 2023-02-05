@@ -34,22 +34,18 @@ load_dotenv('config.env', override=True)
 
 Interval = []
 QbInterval = []
-DRIVES_NAMES = []
-DRIVES_IDS = []
-INDEX_URLS = []
-CATEGORY_NAMES = []
-CATEGORY_IDS = []
+list_drives = {}
 SHORTENERES = []
 SHORTENER_APIS = []
 BUTTON_NAMES = []
 BUTTON_URLS = []
-CATEGORY_INDEXES = []
 GLOBAL_EXTENSION_FILTER = ['.aria2']
 user_data = {}
 aria2_options = {}
 qbit_options = {}
 queued_dl = {}
 queued_up = {}
+categories = {}
 non_queued_dl = set()
 non_queued_up = set()
 
@@ -362,8 +358,8 @@ LEECH_LIMIT = '' if len(LEECH_LIMIT) == 0 else float(LEECH_LIMIT)
 MAX_PLAYLIST = environ.get('MAX_PLAYLIST', '')
 MAX_PLAYLIST = '' if len(MAX_PLAYLIST) == 0 else int(MAX_PLAYLIST)
 
-ENABLE_CHAT_RESTRICT = environ.get('ENABLE_CHAT_RESTRICT', '')
-ENABLE_CHAT_RESTRICT = ENABLE_CHAT_RESTRICT.lower() == 'true'
+ENABLE_RATE_LIMITER = environ.get('ENABLE_RATE_LIMITER', '')
+ENABLE_RATE_LIMITER = ENABLE_RATE_LIMITER.lower() == 'true'
 
 ENABLE_MESSAGE_FILTER = environ.get('ENABLE_MESSAGE_FILTER', '')
 ENABLE_MESSAGE_FILTER = ENABLE_MESSAGE_FILTER.lower() == 'true'
@@ -451,7 +447,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                 'MEGA_LIMIT': MEGA_LIMIT,
                 'LEECH_LIMIT': LEECH_LIMIT,
                 'MAX_PLAYLIST': MAX_PLAYLIST,
-                'ENABLE_CHAT_RESTRICT': ENABLE_CHAT_RESTRICT,
+                'ENABLE_RATE_LIMITER': ENABLE_RATE_LIMITER,
                 'ENABLE_MESSAGE_FILTER': ENABLE_MESSAGE_FILTER,
                 'STOP_DUPLICATE_TASKS': STOP_DUPLICATE_TASKS,
                 'DISABLE_DRIVE_LINK': DISABLE_DRIVE_LINK,
@@ -461,24 +457,24 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                 'DELETE_LINKS': DELETE_LINKS}
 
 if GDRIVE_ID:
-    DRIVES_NAMES.append("Main")
-    DRIVES_IDS.append(GDRIVE_ID)
-    INDEX_URLS.append(INDEX_URL)
-    CATEGORY_NAMES.append("Root")
-    CATEGORY_IDS.append(GDRIVE_ID)
-    CATEGORY_INDEXES.append(INDEX_URL)
+    list_drives['Main'] = {"drive_id": GDRIVE_ID, "index_link": INDEX_URL}
+    categories['Root'] = {"drive_id": GDRIVE_ID, "index_link": INDEX_URL}
 
 if path.exists('list_drives.txt'):
     with open('list_drives.txt', 'r+') as f:
         lines = f.readlines()
         for line in lines:
             temp = line.strip().split()
-            DRIVES_IDS.append(temp[1])
-            DRIVES_NAMES.append(temp[0].replace("_", " "))
+            name = temp[0].replace("_", " ")
+            if name.casefold() == "Main":
+                name = "Main Custom"
+            tempdict = {}
+            tempdict['drive_id'] = temp[1]
             if len(temp) > 2:
-                INDEX_URLS.append(temp[2])
+                tempdict['index_link'] = temp[2]
             else:
-                INDEX_URLS.append('')
+                tempdict['index_link'] = ''
+            list_drives[name] = tempdict
 
 if path.exists('buttons.txt'):
     with open('buttons.txt', 'r+') as f:
@@ -506,12 +502,16 @@ if path.exists('categories.txt'):
         lines = f.readlines()
         for line in lines:
             temp = line.strip().split()
-            CATEGORY_IDS.append(temp[1])
-            CATEGORY_NAMES.append(temp[0].replace("_", " "))
+            name = temp[0].replace("_", " ")
+            if name.casefold() == "Root":
+                name = "Root Custom"
+            tempdict = {}
+            tempdict['drive_id'] = temp[1]
             if len(temp) > 2:
-                CATEGORY_INDEXES.append(temp[2])
+                tempdict['index_link'] = temp[2]
             else:
-                CATEGORY_INDEXES.append('')
+                tempdict['index_link'] = ''
+            categories[name] = tempdict
 
 if BASE_URL:
     Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
