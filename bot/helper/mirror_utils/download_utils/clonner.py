@@ -15,7 +15,7 @@ def start_clone(link, listener):
     res, size, name, files = gd.helper(link)
     if res != "":
         return listener.onDownloadError(res)
-    if config_dict['STOP_DUPLICATE']:
+    if config_dict['STOP_DUPLICATE'] and not listener.select:
         LOGGER.info('Checking File/Folder if already in Drive...')
         smsg, button = gd.drive_list(name, True)
         if smsg:
