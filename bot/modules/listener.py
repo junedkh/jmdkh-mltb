@@ -358,7 +358,8 @@ class MirrorLeechListener:
                 msg += f' |<b>Files</b>: {files}'
             msg += f'\n\n<b>#cc</b>: {self.tag} | <b>Elapsed</b>: {get_readable_time(time() - self.message.date.timestamp())}'
             msg += f"\n\n<b>Upload</b>: {self.mode}"
-            msg += f"\n\n<b>Folder id</b>: <code>{drive_id}</code>"
+            if config_dict['GDRIVE_ID'] != drive_id:
+                msg += f"\n\n<b>Folder id</b>: <code>{drive_id}</code>"
             buttons = ButtonMaker()
             if not config_dict['DISABLE_DRIVE_LINK']:
                 link = short_url(link)
