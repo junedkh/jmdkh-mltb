@@ -41,10 +41,6 @@ def cancel_mirror(update, context):
         sendMessage("This task is not for you!", context.bot, message)
         return
 
-    if dl.status() == MirrorStatus.STATUS_CONVERTING:
-        sendMessage("Converting... Can't cancel this task!", context.bot, message)
-        return
-
     dl.download().cancel_download()
 
 cancel_listener = {}
@@ -59,9 +55,6 @@ def cancel_all(status, info):
         cant_cancel = 0
         for dl in dls:
             try:
-                if dl.status() == MirrorStatus.STATUS_CONVERTING:
-                    cant_cancel += 1
-                    continue
                 dl.download().cancel_download()
                 canceled += 1
                 sleep(1)

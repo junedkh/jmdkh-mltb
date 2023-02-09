@@ -254,7 +254,6 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 ### Limits
 - `STORAGE_THRESHOLD`: To leave specific storage free and any download will lead to leave free storage less than this value will be cancelled. Don't add unit, the default unit is `GB`.
 - `LEECH_LIMIT`:  To limit the Torrent/Direct/ytdlp leech size. Don't add unit, the default unit is `GB`.
-- `MAX_PLAYLIST`: To limit number of files for ytdlp playlist in leech mode. `Int`
 - `CLONE_LIMIT`: To limit the size of Google Drive folder/file which you can clone. Don't add unit, the default unit is `GB`.
 - `MEGA_LIMIT`: To limit the size of Mega download. Don't add unit, the default unit is `GB`.
 - `TORRENT_LIMIT`: To limit the size of torrent download. Don't add unit, the default unit is `GB`.
