@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from bot import LOGGER
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size
 
@@ -11,7 +12,7 @@ class SplitStatus:
         self.message = self.__listener.message
         self.startTime = self.__listener.startTime
         self.mode = self.__listener.mode
-        self.source = self.__source()
+        self.source = self.__listener.source
         self.engine = "ffmpeg/split"
 
     def gid(self):
@@ -41,15 +42,8 @@ class SplitStatus:
     def download(self):
         return self
 
-    def cancel_download(self):
+    async def cancel_download(self):
         LOGGER.info(f'Cancelling Split: {self.__name}')
         if self.__listener.suproc:
             self.__listener.suproc.kill()
-        self.__listener.onUploadError('splitting stopped by user!')
-
-    def __source(self):
-        reply_to = self.message.reply_to_message
-        source = reply_to.from_user.username or reply_to.from_user.id if reply_to and \
-            not reply_to.from_user.is_bot else self.message.from_user.username \
-                or self.message.from_user.id
-        return f"<a href='{self.message.link}'>{source}</a>"
+        await self.__listener.onUploadError('splitting stopped by user!')

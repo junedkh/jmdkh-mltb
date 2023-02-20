@@ -12,7 +12,7 @@ from base64 import standard_b64encode
 from http.cookiejar import MozillaCookieJar
 from json import loads
 from os import path
-from re import findall, match, search, sub
+from re import findall, search, sub
 from time import sleep
 from urllib.parse import quote, unquote, urlparse
 from uuid import uuid4
@@ -24,7 +24,7 @@ from lxml import etree
 from requests import Session, request
 
 from bot import LOGGER, config_dict
-from bot.helper.ext_utils.bot_utils import get_readable_time, is_Sharerlink
+from bot.helper.ext_utils.bot_utils import get_readable_time, is_share_link
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
@@ -62,10 +62,6 @@ def direct_link_generator(link: str):
         return streamtape(link)
     elif 'racaty' in domain:
         return racaty(link)
-    elif '1fichier.com' in domain:
-        return fichier(link)
-    elif 'solidfiles.com' in domain:
-        return solidfiles(link)
     elif 'krakenfiles.com' in domain:
         return krakenfiles(link)
     elif 'upload.ee' in domain:
@@ -88,7 +84,7 @@ def direct_link_generator(link: str):
         return fembed(link)
     elif any(x in domain for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
         return sbembed(link)
-    elif is_Sharerlink(link):
+    elif is_share_link(link):
         if 'gdtot' in domain:
             return gdtot(link)
         elif 'filepress' in domain:
@@ -314,74 +310,6 @@ def racaty(url: str) -> str:
     else:
         raise DirectDownloadLinkException('ERROR: Direct link not found')
 
-def fichier(link: str) -> str:
-    """ 1Fichier direct link generator
-    Based on https://github.com/Maujar
-    """
-    regex = r"^([http:\/\/|https:\/\/]+)?.*1fichier\.com\/\?.+"
-    gan = match(regex, link)
-    if not gan:
-      raise DirectDownloadLinkException("ERROR: The link you entered is wrong!")
-    if "::" in link:
-      pswd = link.split("::")[-1]
-      url = link.split("::")[-2]
-    else:
-      pswd = None
-      url = link
-    try:
-      if pswd is None:
-        req = request('post', url)
-      else:
-        pw = {"pass": pswd}
-        req = request('post', url, data=pw)
-    except Exception as e:
-      raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-    if req.status_code == 404:
-      raise DirectDownloadLinkException("ERROR: File not found/The link you entered is wrong!")
-    soup = BeautifulSoup(req.content, 'lxml')
-    if soup.find("a", {"class": "ok btn-general btn-orange"}):
-        if dl_url := soup.find("a", {"class": "ok btn-general btn-orange"})["href"]:
-            return dl_url
-        raise DirectDownloadLinkException("ERROR: Unable to generate Direct Link 1fichier!")
-    elif len(soup.find_all("div", {"class": "ct_warn"})) == 3:
-        str_2 = soup.find_all("div", {"class": "ct_warn"})[-1]
-        if "you must wait" in str(str_2).lower():
-            if numbers := [int(word) for word in str(str_2).split() if word.isdigit()]:
-                raise DirectDownloadLinkException(f"ERROR: 1fichier is on a limit. Please wait {numbers[0]} minute.")
-            else:
-                raise DirectDownloadLinkException("ERROR: 1fichier is on a limit. Please wait a few minutes/hour.")
-        elif "protect access" in str(str_2).lower():
-          raise DirectDownloadLinkException(f"ERROR: This link requires a password!\n\n<b>This link requires a password!</b>\n- Insert sign <b>::</b> after the link and write the password after the sign.\n\n<b>Example:</b> https://1fichier.com/?smmtd8twfpm66awbqz04::love you\n\n* No spaces between the signs <b>::</b>\n* For the password, you can use a space!")
-        else:
-            raise DirectDownloadLinkException("ERROR: Failed to generate Direct Link from 1fichier!")
-    elif len(soup.find_all("div", {"class": "ct_warn"})) == 4:
-        str_1 = soup.find_all("div", {"class": "ct_warn"})[-2]
-        str_3 = soup.find_all("div", {"class": "ct_warn"})[-1]
-        if "you must wait" in str(str_1).lower():
-            if numbers := [int(word) for word in str(str_1).split() if word.isdigit()]:
-                raise DirectDownloadLinkException(f"ERROR: 1fichier is on a limit. Please wait {numbers[0]} minute.")
-            else:
-                raise DirectDownloadLinkException("ERROR: 1fichier is on a limit. Please wait a few minutes/hour.")
-        elif "bad password" in str(str_3).lower():
-          raise DirectDownloadLinkException("ERROR: The password you entered is wrong!")
-        else:
-            raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
-    else:
-        raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
-
-def solidfiles(url: str) -> str:
-    """ Solidfiles direct link generator
-    Based on https://github.com/Xonshiz/SolidFiles-Downloader
-    By https://github.com/Jusidama18 """
-    try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36'
-        }
-        pageSource = request('get', url, headers = headers).text
-        mainOptions = str(search(r'viewerOptions\'\,\ (.*?)\)\;', pageSource).group(1))
-        return loads(mainOptions)["downloadUrl"]
-    except Exception as e:
-        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
 
 def krakenfiles(page_link: str) -> str:
     """ krakenfiles direct link generator

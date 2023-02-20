@@ -266,7 +266,6 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
   - it will apply only for member
   - **Note**: Bot should be added in the filled chat_id as admin.
 - `USER_MAX_TASKS`: Maximum number of tasks for each group members at a time. `Int`
-- `ENABLE_RATE_LIMITER`: To enable request limit 1 request per 1 second. `Bool`
   - it will not accept any command/callback of user for 1 minute.
 - `ENABLE_MESSAGE_FILTER`: If enabled then bot will not download files with captions or forwarded. `Bool`
 - `STOP_DUPLICATE_TASKS`: To enable stop duplicate task across multiple bots. `Bool`

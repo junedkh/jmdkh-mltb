@@ -1,7 +1,8 @@
+#!/usr/bin/env python3
 from pkg_resources import get_distribution
 
 from bot import DOWNLOAD_DIR
-from bot.helper.ext_utils.bot_utils import (MirrorStatus,
+from bot.helper.ext_utils.bot_utils import (MirrorStatus, async_to_sync,
                                             get_readable_file_size,
                                             get_readable_time)
 from bot.helper.ext_utils.fs_utils import get_path_size
@@ -17,7 +18,7 @@ class YtDlpDownloadStatus:
         self.message = self.__listener.message
         self.startTime = self.__listener.startTime
         self.mode = self.__listener.mode
-        self.source = self.__source()
+        self.source = self.__listener.source
         self.engine = engine_
 
     def gid(self):
@@ -27,7 +28,7 @@ class YtDlpDownloadStatus:
         if self.__obj.downloaded_bytes != 0:
           return self.__obj.downloaded_bytes
         else:
-          return get_path_size(f"{DOWNLOAD_DIR}{self.__uid}")
+          return async_to_sync(get_path_size, f"{DOWNLOAD_DIR}{self.__uid}")
 
     def size_raw(self):
         return self.__obj.size
@@ -70,10 +71,3 @@ class YtDlpDownloadStatus:
 
     def download(self):
         return self.__obj
-
-    def __source(self):
-        reply_to = self.message.reply_to_message
-        source = reply_to.from_user.username or reply_to.from_user.id if reply_to and \
-            not reply_to.from_user.is_bot else self.message.from_user.username \
-                or self.message.from_user.id
-        return f"<a href='{self.message.link}'>{source}</a>"
