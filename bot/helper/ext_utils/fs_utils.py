@@ -309,15 +309,18 @@ async def get_document_type(path):
     return is_video, is_audio, is_image
 
 def check_storage_threshold(size, threshold, arch=False, alloc=False):
+    free = disk_usage(DOWNLOAD_DIR).free
     if not alloc:
-        if not arch:
-            if disk_usage(DOWNLOAD_DIR).free - size < threshold:
-                return False
-        elif disk_usage(DOWNLOAD_DIR).free - (size * 2) < threshold:
+        if (
+            not arch
+            and free - size < threshold
+            or arch
+            and free - (size * 2) < threshold
+        ):
             return False
     elif not arch:
-        if disk_usage(DOWNLOAD_DIR).free < threshold:
+        if free < threshold:
             return False
-    elif disk_usage(DOWNLOAD_DIR).free - size < threshold:
+    elif free - size < threshold:
         return False
     return True

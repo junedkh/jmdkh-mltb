@@ -166,8 +166,7 @@ USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 if len(USER_SESSION_STRING) != 0:
     log_info("Creating client from USER_SESSION_STRING")
     user = tgClient('user', TELEGRAM_API, TELEGRAM_HASH, session_string=USER_SESSION_STRING,
-                    parse_mode=enums.ParseMode.HTML, no_updates=True, takeout=True,
-                    max_concurrent_transmissions=10)
+                    parse_mode=enums.ParseMode.HTML, no_updates=True)
     user.start()
     IS_PREMIUM_USER = user.me.is_premium
 
@@ -552,8 +551,7 @@ else:
     qb_client.app_set_preferences(qb_opt)
 
 log_info("Creating client from BOT_TOKEN")
-bot = tgClient('bot', TELEGRAM_API, TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML,
-               max_concurrent_transmissions=10)
+bot = tgClient('bot', TELEGRAM_API, TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML)
 bot.start()
 bot_loop = bot.loop
 bot_name = bot.me.username

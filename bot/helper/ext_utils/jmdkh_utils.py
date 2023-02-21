@@ -11,7 +11,7 @@ from bot import LOGGER
 async def extract_link(link, shouldDel=False):
     try:
         if link and link.startswith('magnet:'):
-            raw_link = search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', link).group(0).lower()
+            raw_link = search(r'(?<=xt=urn:(btih|btmh):)[a-zA-Z0-9]+', link).group(0).lower()
         elif "drive.google.com" in urlparse(link).netloc:
             if "folders" in link or "file" in link:
                 regex = r"https:\/\/drive\.google\.com\/(?:drive(.*?)\/folders\/|file(.*?)?\/d\/)([-\w]+)"

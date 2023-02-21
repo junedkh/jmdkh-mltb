@@ -10,7 +10,7 @@ from aiofiles.os import path as aiopath
 from aiofiles.os import remove as aioremove
 from aiofiles.os import rename
 from aioshutil import move
-from requests import utils as rutils
+from urllib.parse import quote as url_quote
 
 from bot import (DATABASE_URL, DOWNLOAD_DIR, LOGGER, MAX_SPLIT_SIZE,
                  SHORTENERES, Interval, aria2, config_dict, download_dict,
@@ -123,6 +123,7 @@ class MirrorLeechListener:
     async def onDownloadComplete(self):
         if len(self.sameDir) == 1:
             await sleep(3)
+        multi_links = False
         async with download_dict_lock:
             if len(self.sameDir) > 1:
                 self.sameDir.remove(self.uid)
@@ -135,15 +136,14 @@ class MirrorLeechListener:
                     if subdir in await listdir(des_path):
                         sub_path = await rename(sub_path, f"{self.dir}/{folder_name}/1-{subdir}")
                     await move(sub_path, des_path)
-                del download_dict[self.uid]
-                name = sub_path.rsplit('/', 1)[-1]
-                LOGGER.info(f"Download completed: {name}. Waiting other files to finish download...")
-                await clean_download(self.dir)
-                return
+                multi_links = True
             download = download_dict[self.uid]
             name = str(download.name()).replace('/', '')
             gid = download.gid()
         LOGGER.info(f"Download completed: {name}")
+        if multi_links:
+            await self.onUploadError('Downloaded! Waiting for other tasks...')
+            return
         if name == "None" or self.isQbit or not await aiopath.exists(f"{self.dir}/{name}"):
             name = (await listdir(self.dir))[-1]
         m_path = f"{self.dir}/{name}"
@@ -393,7 +393,7 @@ class MirrorLeechListener:
                 buttons.ubutton("🔐 Drive Link", link)
             LOGGER.info(f'Done Uploading {name}')
             if INDEX_URL:= self.index_link or config_dict['INDEX_URL']:
-                url_path = rutils.quote(f'{name}')
+                url_path = url_quote(f'{name}')
                 if typ == "Folder":
                     share_url = await sync_to_async(short_url, f'{INDEX_URL}/{url_path}/')
                     buttons.ubutton("📁 Index Link", share_url)
@@ -426,32 +426,80 @@ class MirrorLeechListener:
                     if self.uid in non_queued_up:
                         non_queued_up.remove(self.uid)
                 return
-        await self._clean_update()
+        if not self.isClone:
+            await clean_download(self.dir)
+        async with download_dict_lock:
+            if self.uid in download_dict.keys():
+                del download_dict[self.uid]
+            count = len(download_dict)
+        if count == 0:
+            await self.clean()
+        else:
+            await update_all_messages()
+
+        async with queue_dict_lock:
+            if self.uid in non_queued_up:
+                non_queued_up.remove(self.uid)
+
+        await start_from_queued()
+        await delete_links(self.message)
 
     async def onDownloadError(self, error, button=None):
-        msg = f"{self.tag} your download has been stopped due to: {escape(error)}\n<b>Elapsed</b>: {get_readable_time(time() - self.startTime)}"
-        await self._clean_update(msg, button)
-
-    async def onUploadError(self, error):
-        msg = f"{self.tag} {escape(error)}\n<b>Elapsed</b>: {get_readable_time(time() - self.startTime)}"
-        await self._clean_update(msg)
-
-    async def _clean_update(self, msg=None, button=None):
         if not self.isClone:
             await clean_download(self.dir)
             if self.newDir:
                 await clean_download(self.newDir)
         async with download_dict_lock:
-            if self.uid in download_dict:
+            if self.uid in download_dict.keys():
                 del download_dict[self.uid]
             count = len(download_dict)
             if self.uid in self.sameDir:
                 self.sameDir.remove(self.uid)
-        if msg:
-            msg += f"\n<b>Upload</b>: {self.mode}"
-            await sendMessage(self.message, msg, button)
-            if self.logMessage:
-                await sendMessage(self.logMessage, msg, button)
+        msg = f"{self.tag} your download has been stopped due to: {escape(error)}\n<b>Elapsed</b>: {get_readable_time(time() - self.startTime)}"
+        msg += f"\n<b>Upload</b>: {self.mode}"
+        await sendMessage(self.message, msg, button)
+        if self.logMessage:
+            await sendMessage(self.logMessage, msg, button)
+        if count == 0:
+            await self.clean()
+        else:
+            await update_all_messages()
+
+        if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS'] and self.raw_url:
+            await DbManger().remove_download(self.raw_url)
+        if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
+            await DbManger().rm_complete_task(self.message.link)
+
+        async with queue_dict_lock:
+            if self.uid in queued_dl:
+                del queued_dl[self.uid]
+            if self.uid in non_queued_dl:
+                non_queued_dl.remove(self.uid)
+            if self.uid in queued_up:
+                del queued_up[self.uid]
+            if self.uid in non_queued_up:
+                non_queued_up.remove(self.uid)
+        if self.queuedUp is not None:
+            self.queuedUp.set()
+        await start_from_queued()
+        await delete_links(self.message)
+
+    async def onUploadError(self, error):
+        if not self.isClone:
+            await clean_download(self.dir)
+            if self.newDir:
+                await clean_download(self.newDir)
+        async with download_dict_lock:
+            if self.uid in download_dict.keys():
+                del download_dict[self.uid]
+            count = len(download_dict)
+            if self.uid in self.sameDir:
+                self.sameDir.remove(self.uid)
+        msg = f"{self.tag} {escape(error)}\n<b>Elapsed</b>: {get_readable_time(time() - self.startTime)}"
+        msg += f"\n<b>Upload</b>: {self.mode}"
+        await sendMessage(self.message, msg)
+        if self.logMessage:
+            await sendMessage(self.logMessage, msg)
         if count == 0:
             await self.clean()
         else:
@@ -470,6 +518,7 @@ class MirrorLeechListener:
             if self.uid in non_queued_up:
                 non_queued_up.remove(self.uid)
 
-        self.queuedUp = False
+        if self.queuedUp is not None:
+            self.queuedUp.set()
         await start_from_queued()
         await delete_links(self.message)
