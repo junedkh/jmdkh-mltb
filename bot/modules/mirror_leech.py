@@ -4,6 +4,7 @@ from base64 import b64encode
 from re import match as re_match
 from re import split as re_split
 
+from aiofiles.os import path as aiopath
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
 
@@ -216,7 +217,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
         msg_ += "\n<b>Multi links only by replying to first link:</b>\n<code>/cmd</code> 10(number of links)"
         return await sendMessage(message, msg_)
 
-    if not is_url(link) and not is_magnet(link) or (link.isdigit() and multi == 0):
+    if not is_url(link) and not is_magnet(link) and not await aiopath.exists(link) or (link.isdigit() and multi == 0):
         help_msg = '''
 <code>/{cmd}</code> link |newname pswd: xx(zip/unzip)
 
