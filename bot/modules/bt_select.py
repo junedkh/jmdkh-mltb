@@ -44,8 +44,7 @@ async def select(client, message):
         await sendMessage(message, msg)
         return
 
-    if OWNER_ID != user_id and dl.message.from_user.id != user_id and \
-       (user_id not in user_data or not user_data[user_id].get('is_sudo')):
+    if not await CustomFilters.sudo(client, message) and dl.message.from_user.id != user_id:
         await sendMessage(message, "This task is not for you!")
         return
     if dl.status() not in [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_PAUSED, MirrorStatus.STATUS_QUEUEDL]:
@@ -130,7 +129,8 @@ async def get_confirm(client, query):
         await message.delete()
     elif data[1] == "rm":
         await query.answer()
-        await dl.download().cancel_download()
+        obj = dl.download()
+        await obj.cancel_download()
         await query.message.delete()
 
 

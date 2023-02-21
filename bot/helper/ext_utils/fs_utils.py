@@ -4,7 +4,7 @@ from math import ceil
 from os import path as ospath
 from os import walk
 from re import I
-from re import match as re_match
+from re import search as re_search
 from re import split as re_split
 from shutil import disk_usage, rmtree
 from sys import exit as sysexit
@@ -30,6 +30,20 @@ ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".
             ".zip", ".7z", ".z", ".rar", ".iso", ".wim", ".cab", ".apm", ".arj", ".chm",
             ".cpio", ".cramfs", ".deb", ".dmg", ".fat", ".hfs", ".lzh", ".lzma", ".mbr",
             ".msi", ".mslz", ".nsis", ".ntfs", ".rpm", ".squashfs", ".udf", ".vhd", ".xar"]
+
+FIRST_SPLIT_REGEX = r'(\.|_)part0*1\.rar$|(\.|_)7z\.0*1$|(\.|_)zip\.0*1$|^(?!.*(\.|_)part\d+\.rar$).*\.rar$'
+
+SPLIT_REGEX = r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$'
+
+
+def is_first_archive_split(file):
+    return bool(re_search(FIRST_SPLIT_REGEX, file))
+
+def is_archive(file):
+    return file.endswith(tuple(ARCH_EXT))
+
+def is_archive_split(file):
+    return bool(re_search(SPLIT_REGEX, file))
 
 async def clean_target(path):
     if await aiopath.exists(path):
@@ -102,9 +116,11 @@ async def get_path_size(path):
     return total_size
 
 def get_base_name(orig_path):
-    if ext := [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]:
-        ext = ext[0]
-        return re_split(f'{ext}$', orig_path, maxsplit=1, flags=I)[0]
+    extension = next(
+        (ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)), ''
+    )
+    if extension != '':
+        return re_split(f'{extension}$', orig_path, maxsplit=1, flags=I)[0]
     else:
         raise NotSupportedExtractionArchive('File format not supported for extraction')
 
@@ -255,7 +271,7 @@ async def get_document_type(path):
     is_audio = False
     is_image = False
 
-    if path.endswith(tuple(ARCH_EXT)) or re_match(r'.+\.(zip|bin)(\.0*\d+)?$', path):
+    if path.endswith(tuple(ARCH_EXT)) or re_search(r'.+(\.|_)(rar|7z|zip|bin)(\.0*\d+)?$', path):
         return is_video, is_audio, is_image
 
     mime_type = await sync_to_async(get_mime_type, path)

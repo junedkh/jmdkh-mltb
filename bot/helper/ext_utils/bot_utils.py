@@ -19,9 +19,9 @@ from bot import (DOWNLOAD_DIR, bot_loop, botStartTime, config_dict,
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
-MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
+MAGNET_REGEX = r'magnet:\?xt=urn:(btih|btmh):[a-zA-Z0-9]*'
 
-URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
+URL_REGEX = r'^(https?://|ftp://)?(www\.)?[^/\s]+\.[^/\s:]+(:\d+)?(/[^?\s]*)?(\?[^#\s]*)?(#.*)?$'
 
 COUNT = 0
 PAGE_NO = 1
@@ -249,6 +249,10 @@ def get_readable_time(seconds):
     result += f'{seconds}s'
     return result
 
+def is_magnet(url):
+    magnet = re_match(MAGNET_REGEX, url)
+    return bool(magnet)
+
 def is_url(url):
     url = re_match(URL_REGEX, url)
     return bool(url)
@@ -274,10 +278,6 @@ def get_mega_link_type(url):
     elif "/#F!" in url:
         return "folder"
     return "file"
-
-def is_magnet(url):
-    magnet = re_match(MAGNET_REGEX, url)
-    return bool(magnet)
 
 def get_content_type(link):
     try:

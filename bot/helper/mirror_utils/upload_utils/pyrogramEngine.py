@@ -102,6 +102,19 @@ class TgUploader:
             up_path = new_path
         else:
             cap_mono = f"<code>{file_}</code>"
+        if len(file_) > 60:
+            ntsplit = file_.rsplit('.', 2)
+            if len(ntsplit[1]) >= 60:
+                ntsplit = file_.rsplit('.', 1)
+                ext = ntsplit[1]
+            else:
+                ext = f"{ntsplit[1]}.{ntsplit[2]}"
+            extn = len(ext)
+            remain = 60 - extn
+            name = ntsplit[0][:remain]
+            new_path = ospath.join(dirpath, f"{name}.{ext}")
+            await aiorename(up_path, new_path)
+            up_path = new_path
         return up_path, cap_mono
 
     def __get_input_media(self, subkey, key):
@@ -147,6 +160,7 @@ class TgUploader:
                         continue
                     if self.__is_cancelled:
                         return
+                    up_path, cap_mono = await self.__prepare_file(up_path, file_, dirpath)
                     if f_size > 2097152000 and IS_PREMIUM_USER and self.__sent_msg._client.me.is_bot:
                         self.__sent_msg = await user.get_messages(chat_id=self.__sent_msg.chat.id, message_ids=self.__sent_msg.id)
                         self.__upload_4gb += 1
@@ -160,7 +174,6 @@ class TgUploader:
                                     if len(msgs) > 1:
                                         await self.__send_media_group(subkey, key, msgs)
                     self.__last_msg_in_group = False
-                    up_path, cap_mono = await self.__prepare_file(up_path, file_, dirpath)
                     self._last_uploaded = 0
                     uploaded_doc = await self.__upload_file(up_path, cap_mono)
                     if self.__is_cancelled:
