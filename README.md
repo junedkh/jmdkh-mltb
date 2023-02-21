@@ -68,9 +68,15 @@ In each single file there is a major change from base code, it's almost totaly d
 - Zip file/folder with or without password
 ### RSS
 - Rss feed. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
-- Filter added and all functions have been improved
+- Filters added
+- Edit any feed while running: pause, resume, edit command and edit filters
+- Rss for each user with tag
+- Sudo settings to control users feeds
+- All functions have been improved using buttons from one command.
 ### Overall
 - Docker image support for linux `amd64, arm64/v8, arm/v7, s390x`
+- Switch from sync to async
+- SWitch from python-telegram-bot to pyrogram
 - Edit variables and overwrite the private files while bot running
 - Update bot at startup and with restart command using `UPSTREAM_REPO`
 - Improve Telegraph. Based on [Sreeraj](https://github.com/SVR666) loaderX-bot
@@ -206,7 +212,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ### Update
 - `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your bot from filled repository on each restart. `Str`.
-  - **NOTE**: Any change in docker or requirements you need to deploy/build again with updated repo to take effect. DON'T delete .gitignore file. For more information read [THIS](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended).
+  - **NOTE**: Any change in docker or requirements you need to deploy/build again with updated repo to take effect. DON'T delete .gitignore file. For more information read [THIS](#upstream-repo-recommended).
 - `UPSTREAM_BRANCH`: Upstream branch for update. Default is `master`. `Str`
 
 ### Leech
@@ -226,10 +232,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ### RSS
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` second at least. Default is `900` in sec. `Int`
-- `RSS_COMMAND`: Choose command for the desired action. `Str`. **NOTE**: Don't add `/` at the beginning.
 - `RSS_CHAT_ID`: Chat ID where rss links will be sent. If using channel then add channel id. Add `-100` before channel id. `Int`
-- `RSS_USER_SESSION_STRING`: To send rss links from your telegram account. Instead of adding bot to channel then linking the channel to group to get rss link since bot will not read command from itself or other bot. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: Don't use same session string as `USER_SESSION_STRING`.
-  - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` is required, otherwise all rss commands will not work. You must use bot in group. You can add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.
+  - **RSS NOTE**: `RSS_CHAT_ID` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` OR bot should be added in group and channel and used in group linked to that channel so messages sent by the bot to channel will be forwarded to group without using `USER_STRING_SESSION`. If `DATABASE_URL` not added you will miss the feeds while bot offline.
 
 ### MEGA
 - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk). `Int`
