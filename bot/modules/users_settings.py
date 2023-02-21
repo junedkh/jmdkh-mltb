@@ -86,7 +86,6 @@ async def get_user_settings(from_user):
             f"Leech Prefix is <code>{escape(lprefix)}</code>"
     return text, buttons.build_menu(1)
 
-@new_thread
 async def update_user_settings(query):
     msg, button = await get_user_settings(query.from_user)
     await editMessage(query.message, msg, button)
@@ -142,7 +141,6 @@ async def leech_split_size(client, message, pre_event):
     if DATABASE_URL:
         await DbManger().update_user_data(user_id)
 
-@new_thread
 async def event_handler(client, query, pfunc, photo=False):
     user_id = query.from_user.id
     handler_dict[user_id] = True
@@ -158,7 +156,7 @@ async def event_handler(client, query, pfunc, photo=False):
             await update_user_settings(query)
     client.remove_handler(*handler)
 
-
+@new_thread
 async def edit_user_settings(client, query):
     from_user = query.from_user
     user_id = from_user.id
