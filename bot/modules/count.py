@@ -6,7 +6,7 @@ from pyrogram.handlers import MessageHandler
 
 from bot import bot
 from bot.helper.ext_utils.bot_utils import (get_readable_time, is_gdrive_link,
-                                            new_thread, sync_to_async)
+                                            new_task, sync_to_async)
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -15,7 +15,7 @@ from bot.helper.telegram_helper.message_utils import (anno_checker,
                                                       sendMessage)
 
 
-@new_thread
+@new_task
 async def countNode(client, message):
     args = message.text.split()
     link = ''

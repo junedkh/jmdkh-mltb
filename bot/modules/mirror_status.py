@@ -8,7 +8,7 @@ from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from bot import (DOWNLOAD_DIR, Interval, bot, botStartTime, config_dict,
                  download_dict, download_dict_lock, status_reply_dict_lock)
 from bot.helper.ext_utils.bot_utils import (get_readable_file_size,
-                                            get_readable_time, new_thread,
+                                            get_readable_time, new_task,
                                             setInterval, turn)
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -19,7 +19,7 @@ from bot.helper.telegram_helper.message_utils import (auto_delete_message,
                                                       update_all_messages)
 
 
-@new_thread
+@new_task
 async def mirror_status(client, message):
     async with download_dict_lock:
         count = len(download_dict)
@@ -40,7 +40,7 @@ async def mirror_status(client, message):
                 Interval.clear()
                 Interval.append(setInterval(config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))
 
-@new_thread
+@new_task
 async def status_pages(client, query):
     await query.answer()
     data = query.data.split()

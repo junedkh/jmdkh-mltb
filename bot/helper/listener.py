@@ -354,7 +354,7 @@ class MirrorLeechListener:
                             await sendMessage(self.logMessage, msg + fmsg)
                         buttons = ButtonMaker()
                         buttons = extra_btns(buttons)
-                        if self.isSuperGroup:
+                        if self.isSuperGroup and not self.message.chat.has_protected_content:
                             buttons.ibutton('Save This Message', 'save', 'footer')
                         await sendMessage(self.message, msg + fmsg, buttons.build_menu(2))
                         await sleep(1)
@@ -364,7 +364,7 @@ class MirrorLeechListener:
                         await sendMessage(self.logMessage, msg + fmsg)
                     buttons = ButtonMaker()
                     buttons = extra_btns(buttons)
-                    if self.isSuperGroup:
+                    if self.isSuperGroup and not self.message.chat.has_protected_content:
                         buttons.ibutton('Save This Message', 'save', 'footer')
                     await sendMessage(self.message, msg + fmsg, buttons.build_menu(2))
             if self.seed:
@@ -409,7 +409,7 @@ class MirrorLeechListener:
                 msg += '\n\n<b>Links has been sent in your DM.</b>'
                 await sendMessage(self.message, msg)
             else:
-                if self.isSuperGroup:
+                if self.isSuperGroup and not self.message.chat.has_protected_content:
                     buttons.ibutton("Save This Message", 'save', 'footer')
                 await sendMessage(self.message, msg, buttons.build_menu(2))
             if self.logMessage:

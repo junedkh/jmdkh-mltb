@@ -6,7 +6,7 @@ from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 
 from bot import bot, bot_loop, download_dict, download_dict_lock
 from bot.helper.ext_utils.bot_utils import (MirrorStatus, getAllDownload,
-                                            getDownloadByGid, new_thread)
+                                            getDownloadByGid, new_task)
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -14,7 +14,6 @@ from bot.helper.telegram_helper.message_utils import (anno_checker,
                                                       editMessage, sendMessage)
 
 
-@new_thread
 async def cancel_mirror(client, message):
     if not message.from_user:
         message.from_user = await anno_checker(message)
@@ -48,7 +47,7 @@ async def cancel_mirror(client, message):
 
 cancel_listener = {}
 
-@new_thread
+@new_task
 async def cancel_all(status, info):
     user_id = info[0]
     msg = info[1]
@@ -77,6 +76,7 @@ async def cancel_all(status, info):
     else:
         await editMessage(msg, f"{user_id} Don't have any active task!")
 
+@new_task
 async def cancell_all_buttons(client, message):
     async with download_dict_lock:
         count = len(download_dict)
@@ -122,7 +122,7 @@ async def cancell_all_buttons(client, message):
     cancel_listener[msg_id] = [user_id, can_msg, message.from_user.id, tag]
     bot_loop.create_task(_auto_cancel(can_msg, msg_id))
 
-@new_thread
+@new_task
 async def cancel_all_update(client, query):
     data = query.data.split()
     user_id = query.from_user.id
@@ -141,7 +141,7 @@ async def cancel_all_update(client, query):
         return await query.answer(text=f"You don't have any active task in {data[1]}", show_alert=True)
     await query.answer()
     del cancel_listener[msg_id]
-    bot_loop.create_task(cancel_all(data[1], info))
+    await cancel_all(data[1], info)
 
 async def _auto_cancel(msg, msg_id):
     await sleep(30)

@@ -90,7 +90,6 @@ async def update_user_settings(query):
     msg, button = await get_user_settings(query.from_user)
     await editMessage(query.message, msg, button)
 
-@new_thread
 async def user_settings(client, message):
     msg, button = await get_user_settings(message.from_user)
     await sendMessage(message, msg, button)
@@ -305,7 +304,6 @@ Check all available formatting options <a href="https://core.telegram.org/bots/a
         await message.reply_to_message.delete()
         await message.delete()
 
-@new_thread
 async def send_users_settings(client, message):
     msg = f'{len(user_data)} users save there setting'
     for user, data in user_data.items():

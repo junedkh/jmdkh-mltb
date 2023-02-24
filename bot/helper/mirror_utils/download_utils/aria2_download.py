@@ -65,7 +65,6 @@ async def __onDownloadStarted(api, gid):
                         if smsg:
                             await listener.onDownloadError('File/Folder already available in Drive.\nHere are the search results:\n', button)
                             await sync_to_async(api.remove, [download], force=True, files=True)
-                            return
         if any([(DIRECT_LIMIT:= config_dict['DIRECT_LIMIT']),
                 (TORRENT_LIMIT:= config_dict['TORRENT_LIMIT']),
                 (LEECH_LIMIT:= config_dict['LEECH_LIMIT']),
@@ -74,43 +73,40 @@ async def __onDownloadStarted(api, gid):
             dl = await getDownloadByGid(gid)
             if dl and hasattr(dl, 'listener'):
                 listener = dl.listener()
-            else:
-                return
-            download = await sync_to_async(api.get_download, gid)
-            download = download.live
-            if download.total_length == 0:
-                start_time = time()
-                while time() - start_time <= 15:
-                    download = await sync_to_async(api.get_download, gid)
-                    download = download.live
-                    if download.followed_by_ids:
-                        download = await sync_to_async(api.get_download, download.followed_by_ids[0])
-                    if download.total_length > 0:
-                        break
-            size = download.total_length
-            limit_exceeded = ''
-            if not limit_exceeded and STORAGE_THRESHOLD:
-                limit = STORAGE_THRESHOLD * 1024**3
-                arch = any([listener.isZip, listener.extract])
-                acpt = check_storage_threshold(size, limit, arch, True)
-                if not acpt:
-                    limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
-            if not limit_exceeded and DIRECT_LIMIT and not download.is_torrent:
-                limit = DIRECT_LIMIT * 1024**3
-                if size > limit:
-                    limit_exceeded = f'Direct limit is {get_readable_file_size(limit)}'
-            if not limit_exceeded and TORRENT_LIMIT and download.is_torrent:
-                limit = TORRENT_LIMIT * 1024**3
-                if size > limit:
-                    limit_exceeded = f'Torrent limit is {get_readable_file_size(limit)}'
-            if not limit_exceeded and LEECH_LIMIT and listener.isLeech:
-                limit = LEECH_LIMIT * 1024**3
-                if size > limit:
-                    limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}'
-            if limit_exceeded:
-                await listener.onDownloadError(f'{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}')
-                await sync_to_async(api.remove, [download], force=True, files=True)
-                return
+                download = await sync_to_async(api.get_download, gid)
+                download = download.live
+                if download.total_length == 0:
+                    start_time = time()
+                    while time() - start_time <= 15:
+                        download = await sync_to_async(api.get_download, gid)
+                        download = download.live
+                        if download.followed_by_ids:
+                            download = await sync_to_async(api.get_download, download.followed_by_ids[0])
+                        if download.total_length > 0:
+                            break
+                size = download.total_length
+                limit_exceeded = ''
+                if not limit_exceeded and STORAGE_THRESHOLD:
+                    limit = STORAGE_THRESHOLD * 1024**3
+                    arch = any([listener.isZip, listener.extract])
+                    acpt = check_storage_threshold(size, limit, arch, True)
+                    if not acpt:
+                        limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
+                if not limit_exceeded and DIRECT_LIMIT and not download.is_torrent:
+                    limit = DIRECT_LIMIT * 1024**3
+                    if size > limit:
+                        limit_exceeded = f'Direct limit is {get_readable_file_size(limit)}'
+                if not limit_exceeded and TORRENT_LIMIT and download.is_torrent:
+                    limit = TORRENT_LIMIT * 1024**3
+                    if size > limit:
+                        limit_exceeded = f'Torrent limit is {get_readable_file_size(limit)}'
+                if not limit_exceeded and LEECH_LIMIT and listener.isLeech:
+                    limit = LEECH_LIMIT * 1024**3
+                    if size > limit:
+                        limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}'
+                if limit_exceeded:
+                    await listener.onDownloadError(f'{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}')
+                    await sync_to_async(api.remove, [download], force=True, files=True)
     except Exception as e:
         LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")
 

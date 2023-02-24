@@ -3,14 +3,14 @@ from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
 
 from bot import LOGGER, bot, bot_loop
-from bot.helper.ext_utils.bot_utils import is_gdrive_link, new_thread, sync_to_async
+from bot.helper.ext_utils.bot_utils import is_gdrive_link, new_task, sync_to_async
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (auto_delete_message,
                                                       editMessage, sendMessage)
 
-@new_thread
+@new_task
 async def deletefile(client, message):
     args = message.text.split()
     if len(args) > 1:
@@ -30,12 +30,13 @@ async def deletefile(client, message):
 
 delete = set()
 
-@new_thread
+@new_task
 async def delete_leech(client, message):
-    if len(message.command) == 1:
-        link = message.command[0].strip()
+    args = message.text.split()
+    if len(args) > 1:
+        link = args[1]
     elif reply_to := message.reply_to_message:
-        link = reply_to.text.split(maxsplit=1)[0].strip()
+        link = reply_to.text.strip()
     else:
         link = ''
     if not link.startswith('https://t.me/'):
@@ -52,9 +53,9 @@ async def delete_leech(client, message):
         chat_id = f'-100{chat_id}'
         chat_id = int(chat_id)
     reply_message = await sendMessage(message, msg)
-    bot_loop.create_task(deleting(client, chat_id, message_id, reply_message))
+    await deleting(client, chat_id, message_id, reply_message)
     
-
+@new_task
 async def deleting(client, chat_id, message_id, message):
     delete.add(message_id)
     try:

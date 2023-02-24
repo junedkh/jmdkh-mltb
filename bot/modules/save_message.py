@@ -2,10 +2,10 @@ from pyrogram.filters import regex
 from pyrogram.handlers import CallbackQueryHandler
 
 from bot import bot
-from bot.helper.ext_utils.bot_utils import new_thread
+from bot.helper.ext_utils.bot_utils import new_task
 
 
-@new_thread
+@new_task
 async def save_message(client, query):
     if query.data == "save":
         try:

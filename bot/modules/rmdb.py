@@ -2,7 +2,7 @@ from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
 
 from bot import DATABASE_URL, bot, config_dict
-from bot.helper.ext_utils.bot_utils import is_magnet, is_url, new_thread
+from bot.helper.ext_utils.bot_utils import is_magnet, is_url, new_task
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.jmdkh_utils import extract_link
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -10,7 +10,7 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage
 
 
-@new_thread
+@new_task
 async def rmdbNode(client, message):
     if DATABASE_URL and not config_dict['STOP_DUPLICATE_TASKS']:
         return await sendMessage(message, 'STOP_DUPLICATE_TASKS feature is not enabled')

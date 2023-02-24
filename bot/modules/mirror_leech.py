@@ -13,7 +13,7 @@ from bot import (DATABASE_URL, DOWNLOAD_DIR, IS_PREMIUM_USER, LOGGER, bot,
 from bot.helper.ext_utils.bot_utils import (check_user_tasks, get_content_type,
                                             is_gdrive_link, is_magnet,
                                             is_mega_link, is_share_link,
-                                            is_url, new_task, new_thread,
+                                            is_url, new_task, new_task,
                                             sync_to_async)
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
@@ -38,9 +38,9 @@ from bot.helper.telegram_helper.message_utils import (anno_checker,
                                                       sendLogMessage,
                                                       sendMessage)
 
-
-@new_thread
-async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir={}, isClone=False):
+from pyrogram.types import Message
+@new_task
+async def _mirror_leech(client, message:Message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir={}, isClone=False):
     mesg = message.text.split('\n')
     message_args = mesg[0].split(maxsplit=1)
     index = 1
@@ -137,6 +137,10 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
     if len(mesg) > 1 and mesg[1].startswith('Tag: '):
         tag, id_ = mesg[1].split('Tag: ')[1].split()
         message.from_user = await client.get_users(id_)
+        try:
+            await message.unpin()
+        except:
+            pass
     elif sender_chat:= message.sender_chat:
         tag = sender_chat.title
     elif username := message.from_user.username:

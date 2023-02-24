@@ -15,7 +15,7 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import new_thread
+from bot.helper.ext_utils.bot_utils import new_task, new_thread
 
 rss_dict_lock = Lock()
 handler_dict = {}
@@ -50,7 +50,6 @@ async def updateRssMenu(query):
     msg, button = await rssMenu(query)
     await editMessage(query.message, msg, button)
 
-@new_thread
 async def getRssMenu(client, message):
     msg, button = await rssMenu(message)
     await sendMessage(message, msg, button)
@@ -143,14 +142,10 @@ async def rssSub(client, message, pre_event):
 
 async def getUserId(title):
     async with rss_dict_lock:
-        return next(
-            (
-                (True, user_id)
-                for user_id, feed in list(rss_dict.items())
-                if feed['title'] == title
-            ),
-            (False, False),
-        )
+        for user_id, feed in list(rss_dict.items()):
+            if feed['title'] == title:
+                return True, user_id
+        return False, False
 
 async def rssUpdate(client, message, pre_event, state):
     user_id = message.from_user.id
@@ -384,10 +379,14 @@ async def rssListener(client, query):
 Use this format to add feed url:
 Title1 link c: command (optional) inf: xx (optional) exf: xx (optional)
 Title2 link c: command inf: xx exf: xx
+
 Example: Title https://www.rss-url.com inf: 1080 or 720 or 144p|mkv or mp4|hevc exf: flv or web|xxx
 This filter will parse links that it's titles contains `(1080 or 720 or 144p) and (mkv or mp4) and hevc` and doesn't conyain (flv or web) and xxx` words. You can add whatever you want.
+
 Another example: inf:  1080  or 720p|.web. or .webrip.|hvec or x264. This will parse titles that contains ( 1080  or 720p) and (.web. or .webrip.) and (hvec or x264). I have added space before and after 1080 to avoid wrong matching. If this `10805695` number in title it will match 1080 if added 1080 without spaces after it.
+
 Where inf: For included words filter and exf: For excluded words filter.
+
 Filter Notes:
 1. | means and.
 2. Add `or` between similar keys, you can add it between qualities or between extensions, so don't add filter like this f: 1080|mp4 or 720|web because this will parse 1080 and (mp4 or 720) and web ... not (1080 and mp4) or (720 and web)."
@@ -463,7 +462,8 @@ Timeout: 60 sec.
         if len(rss_dict.get(int(data[2]), {})) == 0:
             await query.answer(text="No subscriptions!", show_alert=True)
             return
-        elif data[1].endswith('unsub'):
+        await query.answer()
+        if data[1].endswith('unsub'):
             async with rss_dict_lock:
                 del rss_dict[int(data[2])]
             if DATABASE_URL:
@@ -483,13 +483,13 @@ Timeout: 60 sec.
                 scheduler.resume()
             if DATABASE_URL:
                 await DbManger().rss_update(int(data[2]))
-        await query.answer(text='Done!', show_alert=True)
         await updateRssMenu(query)
     elif data[1].startswith('all'):
         if len(rss_dict) == 0:
             await query.answer(text="No subscriptions!", show_alert=True)
             return
-        elif data[1].endswith('unsub'):
+        await query.answer()
+        if data[1].endswith('unsub'):
             async with rss_dict_lock:
                 rss_dict.clear()
             if DATABASE_URL:
@@ -514,7 +514,6 @@ Timeout: 60 sec.
                 scheduler.start()
             if DATABASE_URL:
                 await DbManger().rss_update_all()
-        await query.answer(text='Done!', show_alert=True)
     elif data[1] == 'deluser':
         if len(rss_dict) == 0:
             await query.answer(text="No subscriptions!", show_alert=True)
@@ -610,7 +609,10 @@ async def rssMonitor():
                         feed_msg += f"<b>Link: </b><code>{url}</code>\n\n<b>Tag: </b>{data['tag']} <code>{user}</code>"
                     await sendRss(feed_msg)
                     feed_count += 1
-                    await sleep(5)
+                    try:
+                        await sleep(10)
+                    except:
+                        pass
                 async with rss_dict_lock:
                     if user not in rss_dict or not rss_dict[user].get(title, False):
                         continue

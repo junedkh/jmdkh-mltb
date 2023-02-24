@@ -633,6 +633,8 @@ class GoogleDriveHelper:
 
 
     def count(self, link):
+        if self.__service is None:
+            self.__service = self.__authorize()
         try:
             file_id = self.getIdFromUrl(link)
         except (KeyError, IndexError):

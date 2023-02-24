@@ -11,7 +11,7 @@ from bot import (DATABASE_URL, DOWNLOAD_DIR, IS_PREMIUM_USER, LOGGER, bot,
 from bot.helper.ext_utils.bot_utils import (check_user_tasks,
                                             get_readable_file_size,
                                             is_gdrive_link, is_url, new_task,
-                                            new_thread, sync_to_async)
+                                            new_task, sync_to_async)
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.jmdkh_utils import extract_link
 from bot.helper.listener import MirrorLeechListener
@@ -49,7 +49,7 @@ async def _auto_cancel(msg, task_id):
     except:
         pass
 
-@new_thread
+@new_task
 async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     mssg = message.text
     user_id = message.from_user.id
@@ -365,7 +365,7 @@ async def _mp3_subbuttons(task_id, msg, playlist=False):
     SUBBUTTONS = buttons.build_menu(2)
     await editMessage(msg, f"Choose Audio{i} Bitrate:", SUBBUTTONS)
 
-@new_thread
+@new_task
 async def select_format(client, query):
     user_id = query.from_user.id
     data = query.data.split()

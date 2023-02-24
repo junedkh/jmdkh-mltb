@@ -87,9 +87,9 @@ class TgUploader:
             self.__sent_msg = self.__listener.message
         if self.__listener.dmMessage:
             self.__sent_DMmsg = self.__listener.dmMessage
-        if self.__listener.isSuperGroup or config_dict['DUMP_CHAT']:
+        if (self.__listener.isSuperGroup or config_dict['DUMP_CHAT']) and not self.__sent_msg.chat.has_protected_content:
             btn = ButtonMaker()
-            btn.ibutton('Save Message', 'save', 'footer')
+            btn.ibutton('Save This File', 'save', 'footer')
             self.__button = btn.build_menu(1)
 
     async def __prepare_file(self, up_path, file_, dirpath):
@@ -104,13 +104,14 @@ class TgUploader:
             cap_mono = f"<code>{file_}</code>"
         if len(file_) > 60:
             ntsplit = file_.rsplit('.', 2)
-            if len(ntsplit[1]) >= 60 or len(ntsplit) == 2:
+            if len(ntsplit) == 1:
+                ext = ''
+            elif len(ntsplit[1]) >= 60 or len(ntsplit) == 2:
                 ntsplit = file_.rsplit('.', 1)
                 ext = ntsplit[1]
             else:
                 ext = f"{ntsplit[1]}.{ntsplit[2]}"
-            extn = len(ext)
-            remain = 60 - extn
+            remain = 60 - len(ext)
             name = ntsplit[0][:remain]
             new_path = ospath.join(dirpath, f"{name}.{ext}")
             await aiorename(up_path, new_path)
@@ -128,7 +129,8 @@ class TgUploader:
         return rlist
 
     async def __send_media_group(self, subkey, key, msgs):
-        msgs_list = await msgs[0].reply_to_message.reply_media_group(media=self.__get_input_media(subkey, key),
+        grouped_media = self.__get_input_media(subkey, key)
+        msgs_list = await msgs[0].reply_to_message.reply_media_group(media=grouped_media,
                                                                      quote=True,
                                                                      disable_notification=True)
         for msg in msgs:
@@ -140,6 +142,9 @@ class TgUploader:
             for m in msgs_list:
                 self.__msgs_dict[m.link] = m.caption
         self.__sent_msg = msgs_list[-1]
+        if self.__sent_DMmsg:
+            dm_msgs_list = await self.__sent_DMmsg.reply_media_group(media=grouped_media, quote=True)
+            self.__sent_DMmsg = dm_msgs_list[-1]
 
     async def upload(self, o_files, m_size):
         await self.__msg_to_reply()
@@ -212,6 +217,12 @@ class TgUploader:
         LOGGER.info(f"Leech Completed: {self.name}")
         size = get_readable_file_size(self.__size)
         await self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)
+
+    async def __send_dm(self):
+        self.__sent_DMmsg = await self.__sent_msg.copy(
+            chat_id=self.__sent_DMmsg.chat.id,
+            reply_markup=None,
+            reply_to_message_id=self.__sent_DMmsg.id)
 
     @retry(wait=wait_exponential(multiplier=2, min=4, max=8), stop=stop_after_attempt(3),
            retry=retry_if_exception_type(Exception))
@@ -298,27 +309,27 @@ class TgUploader:
                         await self.__send_media_group(pname, key, msgs)
                     else:
                         self.__last_msg_in_group = True
+                elif self.__sent_DMmsg:
+                    await self.__send_dm()
 
-            if not self.__is_cancelled and self.__sent_DMmsg:
+            if not self.__is_cancelled and self.__sent_DMmsg and not self.__media_group:
                 await sleep(1)
-                self.__sent_DMmsg = await self.__sent_msg.copy(
-                chat_id=self.__sent_DMmsg.chat.id,
-                reply_markup=None,
-                reply_to_message_id=self.__sent_DMmsg.id)
+                await self.__send_dm()
+            if self.__thumb is None and thumb is not None and await aiopath.exists(thumb):
+                await aioremove(thumb)
             return up_path
         except FloodWait as f:
             LOGGER.warning(str(f))
             await sleep(f.value)
         except Exception as err:
+            if self.__thumb is None and thumb is not None and await aiopath.exists(thumb):
+                await aioremove(thumb)
             err_type = "RPCError: " if isinstance(err, RPCError) else ""
             LOGGER.error(f"{err_type}{err}. Path: {up_path}")
             if 'Telegram says: [400' in str(err) and key != 'documents':
                 LOGGER.error(f"Retrying As Document. Path: {up_path}")
                 return await self.__upload_file(up_path, cap_mono, True)
             raise err
-        finally:
-            if self.__thumb is None and thumb is not None and await aiopath.exists(thumb):
-                await aioremove(thumb)
 
     @property
     def speed(self):

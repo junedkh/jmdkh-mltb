@@ -2,12 +2,10 @@ from pyrogram.filters import regex
 from pyrogram.handlers import CallbackQueryHandler
 
 from bot import LOGGER, bot, btn_listener
-from bot.helper.ext_utils.bot_utils import new_thread
 from bot.helper.telegram_helper.message_utils import (deleteMessage,
                                                       editMessage, isAdmin)
 
 
-@new_thread
 async def verifyAnno(client, query):
     message = query.message
     data = query.data.split()

@@ -1005,7 +1005,6 @@ async def edit_bot_settings(client, query):
         await message.reply_to_mssage.delete()
         await message.delete()
 
-@new_thread
 async def bot_settings(client, message):
     msg, button = await get_buttons()
     globals()['START'] = 0

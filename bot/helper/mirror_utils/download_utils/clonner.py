@@ -28,7 +28,7 @@ async def start_clone(link, listener):
         if size > limit:
             msg2 = f'Failed, Clone limit is {get_readable_file_size(limit)}.\nYour File/Folder size is {get_readable_file_size(size)}.'
             return await listener.onDownloadError(msg2)
-    listener.onDownloadStart()
+    await listener.onDownloadStart()
     drive_id = listener.drive_id or config_dict['GDRIVE_ID']
     if files <= 20:
         msg = await sendMessage(listener.message, f"Cloning: <code>{link}</code>")

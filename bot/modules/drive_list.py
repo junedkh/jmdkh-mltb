@@ -5,7 +5,7 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 
 from bot import LOGGER, bot, bot_loop
-from bot.helper.ext_utils.bot_utils import (get_readable_time, new_thread,
+from bot.helper.ext_utils.bot_utils import (get_readable_time, new_task,
                                             sync_to_async)
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -26,7 +26,6 @@ def common_btn(isRecur, msg_id):
     buttons.ibutton("Cancel", f"types cancel {msg_id}")
     return buttons.build_menu(3)
 
-@new_thread
 async def list_buttons(client, message):
     if len(message.command) == 1:
         return await sendMessage(message, 'Send a search key along with command')
@@ -56,7 +55,7 @@ async def _list_drive(key, message, item_type):
         await editMessage(message, f'No result found for <i>{key}</i>')
 
 
-@new_thread
+@new_task
 async def select_type(client, query):
     user_id = query.from_user.id
     message = query.message

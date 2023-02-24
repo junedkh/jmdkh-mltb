@@ -4,19 +4,17 @@ from aiofiles.os import remove as aioremove
 from pyrogram.filters import command, regex
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 
-from bot import (LOGGER, OWNER_ID, aria2, bot, download_dict,
-                 download_dict_lock, user_data)
+from bot import LOGGER, aria2, bot, download_dict, download_dict_lock
 from bot.helper.ext_utils.bot_utils import (MirrorStatus, async_to_sync,
                                             bt_selection_buttons,
-                                            getDownloadByGid, new_thread,
-                                            sync_to_async)
+                                            getDownloadByGid, sync_to_async)
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (anno_checker,
                                                       sendMessage,
                                                       sendStatusMessage)
 
-@new_thread
+
 async def select(client, message):
     if not message.from_user:
         message.from_user = await anno_checker(message)
@@ -76,7 +74,6 @@ async def select(client, message):
         "\n<b><i>Your download will not start automatically</i></b>"
     await sendMessage(message, msg, SBUTTONS)
 
-@new_thread
 async def get_confirm(client, query):
     user_id = query.from_user.id
     data = query.data.split()
