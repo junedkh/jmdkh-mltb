@@ -17,7 +17,7 @@ from bot import (DATABASE_URL, INCOMPLETE_TASK_NOTIFIER, LOGGER,
                  STOP_DUPLICATE_TASKS, Interval, QbInterval, bot, botStartTime,
                  config_dict, scheduler)
 
-from .helper.ext_utils.bot_utils import (cmd_exec, get_readable_file_size,
+from .helper.ext_utils.bot_utils import (cmd_exec, get_readable_file_size, set_commands,
                                          get_readable_time, sync_to_async)
 from .helper.ext_utils.db_handler import DbManger
 from .helper.ext_utils.fs_utils import clean_all, exit_clean_up, start_cleanup
@@ -147,6 +147,7 @@ async def bot_help(client, message):
     await sendMessage(message, help_string)
 
 async def main():
+    await set_commands(bot)
     await start_cleanup()
     await search.initiate_search_tools()
     if DATABASE_URL and STOP_DUPLICATE_TASKS:
