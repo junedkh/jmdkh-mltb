@@ -168,7 +168,7 @@ async def main():
                         if len(msg.encode()) > 4000:
                             if 'Restarted Successfully!' in msg and cid == chat_id:
                                 try:
-                                    await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg)
+                                    await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text='Restarted Successfully!')
                                     await bot.send_message(chat_id, msg, disable_web_page_preview=True, reply_to_message_id=msg_id)
                                 except:
                                     pass
@@ -182,7 +182,8 @@ async def main():
                             msg = ''
                 if 'Restarted Successfully!' in msg and cid == chat_id:
                     try:
-                        await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg)
+                        await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text='Restarted Successfully!')
+                        await bot.send_message(chat_id, msg, disable_web_page_preview=True, reply_to_message_id=msg_id)
                     except:
                         pass
                     await aioremove(".restartmsg")
