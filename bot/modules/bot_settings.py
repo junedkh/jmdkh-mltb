@@ -930,7 +930,11 @@ async def edit_bot_settings(client, query):
         await event_handler(client, query, pfunc, rfunc)
     elif data[1] == 'editvar' and STATE == 'view':
         value = config_dict[data[2]]
-        if len(str(value)) > 200:
+        if value and data[2] in ['DATABASE_URL', 'TELEGRAM_API', 'TELEGRAM_HASH', 'UPSTREAM_REPO',
+                                 'USER_SESSION_STRING', 'MEGA_API_KEY', 'MEGA_PASSWORD',
+                                 'UPTOBOX_TOKEN'] and not await CustomFilters.owner(client, query):
+            value = 'Only owner can see this!'
+        elif len(str(value)) > 200:
             await query.answer()
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"

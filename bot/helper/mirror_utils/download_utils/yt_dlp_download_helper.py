@@ -125,9 +125,9 @@ class YoutubeDLHelper:
             await self.__listener.onDownloadStart()
             await sendStatusMessage(self.__listener.message)
 
-    def __onDownloadError(self, error, button=None):
+    def __onDownloadError(self, error):
         self.__is_cancelled = True
-        async_to_sync(self.__listener.onDownloadError, error, button)
+        async_to_sync(self.__listener.onDownloadError, error)
 
     def extractMetaData(self, link, name, args, get_info=False):
         if args:
@@ -231,7 +231,7 @@ class YoutubeDLHelper:
         limit_exceeded = ''
         if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
             limit = STORAGE_THRESHOLD * 1024**3
-            acpt = check_storage_threshold(self.__size, limit, self.__listener.isZip)
+            acpt = await sync_to_async(check_storage_threshold, self.__size, limit, self.__listener.isZip)
             if not acpt:
                 limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
                 limit_exceeded += f'\nYour File/Folder size is {get_readable_file_size(self.__size)}'

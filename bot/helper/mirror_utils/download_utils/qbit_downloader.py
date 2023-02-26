@@ -188,7 +188,7 @@ async def __size_checked(client, tor):
         if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
             limit = STORAGE_THRESHOLD * 1024**3
             arch = any([listener.isZip, listener.extract])
-            acpt = check_storage_threshold(size, limit, arch)
+            acpt = await sync_to_async(check_storage_threshold, size, limit, arch)
             if not acpt:
                 limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
         if not limit_exceeded and (TORRENT_LIMIT:= config_dict['TORRENT_LIMIT']):

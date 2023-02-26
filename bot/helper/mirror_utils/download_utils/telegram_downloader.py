@@ -122,7 +122,7 @@ class TelegramDownloadHelper:
                 if STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']:
                     limit = STORAGE_THRESHOLD * 1024**3
                     arch = any([self.__listener.isZip, self.__listener.extract])
-                    acpt = check_storage_threshold(size, limit, arch)
+                    acpt = await sync_to_async(check_storage_threshold, size, limit, arch)
                     if not acpt:
                         msg = f'You must leave {get_readable_file_size(limit)} free storage.'
                         msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'

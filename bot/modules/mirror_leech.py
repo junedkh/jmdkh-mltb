@@ -338,7 +338,6 @@ Number should be always before |newname or pswd:
         else:
             await add_gd_download(link, path, listener, name)
     elif is_mega_link(link):
-        listener.ismega = await sendMessage(message, "💡 <b>Mega link this might take a minutes</b>")
         await add_mega_download(link, f'{path}/', listener, name)
     elif isQbit:
         await add_qb_torrent(link, path, listener, ratio, seed_time)

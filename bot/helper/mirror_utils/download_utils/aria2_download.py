@@ -78,6 +78,7 @@ async def __onDownloadStarted(api, gid):
                 if download.total_length == 0:
                     start_time = time()
                     while time() - start_time <= 15:
+                        await sleep(0.5)
                         download = await sync_to_async(api.get_download, gid)
                         download = download.live
                         if download.followed_by_ids:
@@ -89,7 +90,7 @@ async def __onDownloadStarted(api, gid):
                 if not limit_exceeded and STORAGE_THRESHOLD:
                     limit = STORAGE_THRESHOLD * 1024**3
                     arch = any([listener.isZip, listener.extract])
-                    acpt = check_storage_threshold(size, limit, arch, True)
+                    acpt = await sync_to_async(check_storage_threshold, size, limit, arch, True)
                     if not acpt:
                         limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
                 if not limit_exceeded and DIRECT_LIMIT and not download.is_torrent:

@@ -41,7 +41,7 @@ async def add_gd_download(link, path, listener, newname, from_queue=False):
     if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
         limit = STORAGE_THRESHOLD * 1024**3
         arch = any([listener.extract, listener.isZip])
-        acpt = check_storage_threshold(size, limit, arch)
+        acpt = await sync_to_async(check_storage_threshold, size, limit, arch)
         if not acpt:
             limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
     if not limit_exceeded and (GDRIVE_LIMIT:= config_dict['GDRIVE_LIMIT']):

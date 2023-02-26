@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from asyncio import Event
-from concurrent.futures import ThreadPoolExecutor
 from random import SystemRandom
 from string import ascii_letters, digits
 
@@ -143,7 +142,6 @@ class AsyncExecutor:
 
 
 async def add_mega_download(mega_link, path, listener, name, from_queue=False):
-    pool = ThreadPoolExecutor()
     MEGA_API_KEY = config_dict['MEGA_API_KEY']
     MEGA_EMAIL_ID = config_dict['MEGA_EMAIL_ID']
     MEGA_PASSWORD = config_dict['MEGA_PASSWORD']
@@ -164,7 +162,6 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
         node = await sync_to_async(folder_api.authorizeNode, mega_listener.node)
     if mega_listener.error:
         await sendMessage(listener.message, str(mega_listener.error))
-        await listener.ismega.delete()
         await sync_to_async(api.removeListener, mega_listener)
         if folder_api:
             await sync_to_async(folder_api.removeListener, mega_listener)
@@ -182,7 +179,6 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
         if mname:
             smsg, button = await sync_to_async(GoogleDriveHelper().drive_list, mname, True)
             if smsg:
-                await listener.ismega.delete()
                 msg1 = "File/Folder is already available in Drive.\nHere are the search results:"
                 await sendMessage(listener.message, msg1, button)
                 await sync_to_async(api.removeListener, mega_listener)
@@ -194,7 +190,7 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
     if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
         limit = STORAGE_THRESHOLD * 1024**3
         arch = any([listener.isZip, listener.extract])
-        acpt = check_storage_threshold(size, limit, arch)
+        acpt = await sync_to_async(check_storage_threshold, size, limit, arch)
         if not acpt:
             limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
     if not limit_exceeded and (MEGA_LIMIT:= config_dict['MEGA_LIMIT']):
@@ -206,7 +202,6 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
         if size > limit:
             limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}'
     if limit_exceeded:
-        await listener.ismega.delete()
         return await sendMessage(listener.message, f"{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}.")
     mname = name or await sync_to_async(node.getName)
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=8))
@@ -222,7 +217,6 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
                 queued_dl[listener.uid] = ['mega', mega_link, path, listener, name]
         if added_to_queue:
             LOGGER.info(f"Added to Queue/Download: {mname}")
-            await listener.ismega.delete()
             async with download_dict_lock:
                 download_dict[listener.uid] = QueueStatus(mname, size, gid, listener, 'Dl')
             await listener.onDownloadStart()
@@ -237,7 +231,6 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
         non_queued_dl.add(listener.uid)
     await makedirs(path, exist_ok=True)
     mega_listener.setValues(mname, size, gid)
-    await listener.ismega.delete()
     if not from_queue:
         await listener.onDownloadStart()
         await sendStatusMessage(listener.message)
@@ -246,5 +239,5 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
         LOGGER.info(f'Start Queued Download from Mega: {mname}')
     await executor.do(api.startDownload, (node, path, name, None, False, None))
     await sync_to_async(api.removeListener, mega_listener)
-    if folder_api is not None:
+    if folder_api:
         await sync_to_async(folder_api.removeListener, mega_listener)
