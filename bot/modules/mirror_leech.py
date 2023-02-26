@@ -38,9 +38,8 @@ from bot.helper.telegram_helper.message_utils import (anno_checker,
                                                       sendLogMessage,
                                                       sendMessage)
 
-from pyrogram.types import Message
 @new_task
-async def _mirror_leech(client, message:Message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir={}, isClone=False):
+async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir={}, isClone=False):
     mesg = message.text.split('\n')
     message_args = mesg[0].split(maxsplit=1)
     index = 1
