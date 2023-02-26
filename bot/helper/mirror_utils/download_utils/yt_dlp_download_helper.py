@@ -226,7 +226,7 @@ class YoutubeDLHelper:
             if sname:
                 smsg, button = await sync_to_async(GoogleDriveHelper().drive_list, sname, True)
                 if smsg:
-                    self.__onDownloadError('File/Folder already available in Drive.\nHere are the search results:\n', button)
+                    await self.__listener.onDownloadError('File/Folder already available in Drive.\nHere are the search results:\n', button)
                     return
         limit_exceeded = ''
         if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
@@ -248,7 +248,8 @@ class YoutubeDLHelper:
                 limit_exceeded += f'Your {"Playlist" if self.is_playlist else "Video"} size\n'
                 limit_exceeded += f'is {get_readable_file_size(self.__size)}'
         if limit_exceeded:
-            return self.__onDownloadError(limit_exceeded)
+            await self.__listener.onDownloadError(limit_exceeded)
+            return
         all_limit = config_dict['QUEUE_ALL']
         dl_limit = config_dict['QUEUE_DOWNLOAD']
         if all_limit or dl_limit:
