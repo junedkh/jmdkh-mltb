@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 from asyncio import create_subprocess_exec
 from math import ceil
+from os import _exit
 from os import path as ospath
 from os import walk
 from re import I
 from re import search as re_search
 from re import split as re_split
 from shutil import disk_usage, rmtree
-from sys import exit as sysexit
 from time import time
 
 from aiofiles.os import listdir, makedirs, mkdir
@@ -18,8 +18,8 @@ from aioshutil import rmtree as aiormtree
 from magic import Magic
 from PIL import Image
 
-from bot import (DOWNLOAD_DIR, LOGGER, MAX_SPLIT_SIZE, aria2, config_dict,
-                 get_client, user_data)
+from bot import (DOWNLOAD_DIR, LOGGER, MAX_SPLIT_SIZE, aria2,
+                 config_dict, get_client, user_data)
 from bot.helper.ext_utils.bot_utils import (async_to_sync, cmd_exec,
                                             sync_to_async)
 from bot.helper.ext_utils.telegraph_helper import telegraph
@@ -86,12 +86,15 @@ def clean_all():
 
 def exit_clean_up(signal, frame):
     try:
-        LOGGER.info("Please wait, while we clean up the downloads and stop running downloads")
+        LOGGER.info("Please wait, while we clean up and stop the running downloads")
         clean_all()
-        sysexit(0)
+        _exit(0)
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
-        sysexit(1)
+        _exit(1)
+    except Exception as e:
+        LOGGER.error(e)
+        _exit(1)
 
 async def clean_unwanted(path):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
@@ -238,11 +241,11 @@ async def get_media_info(path):
 
     try:
         result = await cmd_exec(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
-                               "json", "-show_format", "-show_streams", path])
+                                 "json", "-show_format", "-show_streams", path])
         if res := result[1]:
             LOGGER.warning(f'Get Media Info: {res}')
     except Exception as e:
-        LOGGER.error(f'Get Document Type: {e}. Mostly File not found!')
+        LOGGER.error(f'Get Media Info: {e}. Mostly File not found!')
         return 0, None, None
 
     fields = eval(result[0]).get('format')
@@ -290,7 +293,7 @@ async def get_document_type(path):
         result = await cmd_exec(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
                                  "json", "-show_streams", path])
         if res := result[1]:
-            LOGGER.warning(f'Get Media Info: {res}')
+            LOGGER.warning(f'Get Document Type: {res}')
     except Exception as e:
         LOGGER.error(f'Get Document Type: {e}. Mostly File not found!')
         return is_video, is_audio, is_image

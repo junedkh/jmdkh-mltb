@@ -117,15 +117,15 @@ def bt_selection_buttons(id_: str, isCanCncl: bool = True):
     buttons.ibutton("Done Selecting", f"btsel done {gid} {id_}")
     return buttons.build_menu(2)
 
-def get_progress_bar_string(status):
-    completed = status.processed_bytes() / 8
-    total = status.size_raw() / 8
+def get_progress_bar_string(processed_bytes, total_bytes):
+    completed = processed_bytes / 8
+    total = total_bytes / 8
     p = 0 if total == 0 else round(completed * 100 / total)
     p = min(max(p, 0), 100)
     cFull = p // 8
     p_str = '■' * cFull
     p_str += '□' * (12 - cFull)
-    return f"[{p_str}]"
+    return p_str
 
 def get_readable_message():
     msg = ""
@@ -138,7 +138,7 @@ def get_readable_message():
     for index, download in enumerate(list(download_dict.values())[COUNT:], start=1):
         msg += f"<b>{download.status()}</b>: <code>{escape(str(download.name()))}</code>"
         if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
-            msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
+            msg += f"\n[{get_progress_bar_string(download.processed_bytes(), download.size_raw())}] {download.progress()}"
             msg += f"\n<b>Processed</b>: {get_readable_file_size(download.processed_bytes())} of {download.size()}"
             msg += f"\n<b>Speed</b>: {download.speed()} | <b>ETA</b>: {download.eta()}"
             if hasattr(download, 'seeders_num'):
@@ -191,7 +191,7 @@ def get_readable_message():
     if STATUS_LIMIT and tasks > STATUS_LIMIT:
         buttons = ButtonMaker()
         buttons.ibutton("<<", "status pre")
-        buttons.ibutton(f"{PAGE_NO}/{PAGES}:{tasks}", "status ref")
+        buttons.ibutton(f"{PAGE_NO}/{PAGES} ({tasks})", "status ref")
         buttons.ibutton(">>", "status nex")
         button = buttons.build_menu(3)
         return msg + bmsg, button
