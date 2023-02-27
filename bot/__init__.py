@@ -9,7 +9,7 @@ from logging import error as log_error
 from logging import getLogger
 from logging import info as log_info
 from logging import warning as log_warning
-from os import environ
+from os import environ, getcwd
 from os import path as ospath
 from os import remove as osremove
 from socket import setdefaulttimeout
@@ -138,7 +138,7 @@ if len(GDRIVE_ID) == 0:
 
 DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
 if len(DOWNLOAD_DIR) == 0:
-    DOWNLOAD_DIR = '/usr/src/app/downloads/'
+    DOWNLOAD_DIR = f'{getcwd()}/downloads/'
 elif not DOWNLOAD_DIR.endswith("/"):
     DOWNLOAD_DIR = f'{DOWNLOAD_DIR}/'
 
@@ -479,7 +479,7 @@ if ospath.exists('categories.txt'):
 if BASE_URL:
     Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
 
-srun(["qbittorrent-nox", "-d", "--profile=."])
+srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
 if not ospath.exists('.netrc'):
     with open('.netrc', 'w'):
        pass

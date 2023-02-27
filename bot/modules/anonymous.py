@@ -17,7 +17,7 @@ async def verifyAnno(client, query):
     if data[1] == 'admin' and is_admin:
         await query.answer(f'Username: {user.username}\nYour userid : {user.id}')
         btn_listener[msg_id] = user
-        LOGGER.info(f'Verification Success by ({user.username}){user.id}')
+        LOGGER.info(f'Verification Success by ({user.username}) {user.id}')
         await deleteMessage(message)
     elif data[1] == 'admin':
         await query.answer('You are not really admin')
