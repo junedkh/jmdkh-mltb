@@ -120,18 +120,6 @@ if len(OWNER_ID) == 0:
 else:
     OWNER_ID = int(OWNER_ID)
 
-TELEGRAM_API = environ.get('TELEGRAM_API', '')
-if len(TELEGRAM_API) == 0:
-    log_error("TELEGRAM_API variable is missing! Exiting now")
-    exit(1)
-else:
-    TELEGRAM_API = int(TELEGRAM_API)
-
-TELEGRAM_HASH = environ.get('TELEGRAM_HASH', '')
-if len(TELEGRAM_HASH) == 0:
-    log_error("TELEGRAM_HASH variable is missing! Exiting now")
-    exit(1)
-
 GDRIVE_ID = environ.get('GDRIVE_ID', '')
 if len(GDRIVE_ID) == 0:
     GDRIVE_ID = ''
@@ -165,10 +153,15 @@ user = ''
 USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 if len(USER_SESSION_STRING) != 0:
     log_info("Creating client from USER_SESSION_STRING")
-    user = tgClient('user', TELEGRAM_API, TELEGRAM_HASH, session_string=USER_SESSION_STRING,
+    user = tgClient('user', session_string=USER_SESSION_STRING,
                     parse_mode=enums.ParseMode.HTML, no_updates=True)
     user.start()
-    IS_PREMIUM_USER = user.me.is_premium
+    if user.me.is_bot:
+        log_warning("You added bot string for user client this is not allowed")
+        user.stop()
+        user = ''
+    else:
+        IS_PREMIUM_USER = user.me.is_premium
 
 MEGA_API_KEY = environ.get('MEGA_API_KEY', '')
 if len(MEGA_API_KEY) == 0:
@@ -394,8 +387,6 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                 'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
                 'STOP_DUPLICATE': STOP_DUPLICATE,
                 'SUDO_USERS': SUDO_USERS,
-                'TELEGRAM_API': TELEGRAM_API,
-                'TELEGRAM_HASH': TELEGRAM_HASH,
                 'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
                 'UPSTREAM_REPO': UPSTREAM_REPO,
                 'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
@@ -551,7 +542,7 @@ else:
     qb_client.app_set_preferences(qb_opt)
 
 log_info("Creating client from BOT_TOKEN")
-bot = tgClient('bot', TELEGRAM_API, TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML)
+bot = tgClient('bot', bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML)
 bot.start()
 bot_loop = bot.loop
 bot_name = bot.me.username

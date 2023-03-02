@@ -8,6 +8,8 @@ from re import I
 from re import search as re_search
 from re import split as re_split
 from shutil import disk_usage, rmtree
+from subprocess import run as srun
+from sys import exit as sexit
 from time import time
 
 from aiofiles.os import listdir, makedirs, mkdir
@@ -18,8 +20,8 @@ from aioshutil import rmtree as aiormtree
 from magic import Magic
 from PIL import Image
 
-from bot import (DOWNLOAD_DIR, LOGGER, MAX_SPLIT_SIZE, aria2,
-                 config_dict, get_client, user_data)
+from bot import (DOWNLOAD_DIR, LOGGER, MAX_SPLIT_SIZE, aria2, config_dict,
+                 get_client, user_data)
 from bot.helper.ext_utils.bot_utils import (async_to_sync, cmd_exec,
                                             sync_to_async)
 from bot.helper.ext_utils.telegraph_helper import telegraph
@@ -88,10 +90,11 @@ def exit_clean_up(signal, frame):
     try:
         LOGGER.info("Please wait, while we clean up and stop the running downloads")
         clean_all()
-        _exit(0)
+        srun(['pkill', '-9', '-f', '-e', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg'])
+        sexit(0)
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
-        _exit(1)
+        sexit(1)
     except Exception as e:
         LOGGER.error(e)
         _exit(1)

@@ -2,8 +2,8 @@
 from asyncio import sleep
 from time import time
 
-from pyrogram.errors import (ChatAdminRequired, FloodWait, PeerIdInvalid, UserIsBlocked,
-                             Unauthorized, UserNotParticipant)
+from pyrogram.errors import (ChatAdminRequired, FloodWait, PeerIdInvalid,
+                             Unauthorized, UserIsBlocked, UserNotParticipant)
 
 from bot import (LOGGER, Interval, bot, btn_listener, categories, config_dict,
                  download_dict_lock, status_reply_dict, status_reply_dict_lock,
@@ -162,9 +162,12 @@ async def sendLogMessage(message, link, tag):
         LOGGER.warning(str(r))
         sleep(r.value * 1.5)
         return await sendLogMessage(message, link, tag)
+    except PeerIdInvalid as e:
+        LOGGER.error(e.MESSAGE)
+    except Unauthorized as r:
+        LOGGER.warning(r.MESSAGE)
     except Exception as e:
         LOGGER.error(str(e))
-        return
 
 async def isAdmin(message, user_id=None):
     if message.chat.type != message.chat.type.PRIVATE:

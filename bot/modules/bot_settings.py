@@ -49,16 +49,6 @@ async def load_config():
     if len(BOT_TOKEN) == 0:
         BOT_TOKEN = config_dict['BOT_TOKEN']
 
-    TELEGRAM_API = environ.get('TELEGRAM_API', '')
-    if len(TELEGRAM_API) == 0:
-        TELEGRAM_API = config_dict['TELEGRAM_API']
-    else:
-        TELEGRAM_API = int(TELEGRAM_API)
-
-    TELEGRAM_HASH = environ.get('TELEGRAM_HASH', '')
-    if len(TELEGRAM_HASH) == 0:
-        TELEGRAM_HASH = config_dict['TELEGRAM_HASH']
-
     OWNER_ID = environ.get('OWNER_ID', '')
     OWNER_ID = config_dict['OWNER_ID'] if len(OWNER_ID) == 0 else int(OWNER_ID)
 
@@ -426,8 +416,6 @@ async def load_config():
                    'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
                    'STOP_DUPLICATE': STOP_DUPLICATE,
                    'SUDO_USERS': SUDO_USERS,
-                   'TELEGRAM_API': TELEGRAM_API,
-                   'TELEGRAM_HASH': TELEGRAM_HASH,
                    'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
                    'UPSTREAM_REPO': UPSTREAM_REPO,
                    'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
@@ -515,11 +503,11 @@ async def get_buttons(key=None, edit_type=None):
     elif edit_type == 'editvar':
         msg = ''
         buttons.ibutton('Back', "botset back var")
-        if key not in ['TELEGRAM_HASH', 'TELEGRAM_API', 'OWNER_ID', 'BOT_TOKEN']:
+        if key not in ['OWNER_ID', 'BOT_TOKEN']:
             buttons.ibutton('Default', f"botset resetvar {key}")
         buttons.ibutton('Close', "botset close")
-        if key in ['SUDO_USERS', 'CMD_SUFFIX', 'OWNER_ID', 'USER_SESSION_STRING', 'TELEGRAM_HASH', 
-                   'TELEGRAM_API', 'AUTHORIZED_CHATS', 'DATABASE_URL', 'BOT_TOKEN', 'DOWNLOAD_DIR']:
+        if key in ['SUDO_USERS', 'CMD_SUFFIX', 'OWNER_ID', 'USER_SESSION_STRING',
+                   'AUTHORIZED_CHATS', 'DATABASE_URL', 'BOT_TOKEN', 'DOWNLOAD_DIR']:
             msg += 'Restart required for this edit to take effect!\n\n'
         msg += f'Send a valid value for {key}. Timeout: 60 sec'
     elif edit_type == 'editaria':
@@ -782,7 +770,7 @@ async def event_handler(client, query, pfunc, rfunc, document=False):
     chat_id = query.message.chat.id
     handler_dict[chat_id] = True
     async def event_filter(_, __, event):
-        return bool(event.from_user.id == query.from_user.id and event.chat.id == chat_id and \
+        return bool((query and event.from_user.id == query.from_user.id) and event.chat.id == chat_id and \
                     (event.text or event.document and document))
     handler = client.add_handler(MessageHandler(pfunc, filters=create(event_filter)), group=-1)
     start_time = time()
@@ -930,7 +918,7 @@ async def edit_bot_settings(client, query):
         await event_handler(client, query, pfunc, rfunc)
     elif data[1] == 'editvar' and STATE == 'view':
         value = config_dict[data[2]]
-        if value and data[2] in ['DATABASE_URL', 'TELEGRAM_API', 'TELEGRAM_HASH', 'UPSTREAM_REPO',
+        if value and data[2] in ['DATABASE_URL', 'UPSTREAM_REPO',
                                  'USER_SESSION_STRING', 'MEGA_API_KEY', 'MEGA_PASSWORD',
                                  'UPTOBOX_TOKEN'] and not await CustomFilters.owner(client, query):
             value = 'Only owner can see this!'
