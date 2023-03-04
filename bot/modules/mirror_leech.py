@@ -56,7 +56,8 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
     auth = ''
 
     if len(message_args) > 1:
-        args = mesg[0].split(maxsplit=5)
+        args = mesg[0].split(maxsplit=6)
+        args.pop(0)
         for x in args:
             x = x.strip()
             if x == 's':
@@ -160,7 +161,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
                 reply_text = reply_to.text.split('\n', 1)[0].strip()
                 if is_url(reply_text) or is_magnet(reply_text):
                     link = reply_text
-            elif reply_to.document and file_.mime_type == 'application/x-bittorrent':
+            elif reply_to.document and (file_.mime_type == 'application/x-bittorrent' or file_.file_name.endswith('.torrent')):
                 link = await reply_to.download()
             elif not isClone:
                 if not message.from_user:

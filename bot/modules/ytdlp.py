@@ -61,6 +61,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     link = ''
     folder_name = ''
     args = mssg.split(maxsplit=5)
+    args.pop(0)
     raw_url = None
     drive_id = None
     index_link = None
