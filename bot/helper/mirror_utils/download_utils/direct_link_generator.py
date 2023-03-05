@@ -27,9 +27,6 @@ from bot import LOGGER, config_dict
 from bot.helper.ext_utils.bot_utils import get_readable_time, is_share_link
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
-fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
-             'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
-
 anonfilesBaseSites = ['anonfiles.com', 'hotfile.io', 'bayfiles.com', 'megaupload.nz', 'letsupload.cc',
                       'filechan.org', 'myfile.is', 'vshare.is', 'rapidshare.nu', 'lolabits.se',
                       'openload.cc', 'share-online.is', 'upvid.cc']
@@ -88,7 +85,7 @@ def direct_link_generator(link: str):
         return anonfilesBased(link)
     elif any(x in domain for x in ['terabox', 'nephobox', '4funbox', 'mirrobox', 'momerybox', 'teraboxapp']):
         return terabox(link)
-    elif any(x in domain for x in fmed_list):
+    elif is_fembed(link):
         return fembed(link)
     elif any(x in domain for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
         return sbembed(link)
@@ -227,6 +224,12 @@ def anonfilesBased(url: str) -> str:
     if sa := soup.find(id="download-url"):
         return sa['href']
     raise DirectDownloadLinkException("ERROR: File not found!")
+
+def is_fembed(url: str):
+    test_link = Bypass().bypass_fembed(url)
+    if test_link:
+        return True
+    return False
 
 def fembed(link: str) -> str:
     """ Fembed direct link generator
