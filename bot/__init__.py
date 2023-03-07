@@ -169,9 +169,9 @@ if len(USER_SESSION_STRING) != 0:
                     parse_mode=enums.ParseMode.HTML, no_updates=True)
     user.start()
     if user.me.is_bot:
-        log_warning("You added bot string for user client this is not allowed")
+        log_warning("You added bot string for USER_SESSION_STRING this is not allowed! Exiting now")
         user.stop()
-        user = ''
+        exit(1)
     else:
         IS_PREMIUM_USER = user.me.is_premium
 
