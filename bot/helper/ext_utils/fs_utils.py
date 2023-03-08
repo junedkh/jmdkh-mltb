@@ -108,7 +108,7 @@ async def clean_unwanted(path):
         if dirpath.endswith((".unwanted", "splited_files_mltb", "copied_mltb")):
             await aiormtree(dirpath)
     for dirpath, subdir, files in await sync_to_async(walk, path, topdown=False):
-        if not listdir(dirpath):
+        if not await listdir(dirpath):
             await rmdir(dirpath)
 
 async def get_path_size(path):
