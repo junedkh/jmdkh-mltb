@@ -175,7 +175,6 @@ async def __stop_duplicate(client, tor):
                 qbmsg, button = await sync_to_async(GoogleDriveHelper().drive_list, qbname, True)
                 if qbmsg:
                     await __onDownloadError("File/Folder is already available in Drive.\nHere are the search results:\n", client, tor, button)
-                    return
     except:
         pass
 
@@ -201,7 +200,7 @@ async def __size_checked(client, tor):
                 limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}'
         if limit_exceeded:
             fmsg = f"{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}"
-            return await __onDownloadError(fmsg, client, tor)
+            await __onDownloadError(fmsg, client, tor)
     except:
         pass
 

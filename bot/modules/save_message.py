@@ -12,13 +12,18 @@ async def save_message(client, query):
     try:
         button = ButtonMaker()
         button_exist = False
-        for _markup in query.message.reply_markup.inline_keyboard[0]:
+        for _markup in query.message.reply_markup.inline_keyboard:
             if isinstance(_markup, list):
                 for another_markup in _markup:
-                    if not another_markup.callback_data:
+                    if isinstance(another_markup, list):
+                        for one_more_markup in another_markup:
+                            if one_more_markup and not one_more_markup.callback_data:
+                                button_exist = True
+                                button.ubutton(one_more_markup.text, one_more_markup.url)
+                    elif another_markup and not another_markup.callback_data:
                         button_exist = True
                         button.ubutton(another_markup.text, another_markup.url)
-            elif not _markup.callback_data:
+            elif _markup and not _markup.callback_data:
                 button_exist = True
                 button.ubutton(_markup.text, _markup.url)
         reply_markup = button.build_menu(2) if button_exist else None
