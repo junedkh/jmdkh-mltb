@@ -184,12 +184,6 @@ async def __size_checked(client, tor):
         listener = download.listener()
         size = tor.size
         limit_exceeded = ''
-        if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
-            limit = STORAGE_THRESHOLD * 1024**3
-            arch = any([listener.isZip, listener.extract])
-            acpt = await sync_to_async(check_storage_threshold, size, limit, arch)
-            if not acpt:
-                limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
         if not limit_exceeded and (TORRENT_LIMIT:= config_dict['TORRENT_LIMIT']):
             limit = TORRENT_LIMIT * 1024**3
             if size > limit:
@@ -198,6 +192,12 @@ async def __size_checked(client, tor):
             limit = LEECH_LIMIT * 1024**3
             if size > limit:
                 limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}'
+        if not limit_exceeded and (STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']):
+            limit = STORAGE_THRESHOLD * 1024**3
+            arch = any([listener.isZip, listener.extract])
+            acpt = await sync_to_async(check_storage_threshold, size, limit, arch)
+            if not acpt:
+                limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
         if limit_exceeded:
             fmsg = f"{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}"
             await __onDownloadError(fmsg, client, tor)
