@@ -40,6 +40,7 @@ def __get_hash_magnet(mgt: str):
     if len(hash_) == 32:
         hash_ = b16encode(b32decode(hash_.upper())).decode()
     return str(hash_)
+
 def __get_hash_file(path):
     with open(path, "rb") as f:
         decodedDict = bdecode(f.read())
@@ -103,10 +104,11 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
                             await deleteMessage(meta)
                             break
                     except:
-                        return await deleteMessage(meta)
+                        await deleteMessage(meta)
+                        return
             await sync_to_async(client.torrents_pause, torrent_hashes=ext_hash)
             SBUTTONS = bt_selection_buttons(ext_hash)
-            msg = f"<b>Name</b>: <code>{tor_info.name}</code>\n\nYour download paused. Choose files then press Done Selecting button to start downloading."             "\n<b><i>Your download will not start automatically</i></b>"
+            msg = f"<b>Name</b>: <code>{tor_info.name}</code>\n\nYour download paused. Choose files then press Done Selecting button to start downloading.\n<b><i>Your download will not start automatically</i></b>"
             await sendMessage(listener.message, msg, SBUTTONS)
         else:
             await sendStatusMessage(listener.message)
@@ -174,10 +176,12 @@ async def __stop_duplicate(client, tor):
             if qbname:
                 qbmsg, button = await sync_to_async(GoogleDriveHelper().drive_list, qbname, True)
                 if qbmsg:
-                    await __onDownloadError("File/Folder is already available in Drive.\nHere are the search results:\n", client, tor, button)
+                    qbmsg = 'File/Folder is already available in Drive.\nHere are the search results:'
+                    await __onDownloadError(qbmsg, client, tor, button)
     except:
         pass
 
+@new_task
 async def __size_checked(client, tor):
     download = await getDownloadByGid(tor.hash[:12])
     try:
@@ -258,7 +262,7 @@ async def __qb_listener():
                     if tor_info.hash not in SIZE_CHECKED and any([config_dict['STORAGE_THRESHOLD'],config_dict['TORRENT_LIMIT'],
                                                                 config_dict['LEECH_LIMIT']]):
                         SIZE_CHECKED.add(tor_info.hash)
-                        bot_loop.create_task(__size_checked(client, tor_info))
+                        __size_checked(client, tor_info)
                 elif tor_info.state == "stalledDL":
                     TORRENT_TIMEOUT = config_dict['TORRENT_TIMEOUT']
                     if tor_info.hash not in RECHECKED and 0.99989999999999999 < tor_info.progress < 1:
@@ -276,7 +280,8 @@ async def __qb_listener():
                     await sync_to_async(client.torrents_recheck, torrent_hashes=tor_info.hash)
                 elif tor_info.state == "error":
                     bot_loop.create_task(__onDownloadError("No enough space for this torrent on device", client, tor_info))
-                elif tor_info.completion_on != 0 and tor_info.hash not in UPLOADED and                   tor_info.state not in ['checkingUP', 'checkingDL', 'checkingResumeData']:
+                elif tor_info.completion_on != 0 and tor_info.hash not in UPLOADED and \
+                    tor_info.state not in ['checkingUP', 'checkingDL', 'checkingResumeData']:
                     UPLOADED.add(tor_info.hash)
                     __onDownloadComplete(client, tor_info)
                 elif tor_info.state in ['pausedUP', 'pausedDL'] and tor_info.hash in SEEDING:
