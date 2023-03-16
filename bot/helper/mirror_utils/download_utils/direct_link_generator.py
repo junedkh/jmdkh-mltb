@@ -160,7 +160,7 @@ def mediafire(url: str) -> str:
         page = cget('get', url).text
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-    if not (final_link := findall(r"\"(https?:\/\/download\d+\.mediafire\.com\/\S+\/\S+\/\S+)\"", page)):
+    if not (final_link := findall(r"\'(https?:\/\/download\d+\.mediafire\.com\/\S+\/\S+\/\S+)\'", page)):
         raise DirectDownloadLinkException("ERROR: No links found in this page")
     return final_link[0]
 
