@@ -3,7 +3,7 @@ from random import choice, random, randrange
 from time import sleep
 from urllib.parse import quote
 
-from cfscrape import create_scraper
+from cloudscraper import create_scraper
 from urllib3 import disable_warnings
 
 from bot import LOGGER, SHORTENER_APIS, SHORTENERES

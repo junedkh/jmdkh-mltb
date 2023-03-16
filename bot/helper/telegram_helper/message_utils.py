@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 from asyncio import sleep
+from datetime import datetime, timedelta, timezone
 from time import time
 
-from pyrogram.errors import (ChatAdminRequired, FloodWait, PeerIdInvalid,
-                             Unauthorized, UserIsBlocked, UserNotParticipant)
+from pyrogram.errors import (FloodWait, PeerIdInvalid, RPCError, UserIsBlocked,
+                             UserNotParticipant)
+from pyrogram.types import ChatPermissions
 
 from bot import (LOGGER, Interval, bot, btn_listener, categories, config_dict,
                  download_dict_lock, status_reply_dict, status_reply_dict_lock,
@@ -21,6 +23,8 @@ async def sendMessage(message, text, buttons=None):
         LOGGER.warning(str(f))
         await sleep(f.value * 1.5)
         return await sendMessage(message, text, buttons)
+    except RPCError as e:
+        LOGGER.error(f"{e.NAME}: {e.MESSAGE}")
     except Exception as e:
         LOGGER.error(str(e))
         return str(e)
@@ -32,6 +36,8 @@ async def editMessage(message, text, buttons=None):
         LOGGER.warning(str(f))
         await sleep(f.value * 1.5)
         return await editMessage(message, text, buttons)
+    except RPCError as e:
+        LOGGER.error(f"{e.NAME}: {e.MESSAGE}")
     except Exception as e:
         LOGGER.error(str(e))
         return str(e)
@@ -43,6 +49,8 @@ async def sendFile(message, file, caption=None):
         LOGGER.warning(str(f))
         await sleep(f.value * 1.5)
         return await sendFile(message, file, caption)
+    except RPCError as e:
+        LOGGER.error(f"{e.NAME}: {e.MESSAGE}")
     except Exception as e:
         LOGGER.error(str(e))
         return str(e)
@@ -59,6 +67,8 @@ async def sendRss(text):
         LOGGER.warning(str(f))
         await sleep(f.value * 1.5)
         return await sendRss(text)
+    except RPCError as e:
+        LOGGER.error(f"{e.NAME}: {e.MESSAGE}")
     except Exception as e:
         LOGGER.error(str(e))
         return str(e)
@@ -66,6 +76,8 @@ async def sendRss(text):
 async def deleteMessage(message):
     try:
         await message.delete()
+    except RPCError as e:
+        LOGGER.error(f"{e.NAME}: {e.MESSAGE}")
     except:
         pass
 
@@ -139,8 +151,10 @@ async def sendDmMessage(message, dmMode, isLeech=False):
     except (UserIsBlocked, PeerIdInvalid) as e:
         buttons = ButtonMaker()
         buttons.ubutton("Start", f"https://t.me/{message._client.me.username}?start=start")
-        await sendMessage(message, f"<b>You didn't START the bot in DM</b>\nError: {e.MESSAGE}", buttons.build_menu(1))
+        await sendMessage(message, f"<b>You didn't START the bot in DM</b>\n\n{e.NAME}: {e.MESSAGE}", buttons.build_menu(1))
         return 'BotNotStarted'
+    except RPCError as e:
+        LOGGER.error(f"{e.NAME}: {e.MESSAGE}")
     except Exception as e:
         LOGGER.error(str(e))
 
@@ -165,20 +179,19 @@ async def sendLogMessage(message, link, tag):
         LOGGER.warning(str(r))
         await sleep(r.value * 1.5)
         return await sendLogMessage(message, link, tag)
-    except PeerIdInvalid as e:
-        LOGGER.error(e.MESSAGE)
-    except Unauthorized as r:
-        LOGGER.warning(r.MESSAGE)
+    except RPCError as e:
+        LOGGER.error(f"{e.NAME}: {e.MESSAGE}")
     except Exception as e:
         LOGGER.error(str(e))
 
 async def isAdmin(message, user_id=None):
-    if message.chat.type != message.chat.type.PRIVATE:
-        if user_id:
-            member = await message.chat.get_member(user_id)
-        else:
-            member = await message.chat.get_member(message.from_user.id)
-        return member.status in [member.status.ADMINISTRATOR, member.status.OWNER]
+    if message.chat.type == message.chat.type.PRIVATE:
+        return
+    if user_id:
+        member = await message.chat.get_member(user_id)
+    else:
+        member = await message.chat.get_member(message.from_user.id)
+    return member.status in [member.status.ADMINISTRATOR, member.status.OWNER]
 
 async def forcesub( message, tag):
     if not (FSUB_IDS := config_dict['FSUB_IDS']):
@@ -192,7 +205,7 @@ async def forcesub( message, tag):
         try:
             chat = await message._client.get_chat(channel_id)
         except PeerIdInvalid as e:
-            LOGGER.error(f'{e.MESSAGE} for {channel_id}')
+            LOGGER.error(f"{e.NAME}: {e.MESSAGE} for {channel_id}")
             continue
         try:
             await chat.get_member(message.from_user.id)
@@ -202,10 +215,8 @@ async def forcesub( message, tag):
             else:
                 invite_link = chat.invite_link
             join_button[chat.title] = invite_link
-        except ChatAdminRequired as e:
-            LOGGER.error(f'{e.MESSAGE} for {channel_id}')
-        except Unauthorized as e:
-            LOGGER.error(f'{e.MESSAGE} for {channel_id}')
+        except RPCError as e:
+            LOGGER.error(f"{e.NAME}: {e.MESSAGE} for {channel_id}")
         except Exception as e:
             LOGGER.error(f'{e} for {channel_id}')
     if join_button:
@@ -274,3 +285,47 @@ async def open_category_btns(message):
     await deleteMessage(prompt)
     del btn_listener[msg_id]
     return drive_id, index_link
+
+async def mute_member(message, userid, until=60):
+    try:
+        await message.chat.restrict_member(
+            userid,
+            ChatPermissions(),
+            datetime.now(timezone.utc) + timedelta(seconds=until))
+    except RPCError as e:
+        LOGGER.error(f"{e.NAME}: {e.MESSAGE}")
+    except Exception as e:
+        LOGGER.error(f'Exception while muting member {e}')
+
+warned_users = {}
+
+async def request_limiter(message=None, query=None):
+    if not (LIMITS :=config_dict['REQUEST_LIMITS']):
+        return
+    if not message:
+        if not query:
+            return
+        message = query.message
+    if message.chat.type == message.chat.type.PRIVATE:
+        return
+    userid = query.from_user.id if query else message.from_user.id
+    current_time = time()
+    if userid in warned_users:
+        time_between = current_time - warned_users[userid]['time']
+        if time_between > 60:
+            warned_users[userid]['warn'] = 0
+        elif time_between < 3:
+            warned_users[userid]['warn'] += 1
+    else:
+        warned_users[userid] = {'warn':0}
+    warned_users[userid]['time'] = current_time
+    if warned_users[userid]['warn'] >= LIMITS+1:
+        return True
+    if warned_users[userid]['warn'] >= LIMITS:
+        await mute_member(message, userid)
+        return True
+    if warned_users[userid]['warn'] >= LIMITS-1:
+        if query:
+            await query.answer("Spam detected! i will mute you for 60 seconds.", show_alert=True)
+        else:
+            await sendMessage(message, "Spam detected! i will mute you for 60 seconds.")

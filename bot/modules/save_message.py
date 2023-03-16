@@ -5,10 +5,14 @@ from pyrogram.handlers import CallbackQueryHandler
 from bot import LOGGER, bot
 from bot.helper.ext_utils.bot_utils import new_task
 from bot.helper.telegram_helper.button_build import ButtonMaker
+from bot.helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.message_utils import request_limiter
 
 
 @new_task
 async def save_message(client, query):
+    if not await CustomFilters.sudo(client, query) and await request_limiter(query=query):
+        return
     try:
         button = ButtonMaker()
         button_exist = False

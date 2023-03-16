@@ -240,7 +240,7 @@ LOG_CHAT = environ.get('LOG_CHAT', '')
 LOG_CHAT = '' if len(LOG_CHAT) == 0 else int(LOG_CHAT)
 
 STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
-STATUS_LIMIT = '' if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
 
 USER_MAX_TASKS = environ.get('USER_MAX_TASKS', '')
 USER_MAX_TASKS = '' if len(USER_MAX_TASKS) == 0 else int(USER_MAX_TASKS)
@@ -350,6 +350,9 @@ DISABLE_LEECH = DISABLE_LEECH.lower() == 'true'
 SET_COMMANDS = environ.get('SET_COMMANDS', '')
 SET_COMMANDS = SET_COMMANDS.lower() == 'true'
 
+REQUEST_LIMITS = environ.get('REQUEST_LIMITS', '')
+REQUEST_LIMITS = '' if len(REQUEST_LIMITS) == 0 else max(int(REQUEST_LIMITS), 5)
+
 DM_MODE = environ.get('DM_MODE', '')
 DM_MODE = DM_MODE.lower() if DM_MODE.lower() in ['leech', 'mirror', 'all'] else ''
 
@@ -422,6 +425,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                 'DISABLE_DRIVE_LINK': DISABLE_DRIVE_LINK,
                 'SET_COMMANDS': SET_COMMANDS,
                 'DISABLE_LEECH': DISABLE_LEECH,
+                'REQUEST_LIMITS':REQUEST_LIMITS,
                 'DM_MODE': DM_MODE,
                 'DELETE_LINKS': DELETE_LINKS}
 

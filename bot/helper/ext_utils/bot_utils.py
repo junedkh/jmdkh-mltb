@@ -82,7 +82,7 @@ async def getDownloadByGid(gid):
                 return dl
     return None
 
-async def getAllDownload(req_status: str, user_id: int = None, onece: bool = True):
+async def getAllDownload(req_status, user_id=None, onece=True):
     dls = []
     async with download_dict_lock:
         for dl in list(download_dict.values()):
@@ -96,7 +96,7 @@ async def getAllDownload(req_status: str, user_id: int = None, onece: bool = Tru
                     dls.append(dl)
     return None if onece else dls
 
-def bt_selection_buttons(id_: str, isCanCncl: bool = True):
+def bt_selection_buttons(id_, isCanCncl=True):
     gid = id_[:12] if len(id_) > 20 else id_
     pincode = ""
     for n in id_:

@@ -19,7 +19,7 @@ from urllib.parse import quote, unquote, urlparse
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
-from cfscrape import create_scraper
+from cloudscraper import create_scraper
 from lk21 import Bypass
 from lxml import etree
 
@@ -160,7 +160,7 @@ def mediafire(url: str) -> str:
         page = cget('get', url).text
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-    if not (final_link := findall(r"\'(https?:\/\/download\d+\.mediafire\.com\/\S+\/\S+\/\S+)\'", page)):
+    if not (final_link := findall(r"\"(https?:\/\/download\d+\.mediafire\.com\/\S+\/\S+\/\S+)\"", page)):
         raise DirectDownloadLinkException("ERROR: No links found in this page")
     return final_link[0]
 
