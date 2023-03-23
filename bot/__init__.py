@@ -21,7 +21,7 @@ from time import sleep, time
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aria2p import API as ariaAPI
 from aria2p import Client as ariaClient
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 from pymongo import MongoClient
 from pyrogram import Client as tgClient
 from pyrogram import enums
@@ -70,8 +70,6 @@ status_reply_dict_lock = Lock()
 queue_dict_lock = Lock()
 status_reply_dict = {}
 download_dict = {}
-# key: rss_title
-# value: {link, last_feed, last_title, filter}
 rss_dict = {}
 btn_listener = {}
 
@@ -136,9 +134,21 @@ GDRIVE_ID = environ.get('GDRIVE_ID', '')
 if len(GDRIVE_ID) == 0:
     GDRIVE_ID = ''
 
+RCLONE_PATH = environ.get('RCLONE_PATH', '')
+if len(RCLONE_PATH) == 0:
+    RCLONE_PATH = ''
+
+RCLONE_FLAGS = environ.get('RCLONE_FLAGS', '')
+if len(RCLONE_FLAGS) == 0:
+    RCLONE_FLAGS = ''
+
+DEFAULT_UPLOAD = environ.get('DEFAULT_UPLOAD', '')
+if DEFAULT_UPLOAD != 'rc':
+    DEFAULT_UPLOAD = 'gd'
+
 DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
 if len(DOWNLOAD_DIR) == 0:
-    DOWNLOAD_DIR = f'{getcwd()}/downloads/'
+    DOWNLOAD_DIR = '/usr/src/app/downloads/'
 elif not DOWNLOAD_DIR.endswith("/"):
     DOWNLOAD_DIR = f'{DOWNLOAD_DIR}/'
 
@@ -158,6 +168,8 @@ EXTENSION_FILTER = environ.get('EXTENSION_FILTER', '')
 if len(EXTENSION_FILTER) > 0:
     fx = EXTENSION_FILTER.split()
     for x in fx:
+        if x.strip().startswith('.'):
+            x = x.lstrip('.')
         GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
 
 IS_PREMIUM_USER = False
@@ -166,7 +178,8 @@ USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 if len(USER_SESSION_STRING) != 0:
     log_info("Creating client from USER_SESSION_STRING")
     user = tgClient('user', TELEGRAM_API, TELEGRAM_HASH, session_string=USER_SESSION_STRING,
-                    parse_mode=enums.ParseMode.HTML, no_updates=True).start()
+                    parse_mode=enums.ParseMode.HTML, no_updates=True)
+    user.start()
     if user.me.is_bot:
         log_warning("You added bot string for USER_SESSION_STRING this is not allowed! Exiting now")
         user.stop()
@@ -240,7 +253,7 @@ LOG_CHAT = environ.get('LOG_CHAT', '')
 LOG_CHAT = '' if len(LOG_CHAT) == 0 else int(LOG_CHAT)
 
 STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
-STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+STATUS_LIMIT = 8 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
 
 USER_MAX_TASKS = environ.get('USER_MAX_TASKS', '')
 USER_MAX_TASKS = '' if len(USER_MAX_TASKS) == 0 else int(USER_MAX_TASKS)
@@ -363,71 +376,76 @@ FSUB_IDS = environ.get('FSUB_IDS', '')
 if len(FSUB_IDS) == 0:
     FSUB_IDS = ''
 
-config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
-                'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
-                'FSUB_IDS': FSUB_IDS,
-                'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
-                'BASE_URL': BASE_URL,
-                'BOT_TOKEN': BOT_TOKEN,
-                'CMD_SUFFIX': CMD_SUFFIX,
-                'DATABASE_URL': DATABASE_URL,
-                'DOWNLOAD_DIR': DOWNLOAD_DIR,
-                'DUMP_CHAT': DUMP_CHAT,
-                'LOG_CHAT': LOG_CHAT,
-                'EQUAL_SPLITS': EQUAL_SPLITS,
-                'EXTENSION_FILTER': EXTENSION_FILTER,
-                'GDRIVE_ID': GDRIVE_ID,
-                'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
-                'INDEX_URL': INDEX_URL,
-                'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
-                'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
-                'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
-                'MEDIA_GROUP': MEDIA_GROUP,
-                'MEGA_API_KEY': MEGA_API_KEY,
-                'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
-                'MEGA_PASSWORD': MEGA_PASSWORD,
-                'OWNER_ID': OWNER_ID,
-                'QUEUE_ALL': QUEUE_ALL,
-                'QUEUE_DOWNLOAD': QUEUE_DOWNLOAD,
-                'QUEUE_UPLOAD': QUEUE_UPLOAD,
-                'RSS_CHAT_ID': RSS_CHAT_ID,
-                'RSS_DELAY': RSS_DELAY,
-                'SEARCH_API_LINK': SEARCH_API_LINK,
-                'SEARCH_LIMIT': SEARCH_LIMIT,
-                'SEARCH_PLUGINS': SEARCH_PLUGINS,
-                'SERVER_PORT': SERVER_PORT,
-                'STATUS_LIMIT': STATUS_LIMIT,
-                'USER_MAX_TASKS': USER_MAX_TASKS,
-                'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
-                'STOP_DUPLICATE': STOP_DUPLICATE,
-                'SUDO_USERS': SUDO_USERS,
-                'TELEGRAM_API': TELEGRAM_API,
-                'TELEGRAM_HASH': TELEGRAM_HASH,
-                'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
-                'UPSTREAM_REPO': UPSTREAM_REPO,
-                'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
-                'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
-                'USER_SESSION_STRING': USER_SESSION_STRING,
-                'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
-                'VIEW_LINK': VIEW_LINK,
-                'WEB_PINCODE': WEB_PINCODE,
-                'YT_DLP_QUALITY': YT_DLP_QUALITY,
-                'STORAGE_THRESHOLD': STORAGE_THRESHOLD,
-                'TORRENT_LIMIT': TORRENT_LIMIT,
-                'DIRECT_LIMIT': DIRECT_LIMIT,
-                'YTDLP_LIMIT': YTDLP_LIMIT,
-                'GDRIVE_LIMIT': GDRIVE_LIMIT,
-                'CLONE_LIMIT': CLONE_LIMIT,
-                'MEGA_LIMIT': MEGA_LIMIT,
-                'LEECH_LIMIT': LEECH_LIMIT,
-                'ENABLE_MESSAGE_FILTER': ENABLE_MESSAGE_FILTER,
-                'STOP_DUPLICATE_TASKS': STOP_DUPLICATE_TASKS,
-                'DISABLE_DRIVE_LINK': DISABLE_DRIVE_LINK,
-                'SET_COMMANDS': SET_COMMANDS,
-                'DISABLE_LEECH': DISABLE_LEECH,
-                'REQUEST_LIMITS':REQUEST_LIMITS,
-                'DM_MODE': DM_MODE,
-                'DELETE_LINKS': DELETE_LINKS}
+config_dict = {
+    "AS_DOCUMENT": AS_DOCUMENT,
+    "AUTHORIZED_CHATS": AUTHORIZED_CHATS,
+    "AUTO_DELETE_MESSAGE_DURATION": AUTO_DELETE_MESSAGE_DURATION,
+    "BASE_URL": BASE_URL,
+    "BOT_TOKEN": BOT_TOKEN,
+    "CMD_SUFFIX": CMD_SUFFIX,
+    "DATABASE_URL": DATABASE_URL,
+    "DEFAULT_UPLOAD": DEFAULT_UPLOAD,
+    "DOWNLOAD_DIR": DOWNLOAD_DIR,
+    "DUMP_CHAT": DUMP_CHAT,
+    "EQUAL_SPLITS": EQUAL_SPLITS,
+    "EXTENSION_FILTER": EXTENSION_FILTER,
+    "GDRIVE_ID": GDRIVE_ID,
+    "INCOMPLETE_TASK_NOTIFIER": INCOMPLETE_TASK_NOTIFIER,
+    "INDEX_URL": INDEX_URL,
+    "IS_TEAM_DRIVE": IS_TEAM_DRIVE,
+    "LEECH_FILENAME_PREFIX": LEECH_FILENAME_PREFIX,
+    "LEECH_SPLIT_SIZE": LEECH_SPLIT_SIZE,
+    "MEDIA_GROUP": MEDIA_GROUP,
+    "MEGA_API_KEY": MEGA_API_KEY,
+    "MEGA_EMAIL_ID": MEGA_EMAIL_ID,
+    "MEGA_PASSWORD": MEGA_PASSWORD,
+    "OWNER_ID": OWNER_ID,
+    "QUEUE_ALL": QUEUE_ALL,
+    "QUEUE_DOWNLOAD": QUEUE_DOWNLOAD,
+    "QUEUE_UPLOAD": QUEUE_UPLOAD,
+    "RCLONE_FLAGS": RCLONE_FLAGS,
+    "RCLONE_PATH": RCLONE_PATH,
+    "RSS_CHAT_ID": RSS_CHAT_ID,
+    "RSS_DELAY": RSS_DELAY,
+    "SEARCH_API_LINK": SEARCH_API_LINK,
+    "SEARCH_LIMIT": SEARCH_LIMIT,
+    "SEARCH_PLUGINS": SEARCH_PLUGINS,
+    "SERVER_PORT": SERVER_PORT,
+    "STATUS_LIMIT": STATUS_LIMIT,
+    "STATUS_UPDATE_INTERVAL": STATUS_UPDATE_INTERVAL,
+    "STOP_DUPLICATE": STOP_DUPLICATE,
+    "SUDO_USERS": SUDO_USERS,
+    "TELEGRAM_API": TELEGRAM_API,
+    "TELEGRAM_HASH": TELEGRAM_HASH,
+    "TORRENT_TIMEOUT": TORRENT_TIMEOUT,
+    "UPSTREAM_REPO": UPSTREAM_REPO,
+    "UPSTREAM_BRANCH": UPSTREAM_BRANCH,
+    "UPTOBOX_TOKEN": UPTOBOX_TOKEN,
+    "USER_SESSION_STRING": USER_SESSION_STRING,
+    "USE_SERVICE_ACCOUNTS": USE_SERVICE_ACCOUNTS,
+    "VIEW_LINK": VIEW_LINK,
+    "WEB_PINCODE": WEB_PINCODE,
+    "YT_DLP_QUALITY": YT_DLP_QUALITY,
+    "USER_MAX_TASKS": USER_MAX_TASKS,
+    "LOG_CHAT": LOG_CHAT,
+    "FSUB_IDS": FSUB_IDS,
+    "STORAGE_THRESHOLD": STORAGE_THRESHOLD,
+    "TORRENT_LIMIT": TORRENT_LIMIT,
+    "DIRECT_LIMIT": DIRECT_LIMIT,
+    "YTDLP_LIMIT": YTDLP_LIMIT,
+    "GDRIVE_LIMIT": GDRIVE_LIMIT,
+    "CLONE_LIMIT": CLONE_LIMIT,
+    "MEGA_LIMIT": MEGA_LIMIT,
+    "LEECH_LIMIT": LEECH_LIMIT,
+    "ENABLE_MESSAGE_FILTER": ENABLE_MESSAGE_FILTER,
+    "STOP_DUPLICATE_TASKS": STOP_DUPLICATE_TASKS,
+    "DISABLE_DRIVE_LINK": DISABLE_DRIVE_LINK,
+    "SET_COMMANDS": SET_COMMANDS,
+    "DISABLE_LEECH": DISABLE_LEECH,
+    "REQUEST_LIMITS": REQUEST_LIMITS,
+    "DM_MODE": DM_MODE,
+    "DELETE_LINKS": DELETE_LINKS,
+}
 
 if GDRIVE_ID:
     list_drives['Main'] = {"drive_id": GDRIVE_ID, "index_link": INDEX_URL}
@@ -510,7 +528,6 @@ aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
 def get_client():
     return qbClient(host="localhost", port=8090, VERIFY_WEBUI_CERTIFICATE=False, REQUESTS_ARGS={'timeout': (30, 60)})
 
-
 def aria2c_init():
     try:
         log_info("Initializing Aria2c")
@@ -538,10 +555,7 @@ if not aria2_options:
     aria2_options = aria2.client.get_global_option()
     del aria2_options['dir']
 else:
-    a2c_glo = {}
-    for op in aria2c_global:
-        if op in aria2_options:
-            a2c_glo[op] = aria2_options[op]
+    a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
     aria2.set_global_options(a2c_glo)
 
 qb_client = get_client()
@@ -559,7 +573,8 @@ else:
     qb_client.app_set_preferences(qb_opt)
 
 log_info("Creating client from BOT_TOKEN")
-bot = tgClient('bot', TELEGRAM_API, TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML).start()
+bot = tgClient('bot', TELEGRAM_API, TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML)
+bot.start()
 bot_loop = bot.loop
 bot_name = bot.me.username
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)

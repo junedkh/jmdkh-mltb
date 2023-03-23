@@ -24,19 +24,19 @@ class AriaDownloadStatus:
         self.start_time = 0
         self.seeding = seeding
         self.message = listener.message
-        self.startTime = self.__listener.startTime
-        self.mode = self.__listener.mode
-        self.source = self.__listener.source
+        self.startTime = self.__listener.extra_details['startTime']
+        self.mode = self.__listener.extra_details['mode']
+        self.source = self.__listener.extra_details['source']
         self.engine = engine_
 
     def __update(self):
         if self.__download is None:
             self.__download = get_download(self.__gid)
-        elif self.__download.followed_by_ids:
-            self.__gid = self.__download.followed_by_ids[0]
-            self.__download = get_download(self.__gid)
         else:
             self.__download = self.__download.live
+        if self.__download.followed_by_ids:
+            self.__gid = self.__download.followed_by_ids[0]
+            self.__download = get_download(self.__gid)
 
     def progress(self):
         """
@@ -45,15 +45,8 @@ class AriaDownloadStatus:
         """
         return self.__download.progress_string()
 
-    def size_raw(self):
-        """
-        Gets total size of the mirror file/folder
-        :return: total size of mirror
-        """
-        return self.__download.total_length
-
     def processed_bytes(self):
-        return self.__download.completed_length
+        return self.__download.completed_length_string()
 
     def speed(self):
         self.__update()

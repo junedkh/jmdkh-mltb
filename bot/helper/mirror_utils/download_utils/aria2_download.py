@@ -7,15 +7,16 @@ from aiofiles.os import remove as aioremove
 
 from bot import (LOGGER, aria2, aria2_options, aria2c_global, config_dict,
                  download_dict, download_dict_lock)
-from bot.helper.ext_utils.bot_utils import (new_thread,
-                                            bt_selection_buttons,
+from bot.helper.ext_utils.bot_utils import (bt_selection_buttons,
                                             get_readable_file_size,
-                                            getDownloadByGid, sync_to_async)
+                                            getDownloadByGid, new_thread,
+                                            sync_to_async)
 from bot.helper.ext_utils.fs_utils import (check_storage_threshold,
                                            clean_unwanted, get_base_name)
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import (deleteMessage,
+from bot.helper.telegram_helper.message_utils import (delete_links,
+                                                      deleteMessage,
                                                       sendMessage,
                                                       sendStatusMessage,
                                                       update_all_messages)
@@ -48,8 +49,8 @@ async def __onDownloadStarted(api, gid):
                 LOGGER.warning(f"onDownloadStart: {gid}. STOP_DUPLICATE didn't pass since download completed earlier!")
                 return
             listener = dl.listener()
-            download = await sync_to_async(api.get_download, gid)
             if not listener.isLeech and not listener.select:
+                download = await sync_to_async(api.get_download, gid)
                 if not download.is_torrent:
                     await sleep(3)
                     download = download.live
@@ -67,6 +68,7 @@ async def __onDownloadStarted(api, gid):
                     if smsg:
                         await listener.onDownloadError('File/Folder already available in Drive.\nHere are the search results:\n', button)
                         await sync_to_async(api.remove, [download], force=True, files=True)
+                        return
     if any([(DIRECT_LIMIT:= config_dict['DIRECT_LIMIT']),
             (TORRENT_LIMIT:= config_dict['TORRENT_LIMIT']),
             (LEECH_LIMIT:= config_dict['LEECH_LIMIT']),
@@ -225,7 +227,7 @@ async def add_aria2c_download(link, path, listener, filename, auth, ratio, seed_
     args = {'dir': path, 'max-upload-limit': '1K'}
     a2c_opt = {**aria2_options}
     [a2c_opt.pop(k) for k in aria2c_global if k in aria2_options]
-    args.update(a2c_opt)
+    args |= a2c_opt
     if filename:
         args['out'] = filename
     if auth:
@@ -242,7 +244,9 @@ async def add_aria2c_download(link, path, listener, filename, auth, ratio, seed_
     if download.error_message:
         error = str(download.error_message).replace('<', ' ').replace('>', ' ')
         LOGGER.info(f"Download Error: {error}")
-        return await sendMessage(listener.message, error)
+        await sendMessage(listener.message, error)
+        await delete_links(listener.message)
+        return
     gid = download.gid
     async with download_dict_lock:
         download_dict[listener.uid] = AriaDownloadStatus(gid, listener)

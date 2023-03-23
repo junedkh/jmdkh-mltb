@@ -20,7 +20,8 @@ from bot.helper.ext_utils.fs_utils import (check_storage_threshold,
                                            clean_unwanted, get_base_name)
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import (deleteMessage,
+from bot.helper.telegram_helper.message_utils import (delete_links,
+                                                      deleteMessage,
                                                       sendMessage,
                                                       sendStatusMessage,
                                                       update_all_messages)
@@ -69,14 +70,17 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
                     elif time() - ADD_TIME >= 120:
                         msg = "Not added! Check if the link is valid or not. If it's torrent file then report, this happens if torrent file size above 10mb."
                         await sendMessage(listener.message, msg)
+                        await delete_links(listener.message)
                         return
             tor_info = tor_info[0]
             ext_hash = tor_info.hash
             if await getDownloadByGid(ext_hash[:12]):
                 await sendMessage(listener.message, "This Torrent already added!")
+                await delete_links(listener.message)
                 return
         else:
             await sendMessage(listener.message, "This is an unsupported/invalid link.")
+            await delete_links(listener.message)
             return
         async with download_dict_lock:
             download_dict[listener.uid] = QbDownloadStatus(listener, ext_hash)
@@ -154,7 +158,7 @@ async def __onSeedFinish(tor):
     if hasattr(download, 'listener'):
         listener = download.listener()
         await listener.onUploadError(f"Seeding stopped with Ratio: {round(tor.ratio, 3)} and Time: {get_readable_time(tor.seeding_time)}")
-    await __remove_torrent(client, tor.hash)
+    await __remove_torrent(client, tor.hash, tor.tags)
 
 @new_task
 async def __stop_duplicate(tor):

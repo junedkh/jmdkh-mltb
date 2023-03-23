@@ -16,7 +16,7 @@ from bot.helper.ext_utils.fs_utils import (check_storage_threshold,
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import (sendMessage,
+from bot.helper.telegram_helper.message_utils import (sendMessage,delete_links,
                                                       sendStatusMessage)
 
 
@@ -66,7 +66,7 @@ class MegaAppListener(MegaListener):
         if str(error).lower() != "no error":
             self.error = error.copy()
             LOGGER.error(f'Mega onRequestFinishError: {self.error}')
-            self.event_setter()
+            async_to_sync(self.event_setter)
             return
         request_type = request.getType()
         if request_type == MegaRequest.TYPE_LOGIN:
@@ -78,7 +78,7 @@ class MegaAppListener(MegaListener):
             self.node = api.getRootNode()
             LOGGER.info(f"Node Name: {self.node.getName()}")
         if request_type not in self._NO_EVENT_ON or self.node and "cloud drive" not in self.node.getName().lower():
-            self.event_setter()
+            async_to_sync(self.event_setter)
 
     def onRequestTemporaryError(self, api, request, error: MegaError):
         LOGGER.error(f'Mega Request error in {error}')
@@ -86,12 +86,12 @@ class MegaAppListener(MegaListener):
             self.is_cancelled = True
             async_to_sync(self.listener.onDownloadError, f"RequestTempError: {error.toString()}")
         self.error = error.toString()
-        self.event_setter()
+        async_to_sync(self.event_setter)
 
     def onTransferUpdate(self, api: MegaApi, transfer: MegaTransfer):
         if self.is_cancelled:
             api.cancelTransfer(transfer, None)
-            self.event_setter()
+            async_to_sync(self.event_setter)
             return
         self.__speed = transfer.getSpeed()
         self.__bytes_transferred = transfer.getTransferredBytes()
@@ -99,10 +99,10 @@ class MegaAppListener(MegaListener):
     def onTransferFinish(self, api: MegaApi, transfer: MegaTransfer, error):
         try:
             if self.is_cancelled:
-                self.event_setter()
+                async_to_sync(self.event_setter)
             elif transfer.isFinished() and (transfer.isFolderTransfer() or transfer.getFileName() == self.name):
                 async_to_sync(self.listener.onDownloadComplete)
-                self.event_setter()
+                async_to_sync(self.event_setter)
         except Exception as e:
             LOGGER.error(e)
 
@@ -120,9 +120,9 @@ class MegaAppListener(MegaListener):
         if not self.is_cancelled:
             self.is_cancelled = True
             async_to_sync(self.listener.onDownloadError, f"TransferTempError: {errStr} ({filen})")
-            self.event_setter()
+            async_to_sync(self.event_setter)
 
-    def event_setter(self):
+    async def event_setter(self):
         self.continue_event.set()
 
     async def cancel_download(self):
@@ -165,6 +165,7 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
         await sync_to_async(api.removeListener, mega_listener)
         if folder_api:
             await sync_to_async(folder_api.removeListener, mega_listener)
+        await delete_links(listener.message)
         return
     mname = name or await sync_to_async(node.getName)
     if config_dict['STOP_DUPLICATE'] and not listener.isLeech:
@@ -184,6 +185,7 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
                 await sync_to_async(api.removeListener, mega_listener)
                 if folder_api:
                     await sync_to_async(folder_api.removeListener, mega_listener)
+                await delete_links(listener.message)
                 return
     size = await sync_to_async(api.getSize, node)
     limit_exceeded = ''
@@ -202,7 +204,9 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
         if not acpt:
             limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
     if limit_exceeded:
-        return await sendMessage(listener.message, f"{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}.")
+        await sendMessage(listener.message, f"{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}.")
+        await delete_links(listener.message)
+        return
     mname = name or await sync_to_async(node.getName)
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=8))
     all_limit = config_dict['QUEUE_ALL']

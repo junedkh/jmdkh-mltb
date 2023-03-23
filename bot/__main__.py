@@ -17,20 +17,17 @@ from bot import (DATABASE_URL, INCOMPLETE_TASK_NOTIFIER, LOGGER,
                  STOP_DUPLICATE_TASKS, Interval, QbInterval, bot, botStartTime,
                  config_dict, scheduler)
 
-from .helper.ext_utils.bot_utils import (cmd_exec, get_progress_bar_string,
-                                         get_readable_file_size,
-                                         get_readable_time, set_commands,
-                                         sync_to_async)
+from .helper.ext_utils.bot_utils import (cmd_exec, get_readable_file_size,
+                                         get_readable_time, set_commands, sync_to_async)
 from .helper.ext_utils.db_handler import DbManger
 from .helper.ext_utils.fs_utils import clean_all, exit_clean_up, start_cleanup
 from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.message_utils import (editMessage, sendFile,
                                                    sendMessage)
-from .modules import (anonymous, authorize, bot_settings, bt_select,
-                      cancel_mirror, category_select, count, delete,
-                      drive_list, eval, mirror_leech, rmdb, rss,
-                      save_message, search, shell, status, users_settings, ytdlp)
+from .modules import (authorize, bot_settings, bt_select, cancel_mirror,
+                      count, delete, eval, drive_list, mirror_leech, rss, search,
+                      shell, status, users_settings, ytdlp)
 
 
 async def stats(client, message):
@@ -51,8 +48,8 @@ async def stats(client, message):
             f'<b>Upload</b>: {get_readable_file_size(net_io.bytes_sent)}\n'\
             f'<b>Download</b>: {get_readable_file_size(net_io.bytes_recv)}\n\n'\
             f'<b>CPU</b>: {cpu_percent(interval=0.5)}%\n'\
-            f'<b>RAM</b>: {get_progress_bar_string(memory.used, memory.total)} {memory.percent}%\n'\
-            f'<b>DISK</b>: {get_progress_bar_string(used, total)} {disk}%\n\n'\
+            f'<b>RAM</b>: {memory.percent}%\n'\
+            f'<b>DISK</b>: {disk}%\n\n'\
             f'<b>Physical Cores</b>: {cpu_count(logical=False)}\n'\
             f'<b>Total Cores</b>: {cpu_count(logical=True)}\n\n'\
             f'<b>SWAP</b>: {get_readable_file_size(swap.total)} | <b>Used</b>: {swap.percent}%\n'\
@@ -82,7 +79,7 @@ async def restart(client, message):
         QbInterval[0].cancel()
         QbInterval.clear()
     await sync_to_async(clean_all)
-    await (await create_subprocess_exec('pkill', '-9', '-f', '-e', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg')).wait()
+    await (await create_subprocess_exec('pkill', '-9', '-f', '-e', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone')).wait()
     await (await create_subprocess_exec('python3', 'update.py')).wait()
     async with aiopen(".restartmsg", "w") as f:
         await f.truncate(0)

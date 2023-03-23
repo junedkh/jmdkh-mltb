@@ -81,7 +81,7 @@ class TgUploader:
                 self.__sent_msg = await self.__listener.logMessage.copy(DUMP_CHAT)
             else:
                 msg = f'<b><a href="{self.__listener.message.link}">Source</a></b>' if self.__listener.isSuperGroup else self.__listener.message.text
-                msg = f'{msg}\n\n<b>#cc</b>: {self.__listener.tag} (<code>{self.__listener.message.from_user.id}</code>)'
+                msg += f'\n\n<b>#cc</b>: {self.__listener.tag} (<code>{self.__listener.message.from_user.id}</code>)'
                 self.__sent_msg = await self.__listener.message._client.send_message(DUMP_CHAT, msg, disable_web_page_preview=True)
             if self.__listener.dmMessage:
                 self.__sent_DMmsg = self.__listener.dmMessage
@@ -183,9 +183,11 @@ class TgUploader:
     async def upload(self, o_files, m_size):
         await self.__msg_to_reply()
         await self.__user_settings()
-        for dirpath, subdir, files in sorted(await sync_to_async(walk, self.__path)):
+        for dirpath, _, files in sorted(await sync_to_async(walk, self.__path)):
             for file_ in natsorted(files):
+                self.__up_path = ospath.join(dirpath, file_)
                 if file_.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+                    await aioremove(self.__up_path)
                     continue
                 try:
                     self.__up_path = ospath.join(dirpath, file_)
@@ -240,7 +242,7 @@ class TgUploader:
                     continue
                 finally:
                     if not self.__is_cancelled and await aiopath.exists(self.__up_path) and \
-                            (not self.__listener.seed or self.__listener.newDir or
+                        (not self.__listener.seed or self.__listener.newDir or
                           dirpath.endswith("splited_files_mltb") or '/copied_mltb/' in self.__up_path):
                         await aioremove(self.__up_path)
         for key, value in list(self.__media_dict.items()):
@@ -260,10 +262,9 @@ class TgUploader:
         if config_dict['DUMP_CHAT']:
             msg = f'<b><a href="{self.__listener.message.link}">Source</a></b>' if self.__listener.isSuperGroup else self.__listener.message.text
             msg = f'{msg}\n\n<b>#LeechCompleted</b>: {self.__listener.tag} #id{self.__listener.message.from_user.id}'
-            await self.__sent_msg.reply(text=msg, quote=True)
+            await self.__sent_msg.reply(text=msg, quote=True, disable_web_page_preview=True)
         LOGGER.info(f"Leech Completed: {self.name}")
-        size = get_readable_file_size(self.__size)
-        await self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)
+        await self.__listener.onUploadComplete(None, self.__size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)
 
     async def __send_dm(self):
         try:

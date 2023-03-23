@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from asyncio import create_subprocess_exec
+from asyncio.subprocess import PIPE
 from math import ceil
-from os import _exit
 from os import path as ospath
 from os import walk
 from re import I
@@ -20,10 +20,9 @@ from aioshutil import rmtree as aiormtree
 from magic import Magic
 from PIL import Image
 
-from bot import (DOWNLOAD_DIR, LOGGER, MAX_SPLIT_SIZE, aria2, config_dict,
-                 get_client, user_data)
-from bot.helper.ext_utils.bot_utils import (async_to_sync, cmd_exec,
-                                            sync_to_async)
+from bot import (DOWNLOAD_DIR, GLOBAL_EXTENSION_FILTER, LOGGER, MAX_SPLIT_SIZE,
+                 aria2, config_dict, get_client, user_data)
+from bot.helper.ext_utils.bot_utils import async_to_sync, cmd_exec, sync_to_async
 from bot.helper.ext_utils.telegraph_helper import telegraph
 
 from .exceptions import NotSupportedExtractionArchive
@@ -90,24 +89,24 @@ def exit_clean_up(signal, frame):
     try:
         LOGGER.info("Please wait, while we clean up and stop the running downloads")
         clean_all()
-        srun(['pkill', '-9', '-f', '-e', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg'])
+        srun(['pkill', '-9', '-f', '-e', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone'])
         sexit(0)
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
         sexit(1)
     except Exception as e:
         LOGGER.error(e)
-        _exit(1)
+        sexit(1)
 
 async def clean_unwanted(path):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
-    for dirpath, subdir, files in await sync_to_async(walk, path, topdown=False):
+    for dirpath, _, files in await sync_to_async(walk, path, topdown=False):
         for filee in files:
             if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
                 await aioremove(ospath.join(dirpath, filee))
         if dirpath.endswith((".unwanted", "splited_files_mltb", "copied_mltb")):
             await aiormtree(dirpath)
-    for dirpath, subdir, files in await sync_to_async(walk, path, topdown=False):
+    for dirpath, _, files in await sync_to_async(walk, path, topdown=False):
         if not await listdir(dirpath):
             await rmdir(dirpath)
 
@@ -115,11 +114,22 @@ async def get_path_size(path):
     if await aiopath.isfile(path):
         return await aiopath.getsize(path)
     total_size = 0
-    for root, dirs, files in await sync_to_async(walk, path):
+    for root, _, files in await sync_to_async(walk, path):
         for f in files:
             abs_path = ospath.join(root, f)
             total_size += await aiopath.getsize(abs_path)
     return total_size
+
+async def count_files_and_folders(path):
+    total_files = 0
+    total_folders = 0
+    for _, dirs, files in await sync_to_async(walk, path):
+        total_files += len(files)
+        for f in files:
+            if f.endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+                total_files -= 1
+        total_folders += len(dirs)
+    return total_folders, total_files
 
 def get_base_name(orig_path):
     extension = next(
@@ -150,16 +160,12 @@ async def take_ss(video_file, duration):
     if duration == 0:
         duration = 3
     duration = duration // 2
-
     status = await create_subprocess_exec("ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(duration),
                                           "-i", video_file, "-frames:v", "1", des_dir)
     await status.wait()
-
     if status.returncode != 0 or not await aiopath.exists(des_dir):
         return None
-
     await sync_to_async(create_thumb, des_dir)
-
     return des_dir
 
 async def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i=1, inLoop=False, noMap=False):
@@ -187,19 +193,21 @@ async def split_file(path, size, file_, dirpath, split_size, listener, start_tim
             if noMap:
                 del cmd[10]
                 del cmd[10]
-            listener.suproc = await create_subprocess_exec(*cmd)
-            await listener.suproc.wait()
-            if listener.suproc.returncode == -9:
+            listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
+            code = await listener.suproc.wait()
+            if code == -9:
                 return False
-            elif listener.suproc.returncode != 0 and not noMap:
-                LOGGER.warning(f"Retrying without map, -map 0 not working in all situations. Path: {path}")
+            elif code != 0 and not noMap:
+                err = (await listener.suproc.stderr.read()).decode().strip()
+                LOGGER.warning(f"{err}. Retrying without map, -map 0 not working in all situations. Path: {path}")
                 try:
                     await aioremove(out_path)
                 except:
                     pass
                 return await split_file(path, size, file_, dirpath, split_size, listener, start_time, i, True, True)
-            elif listener.suproc.returncode != 0:
-                LOGGER.warning(f"Unable to split this video, if it's size less than {MAX_SPLIT_SIZE} will be uploaded as it is. Path: {path}")
+            elif code != 0:
+                err = (await listener.suproc.stderr.read()).decode().strip()
+                LOGGER.warning(f"{err}. Unable to split this video, if it's size less than {MAX_SPLIT_SIZE} will be uploaded as it is. Path: {path}")
                 try:
                     await aioremove(out_path)
                 except:
@@ -234,10 +242,13 @@ async def split_file(path, size, file_, dirpath, split_size, listener, start_tim
     else:
         out_path = ospath.join(dirpath, f"{file_}.")
         listener.suproc = await create_subprocess_exec("split", "--numeric-suffixes=1", "--suffix-length=3",
-                                                      f"--bytes={split_size}", path, out_path)
-        await listener.suproc.wait()
-        if listener.suproc.returncode == -9:
+                                                      f"--bytes={split_size}", path, out_path, stderr=PIPE)
+        code = await listener.suproc.wait()
+        if code == -9:
             return False
+        elif code != 0:
+            err = (await listener.suproc.stderr.read()).decode().strip()
+            LOGGER.error(err)
     return True
 
 async def get_media_info(path):

@@ -53,10 +53,10 @@ In each single file there is a major change from base code, it's almost totaly d
 ### Database
 - Mongo Database support
 - Store bot settings
-- Store user settings including thumbnails in database
+- Store user settings including thumbnails and rclone config in database
 - Store private files
-- Store RSS last recorded data
-- Store incomplete task messages
+- Store RSS data
+- Store incompleted task messages
 ### Torrents Search
 - Torrent search support
 - Search on torrents with Torrent Search API
@@ -73,6 +73,10 @@ In each single file there is a major change from base code, it's almost totaly d
 - Rss for each user with tag
 - Sudo settings to control users feeds
 - All functions have been improved using buttons from one command.
+### Rclone
+- Download and Upload using rclone
+- Ability to choose config, remote and path from list with buttons
+- Ability to set rclone flags
 ### Overall
 - Docker image support for linux `amd64, arm64/v8, arm/v7`
 - Switch from sync to async
@@ -190,18 +194,20 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 **2. Optional Fields**
 
-- `GDRIVE_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to upload all the mirrors. Required for `Google Drive` upload. `Str`
-- `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive. Default is `False`. `Bool`
+- `GDRIVE_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to upload all the mirrors using gdrive tools. `Str`
+- `RCLONE_PATH`: Default rclone path to which you want to upload all the mirrors using rclone. `Str`
+- `DEFAULT_UPLOAD`: Whether `rc` to upload to `RCLONE_PATH` or `gd` to upload to `GDRIVE_ID`. Default is `gd`. `Str`
+- `RCLONE_FLAGS`: key:value|key|key|key:value . Check here all [RcloneFlags](https://rclone.org/flags/). `Str`
+- `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive using gdrive tools. Default is `False`. `Bool`
 - `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to. `Str`
-- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least. `Int`
+- `STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least. `Int`
 - `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly. **NOTE**: Set to `-1` to disable auto message deletion. `Int`
 - `DATABASE_URL`: Your Mongo Database URL (Connection string). Follow this [Generate Database](#generate-database) to generate database. Data will be saved in Database: auth and sudo users, users settings including thumbnails for each user, rss data and incomplete tasks. **NOTE**: You can always edit all settings that saved in database from the official site -> (Browse collections). `Str`
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. Separate them by space. `Int`
 - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space. `Int`
-- `IGNORE_PENDING_REQUESTS`: Ignore pending requests after restart. Default is `False`. `Bool`
-- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not. For this to work see [Using Service Accounts](#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
+- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not with gdrive tools. For this to work see [Using Service Accounts](#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
 - `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index. `Str`
-- `STATUS_LIMIT`: Limit the no. of tasks shown in status message with buttons. Default is `10`. **NOTE**: Recommended limit is `4` tasks. `Int`
+- `STATUS_LIMIT`: Limit the no. of tasks shown in status message with buttons. Default is `8`. **NOTE**: Recommended limit is `4` tasks. `Int`
 - `STOP_DUPLICATE`: Bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**NOTE**: File will be checked using filename not file hash, so this feature is not perfect yet). Default is `False`. `Bool`
 - `CMD_SUFFIX`: commands index number. This number will added at the end all commands. `Str`|`Int`
 - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds. `Int`
@@ -232,8 +238,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ### RSS
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` second at least. Default is `900` in sec. `Int`
-- `RSS_CHAT_ID`: Chat ID where rss links will be sent. If using channel then add channel id. Add `-100` before channel id. `Int`
-  - **RSS NOTE**: `RSS_CHAT_ID` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` OR bot should be added in group and channel and used in group linked to that channel so messages sent by the bot to channel will be forwarded to group without using `USER_STRING_SESSION`. If `DATABASE_URL` not added you will miss the feeds while bot offline.
+- `RSS_CHAT_ID`: Chat ID where rss links will be sent. If you want message to be sent to the channel then add channel id. Add `-100` before channel id. `Int`
+  - **RSS NOTE**: `RSS_CHAT_ID` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` --OR-- bot should be added in both channel and group(linked to channel) so messages sent by the bot to channel will be forwarded to group without using `USER_STRING_SESSION`. If `DATABASE_URL` not added you will miss the feeds while bot offline.
 
 ### MEGA
 - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk). `Int`
@@ -323,7 +329,7 @@ Make sure you still mount the app folder and installed the docker from official 
 
 #### Build And Run The Docker Image Using Official Docker Commands
 
-- Start Docker daemon (SKIP if already running):
+- Start Docker daemon (SKIP if already running, mostly you don't need to do this):
 ```
 sudo dockerd
 ```
@@ -368,6 +374,10 @@ sudo docker-compose stop
 ```
 sudo docker-compose start
 ```
+- To get latest log from already running image (after mounting the folder):
+```
+sudo docker-compose up
+```
 - Tutorial video from Tortoolkit repo for docker-compose and checking ports
 <p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
@@ -408,7 +418,7 @@ sudo docker image prune -a
 - Using `d` perfix alone will lead to use global options for aria2c or qbittorrent.
 
 ### Qbittorrent
-- Global options: `MaxRatio` and `GlobalMaxSeedingMinutes` in qbittorrent.conf, `-1` means no limit, but you can cancel manually.
+- Global options: `GlobalMaxRatio` and `GlobalMaxSeedingMinutes` in qbittorrent.conf, `-1` means no limit, but you can cancel manually.
   - **NOTE**: Don't change `MaxRatioAction`.
 
 ### Aria2c
@@ -511,6 +521,7 @@ To use list from multi TD/folder. Run driveid.py in your terminal and follow it.
 DriveName folderID/tdID or `root` IndexLink(if available)
 DriveName folderID/tdID or `root` IndexLink(if available)
 ```
+
 Example:
 ```
 TD1 root https://example.dev
@@ -593,6 +604,14 @@ Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts o
 
 <p> If you feel like showing your appreciation for this project by Anas, then how about buying me a coffee. for Anas</p>
 
-[!["Buy For Anas"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/anasty17)
+[!["Buy for Anas"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/anasty17)
+
+USDT Address: `TEzjjfkxLKQqndpsdpkA7jgiX7QQCL5p4f` Network: `TRC20`
+
+BTC Addrese: `17dkvxjqdc3yiaTs6dpjUB1TjV3tD7ScWe`
+
+ETH Address: `0xf798a8a1c72d593e16d8f3bb619ebd1a093c7309`
+
+UPI: `mltb-official@ybl`,`mltb-official@ibl`,`mltb-official@axl`
 
 -----

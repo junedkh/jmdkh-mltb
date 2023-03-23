@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from time import time
 
-from bot import DOWNLOAD_DIR, LOGGER
+from bot import LOGGER
 from bot.helper.ext_utils.bot_utils import (MirrorStatus, async_to_sync,
                                             get_readable_file_size,
                                             get_readable_time)
@@ -14,23 +14,22 @@ class ZipStatus:
         self.__size = size
         self.__gid = gid
         self.__listener = listener
-        self.__uid = self.__listener.uid
         self.__start_time = time()
         self.message = self.__listener.message
-        self.startTime = self.__listener.startTime
-        self.mode = self.__listener.mode
-        self.source = self.__listener.source
+        self.startTime = self.__listener.extra_details['startTime']
+        self.mode = self.__listener.extra_details['mode']
+        self.source = self.__listener.extra_details['source']
         self.engine = "7z"
 
     def gid(self):
         return self.__gid
 
     def speed_raw(self):
-        return self.processed_bytes() / (time() - self.__start_time)
+        return self.processed_raw() / (time() - self.__start_time)
 
     def progress_raw(self):
         try:
-            return self.processed_bytes() / self.__size * 100
+            return self.processed_raw() / self.__size * 100
         except:
             return 0
 
@@ -43,15 +42,12 @@ class ZipStatus:
     def name(self):
         return self.__name
 
-    def size_raw(self):
-        return self.__size
-
     def size(self):
         return get_readable_file_size(self.__size)
 
     def eta(self):
         try:
-            seconds = (self.size_raw() - self.processed_bytes()) / self.speed_raw()
+            seconds = (self.__size - self.processed_raw()) / self.speed_raw()
             return f'{get_readable_time(seconds)}'
         except:
             return '-'
@@ -59,11 +55,14 @@ class ZipStatus:
     def status(self):
         return MirrorStatus.STATUS_ARCHIVING
 
-    def processed_bytes(self):
+    def processed_raw(self):
         if self.__listener.newDir:
-            return async_to_sync(get_path_size, f"{DOWNLOAD_DIR}{self.__uid}10000")
+            return async_to_sync(get_path_size, self.__listener.newDir)
         else:
-            return async_to_sync(get_path_size, f"{DOWNLOAD_DIR}{self.__uid}") - self.__size
+            return async_to_sync(get_path_size, self.__listener.dir) - self.__size
+
+    def processed_bytes(self):
+            return get_readable_file_size(self.processed_raw())
 
     def download(self):
         return self

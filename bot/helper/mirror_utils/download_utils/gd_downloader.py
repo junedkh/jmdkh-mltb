@@ -11,7 +11,8 @@ from bot.helper.ext_utils.fs_utils import (check_storage_threshold,
 from bot.helper.mirror_utils.status_utils.gd_download_status import GdDownloadStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import (sendMessage,
+from bot.helper.telegram_helper.message_utils import (delete_links,
+                                                      sendMessage,
                                                       sendStatusMessage)
 
 
@@ -20,6 +21,7 @@ async def add_gd_download(link, path, listener, newname, from_queue=False):
     res, size, name, files = await sync_to_async(drive.helper, link)
     if res != "":
         await sendMessage(listener.message, res)
+        await delete_links(listener.message)
         return
     if newname:
         name = newname
@@ -32,11 +34,13 @@ async def add_gd_download(link, path, listener, newname, from_queue=False):
                 gname = get_base_name(name)
             except:
                 gname = None
-        if gname:
+        if gname is not None:
             gmsg, button = await sync_to_async(drive.drive_list, gname, True)
             if gmsg:
                 msg = "File/Folder is already available in Drive.\nHere are the search results:"
-                return await sendMessage(listener.message, msg, button)
+                await sendMessage(listener.message, msg, button)
+                await delete_links(listener.message)
+                return
     limit_exceeded = ''
     if not limit_exceeded and (GDRIVE_LIMIT:= config_dict['GDRIVE_LIMIT']):
         limit = GDRIVE_LIMIT * 1024**3
@@ -53,7 +57,9 @@ async def add_gd_download(link, path, listener, newname, from_queue=False):
         if not acpt:
             limit_exceeded = f'You must leave {get_readable_file_size(limit)} free storage.'
     if limit_exceeded:
-        return await sendMessage(listener.message, f'{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}.')
+        await sendMessage(listener.message, f'{limit_exceeded}.\nYour File/Folder size is {get_readable_file_size(size)}.')
+        await delete_links(listener.message)
+        return
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
     all_limit = config_dict['QUEUE_ALL']
     dl_limit = config_dict['QUEUE_DOWNLOAD']

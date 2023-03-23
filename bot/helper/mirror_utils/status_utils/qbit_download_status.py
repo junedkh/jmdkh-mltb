@@ -9,10 +9,7 @@ from bot.helper.ext_utils.bot_utils import (MirrorStatus,
 
 def get_download(client, hash_):
     try:
-        if info := client.torrents_info(torrent_hashes=hash_):
-            return info[0]
-        LOGGER.error('Qbittorrent, Error while getting torrent info')
-        return get_download(client, hash_)
+        return client.torrents_info(torrent_hashes=hash_)[0]
     except Exception as e:
         LOGGER.error(f'{e}: Qbittorrent, Error while getting torrent info')
         client = get_client()
@@ -29,9 +26,9 @@ class QbDownloadStatus:
         self.__info = get_download(self.__client, hash_)
         self.seeding = seeding
         self.message = listener.message
-        self.startTime = self.__listener.startTime
-        self.mode = self.__listener.mode
-        self.source = self.__listener.source
+        self.startTime = self.__listener.extra_details['startTime']
+        self.mode = self.__listener.extra_details['mode']
+        self.source = self.__listener.extra_details['source']
         self.engine = engine_
 
     def __update(self):
@@ -44,15 +41,8 @@ class QbDownloadStatus:
         """
         return f'{round(self.__info.progress*100, 2)}%'
 
-    def size_raw(self):
-        """
-        Gets total size of the mirror file/folder
-        :return: total size of mirror
-        """
-        return self.__info.size
-
     def processed_bytes(self):
-        return self.__info.downloaded
+        return get_readable_file_size(self.__info.downloaded)
 
     def speed(self):
         self.__update()

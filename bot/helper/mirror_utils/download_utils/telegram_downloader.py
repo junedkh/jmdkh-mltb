@@ -10,10 +10,12 @@ from bot.helper.ext_utils.bot_utils import (get_readable_file_size,
                                             sync_to_async)
 from bot.helper.ext_utils.fs_utils import check_storage_threshold
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
-from bot.helper.mirror_utils.status_utils.telegram_download_status import TelegramDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import (sendMessage,
+from bot.helper.telegram_helper.message_utils import (delete_links,
+                                                      sendMessage,
                                                       sendStatusMessage)
+
+from ..status_utils.telegram_download_status import TelegramDownloadStatus
 
 global_lock = Lock()
 GLOBAL_GID = set()
@@ -74,9 +76,9 @@ class TelegramDownloadHelper:
         await self.__listener.onDownloadError(error)
 
     async def __onDownloadComplete(self):
+        await self.__listener.onDownloadComplete()
         async with global_lock:
             GLOBAL_GID.remove(self.__id)
-        await self.__listener.onDownloadComplete()
 
     async def __download(self, message, path):
         try:
@@ -100,7 +102,7 @@ class TelegramDownloadHelper:
                 return
             message = await user.get_messages(chat_id=message.chat.id, message_ids=message.id)
         media = message.document or message.photo or message.video or message.audio or \
-                message.voice or message.video_note or message.sticker or message.animation or None
+            message.voice or message.video_note or message.sticker or message.animation or None
         if media:
             async with global_lock:
                 download = media.file_unique_id not in GLOBAL_GID
@@ -118,6 +120,7 @@ class TelegramDownloadHelper:
                     if smsg:
                         msg = "File/Folder is already available in Drive.\nHere are the search results:"
                         await sendMessage(self.__listener.message, msg, button)
+                        await delete_links(self.__listener.message)
                         return
                 if STORAGE_THRESHOLD:= config_dict['STORAGE_THRESHOLD']:
                     limit = STORAGE_THRESHOLD * 1024**3
@@ -126,7 +129,9 @@ class TelegramDownloadHelper:
                     if not acpt:
                         msg = f'You must leave {get_readable_file_size(limit)} free storage.'
                         msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
-                        return await sendMessage(self.__listener.message, msg)
+                        await sendMessage(self.__listener.message, msg)
+                        await delete_links(self.__listener.message)
+                        return
                 all_limit = config_dict['QUEUE_ALL']
                 dl_limit = config_dict['QUEUE_DOWNLOAD']
                 if all_limit or dl_limit:

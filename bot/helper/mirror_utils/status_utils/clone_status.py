@@ -14,16 +14,13 @@ class CloneStatus:
         self.__gid = gid
         self.__listener = listener
         self.message = listener.message
-        self.startTime = self.__listener.startTime
-        self.mode = self.__listener.mode
-        self.source = self.__listener.source
+        self.startTime = self.__listener.extra_details['startTime']
+        self.mode = self.__listener.extra_details['mode']
+        self.source = self.__listener.extra_details['source']
         self.engine = engine_
 
     def processed_bytes(self):
-        return self.__obj.transferred_size
-
-    def size_raw(self):
-        return self.__size
+        return get_readable_file_size(self.__obj.transferred_size)
 
     def size(self):
         return get_readable_file_size(self.__size)
@@ -46,18 +43,12 @@ class CloneStatus:
     def progress(self):
         return f'{round(self.progress_raw(), 2)}%'
 
-    def speed_raw(self):
-        """
-        :return: Download speed in Bytes/Seconds
-        """
-        return self.__obj.cspeed()
-
     def speed(self):
-        return f'{get_readable_file_size(self.speed_raw())}/s'
+        return f'{get_readable_file_size(self.__obj.cspeed())}/s'
 
     def eta(self):
         try:
-            seconds = (self.__size - self.__obj.transferred_size) / self.speed_raw()
+            seconds = (self.__size - self.__obj.transferred_size) / self.__obj.cspeed()
             return f'{get_readable_time(seconds)}'
         except:
             return '-'

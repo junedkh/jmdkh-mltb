@@ -14,7 +14,7 @@ from psutil import cpu_percent, disk_usage, virtual_memory
 from pyrogram.types import BotCommand
 from requests import head as rhead
 
-from bot import (DOWNLOAD_DIR, LOGGER, bot_loop, botStartTime, config_dict,
+from bot import (DOWNLOAD_DIR, bot_loop, botStartTime, config_dict,
                  download_dict, download_dict_lock, extra_buttons, user_data)
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -82,7 +82,7 @@ async def getDownloadByGid(gid):
                 return dl
     return None
 
-async def getAllDownload(req_status, user_id=None, onece=True):
+async def getAllDownload(req_status, user_id=None):
     dls = []
     async with download_dict_lock:
         for dl in list(download_dict.values()):
@@ -90,11 +90,8 @@ async def getAllDownload(req_status, user_id=None, onece=True):
                 continue
             status = dl.status()
             if req_status in ['all', status]:
-                if onece:
-                    return dl
-                else:
-                    dls.append(dl)
-    return None if onece else dls
+                dls.append(dl)
+    return dls
 
 def bt_selection_buttons(id_, isCanCncl=True):
     gid = id_[:12] if len(id_) > 20 else id_
@@ -117,30 +114,28 @@ def bt_selection_buttons(id_, isCanCncl=True):
     buttons.ibutton("Done Selecting", f"btsel done {gid} {id_}")
     return buttons.build_menu(2)
 
-def get_progress_bar_string(processed_bytes, total_bytes):
-    completed = processed_bytes / 8
-    total = total_bytes / 8
-    p = 0 if total == 0 else round(completed * 100 / total)
-    p = min(max(p, 0), 100)
-    cFull = p // 8
+def get_progress_bar_string(pct):
+    pct = float(pct.split('%')[0])
+    p = min(max(pct, 0), 100)
+    cFull = int(p // 8)
     p_str = '■' * cFull
     p_str += '□' * (12 - cFull)
-    return p_str
+    return f"[{p_str}]"
 
 def get_readable_message():
     msg = ""
     button = None
-    if STATUS_LIMIT := config_dict['STATUS_LIMIT']:
-        tasks = len(download_dict)
-        globals()['PAGES'] = ceil(tasks/STATUS_LIMIT)
-        if PAGE_NO > PAGES and PAGES != 0:
-            globals()['COUNT'] -= STATUS_LIMIT
-            globals()['PAGE_NO'] -= 1
-    for index, download in enumerate(list(download_dict.values())[COUNT:], start=1):
+    STATUS_LIMIT = config_dict['STATUS_LIMIT']
+    tasks = len(download_dict)
+    globals()['PAGES'] = ceil(tasks/STATUS_LIMIT)
+    if PAGE_NO > PAGES and PAGES != 0:
+        globals()['COUNT'] -= STATUS_LIMIT
+        globals()['PAGE_NO'] -= 1
+    for download in list(download_dict.values())[COUNT:STATUS_LIMIT+COUNT]:
         msg += f"<b>{download.status()}</b>: <code>{escape(str(download.name()))}</code>"
         if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
-            msg += f"\n[{get_progress_bar_string(download.processed_bytes(), download.size_raw())}] {download.progress()}"
-            msg += f"\n<b>Processed</b>: {get_readable_file_size(download.processed_bytes())} of {download.size()}"
+            msg += f"\n{get_progress_bar_string(download.progress())} {download.progress()}"
+            msg += f"\n<b>Processed</b>: {download.processed_bytes()} of {download.size()}"
             msg += f"\n<b>Speed</b>: {download.speed()} | <b>ETA</b>: {download.eta()}"
             if hasattr(download, 'seeders_num'):
                 try:
@@ -160,8 +155,6 @@ def get_readable_message():
         msg += f"\n<b>Engine</b>: {download.engine}"
         msg += f"\n<b>Upload</b>: {download.mode}"
         msg += f"\n<b>Stop</b>: <code>/{BotCommands.CancelMirror} {download.gid()}</code>\n\n"
-        if STATUS_LIMIT and index == STATUS_LIMIT:
-            break
     if len(msg) == 0:
         return None, None
     dl_speed = 0
@@ -185,7 +178,7 @@ def get_readable_message():
                 up_speed += float(spd.split('K')[0]) * 1024
             elif 'M' in spd:
                 up_speed += float(spd.split('M')[0]) * 1048576
-    if STATUS_LIMIT and tasks > STATUS_LIMIT:
+    if tasks > STATUS_LIMIT:
         buttons = ButtonMaker()
         buttons.ibutton("<<", "status pre")
         buttons.ibutton(f"{PAGE_NO}/{PAGES} ({tasks})", "status ref")
@@ -268,6 +261,9 @@ def is_share_link(url: str):
 def is_mega_link(url):
     return "mega.nz" in url or "mega.co.nz" in url
 
+def is_rclone_path(path):
+    return bool(re_match(r'^(mrcc:)?(?!magnet:)(?![- ])[a-zA-Z0-9_\. -]+(?<! ):(?!.*\/\/).*$|^rcl$', path))
+
 def get_mega_link_type(url):
     if "folder" in url:
         return "folder"
@@ -290,6 +286,9 @@ def get_content_type(link):
     return content_type
 
 def update_user_ldata(id_, key, value):
+    if not key and not value:
+        user_data[id_] = {}
+        return
     if id_ in user_data:
         user_data[id_][key] = value
     else:
@@ -300,21 +299,15 @@ async def cmd_exec(cmd, shell=False):
         proc = await create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
     else:
         proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
-
     stdout, stderr = await proc.communicate()
-
     stdout = stdout.decode().strip()
     stderr = stderr.decode().strip()
-
     return stdout, stderr, proc.returncode
 
 def new_task(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        try:
-            return bot_loop.create_task(func(*args, **kwargs))
-        except Exception as e:
-            LOGGER.error(f"Failed to create task for {func.__name__} : {e}")
+        return bot_loop.create_task(func(*args, **kwargs))
     return wrapper
 
 async def sync_to_async(func, *args, wait=True, **kwargs):
@@ -332,7 +325,6 @@ def new_thread(func):
     def wrapper(*args, wait=False, **kwargs):
         future = run_coroutine_threadsafe(func(*args, **kwargs), bot_loop)
         return future.result() if wait else future
-
     return wrapper
 
 async def set_commands(client):
