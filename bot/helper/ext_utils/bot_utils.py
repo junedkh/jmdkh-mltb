@@ -219,7 +219,7 @@ async def turn(data):
         return False
 
 async def check_user_tasks(user_id, maxtask):
-    if tasks:= await getAllDownload(MirrorStatus.STATUS_DOWNLOADING, user_id, False):
+    if tasks:= await getAllDownload(MirrorStatus.STATUS_DOWNLOADING, user_id):
         return len(tasks) >= maxtask
 
 def get_readable_time(seconds):
