@@ -416,22 +416,21 @@ class MirrorLeechListener:
                 if self.dmMessage:
                     msg += '\n\n<b>Links has been sent in your DM.</b>'
                     await sendMessage(self.message, msg)
+                    await sendMessage(self.dmMessage, msg, buttons.build_menu(2))
                 else:
                     if self.isSuperGroup and not self.message.chat.has_protected_content:
                         buttons.ibutton("Save This Message", 'save', 'footer')
+                    await sendMessage(self.message, msg, buttons.build_menu(2))
                 if self.logMessage:
                     if config_dict['DISABLE_DRIVE_LINK']:
                         link = await sync_to_async(short_url, link)
                         buttons.ubutton("🔐 Drive Link", link, 'header')
-                button = buttons.build_menu(2)
+                    await sendMessage(self.logMessage, msg, buttons.build_menu(2))
             else:
                 msg += f'\n\nPath: <code>{link.split("Path: ")[1]}</code>'
-                button = None
-            await sendMessage(self.message, msg, button)
-            if self.logMessage:
-                await sendMessage(self.logMessage, msg, button)
-            if self.dmMessage:
-                await sendMessage(self.dmMessage, msg, buttons.build_menu(2))
+                await sendMessage(self.message, msg)
+                if self.logMessage:
+                    await sendMessage(self.logMessage, msg)
             if self.seed and not self.isClone:
                 if self.isZip:
                     await clean_target(f"{self.dir}/{name}")

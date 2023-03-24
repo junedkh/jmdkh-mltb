@@ -18,7 +18,7 @@ from bot.helper.ext_utils.bot_utils import (bt_selection_buttons,
                                             setInterval, sync_to_async)
 from bot.helper.ext_utils.fs_utils import (check_storage_threshold,
                                            clean_unwanted, get_base_name)
-from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
+from bot.helper.mirror_utils.status_utils.qbit_status import QbittorrentStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import (delete_links,
                                                       deleteMessage,
@@ -83,7 +83,7 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
             await delete_links(listener.message)
             return
         async with download_dict_lock:
-            download_dict[listener.uid] = QbDownloadStatus(listener, ext_hash)
+            download_dict[listener.uid] = QbittorrentStatus(listener)
         async with qb_download_lock:
             STALLED_TIME[ext_hash] = time()
             if not QbInterval:
@@ -96,7 +96,7 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
                 metamsg = "Downloading Metadata,\n\nWait then you can select files. Use torrent file to avoid this wait."
                 meta = await sendMessage(listener.message, metamsg)
                 while True:
-                    tor_info = await sync_to_async(client.torrents_info, torrent_hashes=ext_hash)
+                    tor_info = await sync_to_async(client.torrents_info, tag=f'{listener.uid}')
                     if len(tor_info) == 0:
                         await deleteMessage(meta)
                         return
@@ -223,7 +223,7 @@ async def __onDownloadComplete(tor):
         async with download_dict_lock:
             if listener.uid in download_dict:
                 removed = False
-                download_dict[listener.uid] = QbDownloadStatus(listener, tor.hash, True)
+                download_dict[listener.uid] = QbittorrentStatus(listener, True)
             else:
                 removed = True
         if removed:
@@ -251,7 +251,7 @@ async def __qb_listener():
                     TORRENT_TIMEOUT = config_dict['TORRENT_TIMEOUT']
                     STALLED_TIME[tor_info.hash] = time()
                     if TORRENT_TIMEOUT and time() - tor_info.added_on >= TORRENT_TIMEOUT:
-                        bot_loop.create_task(__onDownloadError("Dead Torrent! Find Torrent with good Seeders.", tor_info))
+                        bot_loop.create_task(__onDownloadError("Dead Torrent!", tor_info))
                     else:
                         await sync_to_async(client.torrents_reannounce, torrent_hashes=tor_info.hash)
                 elif tor_info.state == "downloading":
@@ -273,7 +273,7 @@ async def __qb_listener():
                         await sync_to_async(client.torrents_recheck, torrent_hashes=tor_info.hash)
                         RECHECKED.add(tor_info.hash)
                     elif TORRENT_TIMEOUT and time() - STALLED_TIME.get(tor_info.hash, 0) >= TORRENT_TIMEOUT:
-                        bot_loop.create_task(__onDownloadError("Dead Torrent! Find Torrent with good Seeders.", tor_info))
+                        bot_loop.create_task(__onDownloadError("Dead Torrent!", tor_info))
                     else:
                         await sync_to_async(client.torrents_reannounce, torrent_hashes=tor_info.hash)
                 elif tor_info.state == "missingFiles":

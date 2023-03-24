@@ -11,11 +11,10 @@ def get_download(gid):
         return aria2.get_download(gid)
     except Exception as e:
         LOGGER.error(f'{e}: Aria2c, Error while getting torrent info')
-        return get_download(gid)
 
 engine_ = f"Aria2c v{aria2.client.get_version()['version']}"
 
-class AriaDownloadStatus:
+class Aria2Status:
 
     def __init__(self, gid, listener, seeding=False):
         self.__gid = gid
