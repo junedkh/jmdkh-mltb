@@ -106,6 +106,8 @@ async def __search(key, site, message, method):
         if total_results == 0:
             await editMessage(message, f"No result found for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i>")
             return
+        await sync_to_async(client.search_delete, search_id=search_id)
+        await sync_to_async(client.auth_log_out)
         msg = f"<b>Found {min(total_results, TELEGRAPH_LIMIT)}</b>"
         msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>"
     link = await __getResult(search_results, key, message, method)
@@ -113,9 +115,6 @@ async def __search(key, site, message, method):
     buttons.ubutton("🔎 VIEW", link)
     button = buttons.build_menu(1)
     await editMessage(message, msg, button)
-    if not method.startswith('api'):
-        await sync_to_async(client.search_delete, search_id=search_id)
-    await sync_to_async(client.auth_log_out)
 
 async def __getResult(search_results, key, message, method):
     telegraph_content = []
