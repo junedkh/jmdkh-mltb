@@ -18,16 +18,18 @@ from bot import (DATABASE_URL, INCOMPLETE_TASK_NOTIFIER, LOGGER,
                  config_dict, scheduler)
 
 from .helper.ext_utils.bot_utils import (cmd_exec, get_readable_file_size,
-                                         get_readable_time, set_commands, sync_to_async)
+                                         get_readable_time, set_commands,
+                                         sync_to_async)
 from .helper.ext_utils.db_handler import DbManger
 from .helper.ext_utils.fs_utils import clean_all, exit_clean_up, start_cleanup
 from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.message_utils import (editMessage, sendFile,
                                                    sendMessage)
-from .modules import (authorize, bot_settings, bt_select, cancel_mirror,
-                      count, delete, eval, drive_list, mirror_leech, rss, search,
-                      shell, status, users_settings, ytdlp)
+from .modules import (anonymous, authorize, bot_settings, bt_select,
+                      cancel_mirror, category_select, count, delete,
+                      drive_list, eval, mirror_leech, rmdb, rss, save_message,
+                      search, shell, status, users_settings, ytdlp)
 
 
 async def stats(client, message):
