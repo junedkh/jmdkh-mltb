@@ -291,18 +291,24 @@ def antfiles(url: str) -> str:
     Based on https://github.com/zevtyardt/lk21
     """
     try:
-        return Bypass().bypass_antfiles(url)
+        link = Bypass().bypass_antfiles(url)
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if not link:
+        raise DirectDownloadLinkException("ERROR: Download link not found")
+    return link
 
 def streamtape(url: str) -> str:
     """ Streamtape direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
     try:
-        return Bypass().bypass_streamtape(url)
+        link = Bypass().bypass_streamtape(url)
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if not link:
+        raise DirectDownloadLinkException("ERROR: Download link not found")
+    return link
 
 def racaty(url: str) -> str:
     """ Racaty direct link generator
