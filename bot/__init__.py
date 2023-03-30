@@ -3,6 +3,7 @@ from uvloop import install
 
 install()
 from asyncio import Lock
+from collections import OrderedDict
 from faulthandler import enable as faulthandler_enable
 from logging import INFO, FileHandler, StreamHandler, basicConfig
 from logging import error as log_error
@@ -445,6 +446,8 @@ config_dict = {
     "DM_MODE": DM_MODE,
     "DELETE_LINKS": DELETE_LINKS,
 }
+
+config_dict = OrderedDict(sorted(config_dict.items()))
 
 if GDRIVE_ID:
     list_drives['Main'] = {"drive_id": GDRIVE_ID, "index_link": INDEX_URL}
