@@ -166,7 +166,7 @@ async def restart_notification():
         except Exception as e:
             LOGGER.error(e)
 
-    if INCOMPLETE_TASK_NOTIFIER and DATABASE_URL:
+    if await aiopath.isfile(".restartmsg") and INCOMPLETE_TASK_NOTIFIER and DATABASE_URL:
         if notifier_dict := await DbManger().get_incomplete_tasks():
             for cid, data in notifier_dict.items():
                 msg = 'Restarted Successfully!' if cid == chat_id else 'Bot Restarted!'
