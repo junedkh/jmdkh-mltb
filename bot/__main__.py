@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from asyncio import create_subprocess_exec
+from asyncio import create_subprocess_exec, gather
 from os import execl as osexecl
 from signal import SIGINT, signal
 from sys import executable
@@ -16,6 +16,7 @@ from pyrogram.handlers import MessageHandler
 from bot import (DATABASE_URL, INCOMPLETE_TASK_NOTIFIER, LOGGER,
                  STOP_DUPLICATE_TASKS, Interval, QbInterval, bot, botStartTime,
                  config_dict, scheduler)
+from bot.helper.listeners.aria2_listener import start_aria2_listener
 
 from .helper.ext_utils.bot_utils import (cmd_exec, get_readable_file_size,
                                          get_readable_time, set_commands,
@@ -26,11 +27,13 @@ from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.message_utils import (editMessage, sendFile,
                                                    sendMessage)
-from .modules import (anonymous, authorize, bot_settings, bt_select,
-                      cancel_mirror, category_select, count, delete,
-                      drive_list, eval, mirror_leech, rmdb, rss, save_message,
-                      search, shell, status, users_settings, ytdlp)
+from .modules import (anonymous, authorize, bot_settings, cancel_mirror,
+                      category_select, eval, gd_count, gd_delete, gd_list,
+                      leech_del, mirror_leech, rmdb, rss, save_message, shell,
+                      status, torrent_search, torrent_select, users_settings,
+                      ytdlp)
 
+start_aria2_listener()
 
 async def stats(client, message):
     total, used, free, disk = disk_usage('/')
@@ -74,17 +77,15 @@ async def restart(client, message):
     restart_message = await sendMessage(message, "Restarting...")
     if scheduler.running:
         scheduler.shutdown(wait=False)
-    if Interval:
-        Interval[0].cancel()
-        Interval.clear()
-    if QbInterval:
-        QbInterval[0].cancel()
-        QbInterval.clear()
+    for interval in [Interval, QbInterval]:
+        if interval:
+            interval[0].cancel()
+            interval.clear()
     await sync_to_async(clean_all)
-    await (await create_subprocess_exec('pkill', '-9', '-f', '-e', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone')).wait()
-    await (await create_subprocess_exec('python3', 'update.py')).wait()
+    proc1 = await create_subprocess_exec('pkill', '-9', '-f', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone')
+    proc2 = await create_subprocess_exec('python3', 'update.py')
+    await gather(proc1.wait(), proc2.wait())
     async with aiopen(".restartmsg", "w") as f:
-        await f.truncate(0)
         await f.write(f"{restart_message.chat.id}\n{restart_message.id}\n")
     osexecl(executable, executable, "-m", "bot")
 
@@ -148,62 +149,46 @@ NOTE: Try each command without any argument to see more detalis.
 async def bot_help(client, message):
     await sendMessage(message, help_string)
 
-async def main():
-    await set_commands(bot)
-    await start_cleanup()
-    await search.initiate_search_tools()
-    if DATABASE_URL and STOP_DUPLICATE_TASKS:
-        await DbManger().clear_download_links()
+async def restart_notification():
+    if await aiopath.isfile(".restartmsg"):
+        with open(".restartmsg") as f:
+            chat_id, msg_id = map(int, f)
+
+    async def send_incompelete_task_message(chat_id, msg_id, cid, msg):
+        try:
+            if msg.startswith('Restarted Successfully!'):
+                await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text='Restarted Successfully!')
+                await bot.send_message(chat_id, msg, disable_web_page_preview=True, reply_to_message_id=msg_id)
+                await aioremove(".restartmsg")
+            else:
+                await bot.send_message(chat_id=cid, text=msg, disable_web_page_preview=True,
+                                        disable_notification=True)
+        except Exception as e:
+            LOGGER.error(e)
+
     if INCOMPLETE_TASK_NOTIFIER and DATABASE_URL:
         if notifier_dict := await DbManger().get_incomplete_tasks():
             for cid, data in notifier_dict.items():
-                if await aiopath.isfile(".restartmsg"):
-                    with open(".restartmsg") as f:
-                        chat_id, msg_id = map(int, f)
-                    msg = 'Restarted Successfully!'
-                else:
-                    msg = 'Bot Restarted!'
+                msg = 'Restarted Successfully!' if cid == chat_id else 'Bot Restarted!'
                 for tag, links in data.items():
                     msg += f"\n\n{tag}: "
                     for index, link in enumerate(links, start=1):
                         msg += f" <a href='{link}'>{index}</a> |"
                         if len(msg.encode()) > 4000:
-                            if 'Restarted Successfully!' in msg and cid == chat_id:
-                                try:
-                                    await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text='Restarted Successfully!')
-                                    await bot.send_message(chat_id, msg, disable_web_page_preview=True, reply_to_message_id=msg_id)
-                                except:
-                                    pass
-                                await aioremove(".restartmsg")
-                            else:
-                                try:
-                                    await bot.send_message(chat_id=cid, text=msg, disable_web_page_preview=True,
-                                                           disable_notification=True)
-                                except Exception as e:
-                                    LOGGER.error(e)
+                            await send_incompelete_task_message(chat_id, msg_id, cid, msg)
                             msg = ''
-                if 'Restarted Successfully!' in msg and cid == chat_id:
-                    try:
-                        await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text='Restarted Successfully!')
-                        await bot.send_message(chat_id, msg, disable_web_page_preview=True, reply_to_message_id=msg_id)
-                    except:
-                        pass
-                    await aioremove(".restartmsg")
-                else:
-                    try:
-                        await bot.send_message(chat_id=cid, text=msg, disable_web_page_preview=True,
-                                         disable_notification=True)
-                    except Exception as e:
-                        LOGGER.error(e)
+                if msg:
+                    await send_incompelete_task_message(chat_id, msg_id, cid, msg)
 
     if await aiopath.isfile(".restartmsg"):
-        with open(".restartmsg") as f:
-            chat_id, msg_id = map(int, f)
         try:
-            await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="Restarted Successfully!")
+            await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text='Restarted Successfully!')
         except:
             pass
         await aioremove(".restartmsg")
+
+async def main():
+    await gather(start_cleanup(), torrent_search.initiate_search_tools(), restart_notification(), set_commands(bot))
 
     bot.add_handler(MessageHandler(start, filters=command(BotCommands.StartCommand)))
     bot.add_handler(MessageHandler(log, filters=command(BotCommands.LogCommand) & CustomFilters.sudo))

@@ -23,9 +23,7 @@ class Aria2Status:
         self.start_time = 0
         self.seeding = seeding
         self.message = listener.message
-        self.startTime = self.__listener.extra_details['startTime']
-        self.mode = self.__listener.extra_details['mode']
-        self.source = self.__listener.extra_details['source']
+        self.extra_details = self.__listener.extra_details
         self.engine = engine_
 
     def __update(self):
@@ -38,17 +36,12 @@ class Aria2Status:
             self.__download = get_download(self.__gid)
 
     def progress(self):
-        """
-        Calculates the progress of the mirror (upload or download)
-        :return: returns progress in percentage
-        """
         return self.__download.progress_string()
 
     def processed_bytes(self):
         return self.__download.completed_length_string()
 
     def speed(self):
-        self.__update()
         return self.__download.download_speed_string()
 
     def name(self):
@@ -62,12 +55,14 @@ class Aria2Status:
 
     def status(self):
         self.__update()
-        download = self.__download
-        if download.is_waiting:
-            return MirrorStatus.STATUS_QUEUEDL
-        elif download.is_paused:
+        if self.__download.is_waiting:
+            if self.seeding:
+                return MirrorStatus.STATUS_QUEUEUP
+            else:
+                return MirrorStatus.STATUS_QUEUEDL
+        elif self.__download.is_paused:
             return MirrorStatus.STATUS_PAUSED
-        elif download.seeder and self.seeding:
+        elif self.__download.seeder and self.seeding:
             return MirrorStatus.STATUS_SEEDING
         else:
             return MirrorStatus.STATUS_DOWNLOADING

@@ -6,6 +6,7 @@ from io import BytesIO
 from math import ceil
 from os import getcwd
 from os import path as ospath
+from re import sub as re_sub
 from time import time
 
 from aiofiles.os import mkdir
@@ -117,7 +118,7 @@ async def set_perfix(client, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     value = message.text
-    if len(value.encode()) < 30:
+    if len(re_sub('<.*?>', '', value)) < 15:
         update_user_ldata(user_id, 'lprefix', value)
         await message.delete()
         if DATABASE_URL:
@@ -138,7 +139,7 @@ async def set_thumb(client, message, pre_event):
     await message.delete()
     await update_user_settings(pre_event)
     if DATABASE_URL:
-        await DbManger().update_user_doc(user_id, des_dir)
+        await DbManger().update_user_doc(user_id, 'thumb', des_dir)
 
 async def add_rclone(client, message, pre_event):
     user_id = message.from_user.id
@@ -152,7 +153,7 @@ async def add_rclone(client, message, pre_event):
     await message.delete()
     await update_user_settings(pre_event)
     if DATABASE_URL:
-        await DbManger().update_user_doc(user_id, des_dir)
+        await DbManger().update_user_doc(user_id, 'rclone', des_dir)
 
 async def leech_split_size(client, message, pre_event):
     user_id = message.from_user.id
@@ -215,7 +216,7 @@ async def edit_user_settings(client, query):
             update_user_ldata(user_id, 'thumb', '')
             await update_user_settings(query)
             if DATABASE_URL:
-                await DbManger().update_user_doc(user_id)
+                await DbManger().update_user_doc(user_id, 'thumb')
         else:
             await query.answer("Old Settings", show_alert=True)
             await update_user_settings(query)
@@ -343,7 +344,7 @@ Check all available formatting options <a href="https://core.telegram.org/bots/a
             update_user_ldata(user_id, 'rclone', '')
             await update_user_settings(query)
             if DATABASE_URL:
-                await DbManger().update_user_doc(user_id)
+                await DbManger().update_user_doc(user_id, 'rclone')
         else:
             await query.answer("Old Settings", show_alert=True)
             await update_user_settings(query)

@@ -19,6 +19,10 @@ from bot.helper.telegram_helper.message_utils import (anno_checker,
 async def countNode(client, message):
     args = message.text.split()
     link = ''
+    if not message.from_user:
+        message.from_user = await anno_checker(message)
+    if not message.from_user:
+        return
     if len(args) > 1:
         link = args[1]
         if username := message.from_user.username:
@@ -33,10 +37,6 @@ async def countNode(client, message):
                 tag = f"@{username}"
             else:
                 tag = reply_to.from_user.mention
-    if not message.from_user:
-        message.from_user = await anno_checker(message)
-    if not message.from_user:
-        return
     if is_gdrive_link(link):
         msg = await sendMessage(message, f"Counting: <code>{link}</code>")
         startTime = time()

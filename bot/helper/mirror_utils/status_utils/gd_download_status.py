@@ -14,9 +14,7 @@ class GdDownloadStatus:
         self.__gid = gid
         self.__listener = listener
         self.message = self.__listener.message
-        self.startTime = self.__listener.extra_details['startTime']
-        self.mode = self.__listener.extra_details['mode']
-        self.source = self.__listener.extra_details['source']
+        self.extra_details = self.__listener.extra_details
         self.engine = engine_
 
     def processed_bytes(self):

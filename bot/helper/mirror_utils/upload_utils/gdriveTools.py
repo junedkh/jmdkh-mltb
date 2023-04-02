@@ -64,7 +64,7 @@ class GoogleDriveHelper:
         self.processed_bytes = 0
         self.transferred_size = 0
         self.__service_account_index = 0
-        self.__service = None
+        self.__service = self.__authorize()
 
     def speed(self):
         """
@@ -153,7 +153,6 @@ class GoogleDriveHelper:
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
            retry=retry_if_exception_type(Exception))
     def getFolderData(self, file_id):
-        self.__service = self.__authorize()
         try:
             meta = self.__service.files().get(fileId=file_id, supportsAllDrives=True).execute()
             if meta.get('mimeType', '') == self.__G_DRIVE_DIR_MIME_TYPE:
@@ -186,7 +185,6 @@ class GoogleDriveHelper:
             self.__total_time += self.__update_interval
 
     def deletefile(self, link: str):
-        self.__service = self.__authorize()
         try:
             file_id = self.getIdFromUrl(link)
         except (KeyError, IndexError):
@@ -212,7 +210,6 @@ class GoogleDriveHelper:
             return msg
 
     def upload(self, file_name, gdrive_id):
-        self.__service = self.__authorize()
         self.__is_uploading = True
         item_path = f"{self.__path}/{file_name}"
         LOGGER.info(f"Uploading: {item_path}")
@@ -372,8 +369,6 @@ class GoogleDriveHelper:
         return
 
     def clone(self, link, gdrive_id):
-        if self.__service is None:
-            self.__service = self.__authorize()
         self.__is_cloning = True
         self.__start_time = time()
         self.__total_files = 0
@@ -538,8 +533,6 @@ class GoogleDriveHelper:
             return {'files': []}
 
     def drive_list(self, fileName, stopDup=False, noMulti=False, isRecursive=True, itemType=""):
-        if self.__service is None:
-            self.__service = self.__authorize()
         msg = ""
         fileName = self.__escapes(str(fileName))
         contents_count = 0
@@ -634,8 +627,6 @@ class GoogleDriveHelper:
         return msg, buttons.build_menu(2)
 
     def count(self, link):
-        if self.__service is None:
-            self.__service = self.__authorize()
         try:
             file_id = self.getIdFromUrl(link)
         except (KeyError, IndexError):
@@ -699,7 +690,6 @@ class GoogleDriveHelper:
                 self.__gDrive_file(filee)
 
     def helper(self, link):
-        self.__service = self.__authorize()
         try:
             file_id = self.getIdFromUrl(link)
         except (KeyError, IndexError):
@@ -734,8 +724,6 @@ class GoogleDriveHelper:
         return "", size, name, files
 
     def download(self, link):
-        if self.__service is None:
-            self.__service = self.__authorize()
         self.__is_downloading = True
         file_id = self.getIdFromUrl(link)
         self.__updater = setInterval(self.__update_interval, self.__progress)

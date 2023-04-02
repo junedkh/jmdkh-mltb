@@ -13,9 +13,7 @@ class UploadStatus:
         self.__size = size
         self.__gid = gid
         self.message = message
-        self.startTime = extra_details['startTime']
-        self.mode = extra_details['mode']
-        self.source = extra_details['source']
+        self.extra_details = extra_details
         self.engine = engine_
 
     def processed_bytes(self):
