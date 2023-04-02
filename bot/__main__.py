@@ -151,6 +151,7 @@ async def bot_help(client, message):
 
 async def restart_notification():
     chat_id = None
+    msg_id = None
     if await aiopath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
