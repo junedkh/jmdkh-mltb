@@ -150,6 +150,7 @@ async def bot_help(client, message):
     await sendMessage(message, help_string)
 
 async def restart_notification():
+    chat_id = None
     if await aiopath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
@@ -166,10 +167,10 @@ async def restart_notification():
         except Exception as e:
             LOGGER.error(e)
 
-    if await aiopath.isfile(".restartmsg") and INCOMPLETE_TASK_NOTIFIER and DATABASE_URL:
+    if INCOMPLETE_TASK_NOTIFIER and DATABASE_URL:
         if notifier_dict := await DbManger().get_incomplete_tasks():
             for cid, data in notifier_dict.items():
-                msg = 'Restarted Successfully!' if cid == chat_id else 'Bot Restarted!'
+                msg = 'Restarted Successfully!' if chat_id is not None and cid == chat_id else 'Bot Restarted!'
                 for tag, links in data.items():
                     msg += f"\n\n{tag}: "
                     for index, link in enumerate(links, start=1):
