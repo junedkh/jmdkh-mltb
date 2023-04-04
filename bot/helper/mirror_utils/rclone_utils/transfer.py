@@ -73,7 +73,7 @@ class RcloneTransferHelper:
         if self.__is_cancelled:
             return
         if code not in [0, -9]:
-            await sendMessage(f'Error: While getting rclone stat. Path: {rc_path}. Stderr: {err[:4000]}')
+            await sendMessage(self.__listener.message, f'Error: While getting rclone stat. Path: {rc_path}. Stderr: {err[:4000]}')
             return
         result = loads(res)
         if result['IsDir']:
@@ -88,7 +88,7 @@ class RcloneTransferHelper:
         if self.__is_cancelled:
             return
         if code not in [0, -9]:
-            await sendMessage(f'Error: While getting rclone size. Path: {rc_path}. Stderr: {err[:4000]}')
+            await sendMessage(self.__listener.message, f'Error: While getting rclone size. Path: {rc_path}. Stderr: {err[:4000]}')
             return
         rdict = loads(res)
         self.size = rdict['bytes']
