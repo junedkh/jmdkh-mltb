@@ -332,6 +332,10 @@ async def qb_zip_leech(client, message):
     _mirror_leech(client, message, True, isQbit=True, isLeech=True)
 
 
+async def cloneNode(client, message):
+    _mirror_leech(client, message, isClone=True)
+
+
 bot.add_handler(MessageHandler(mirror, filters=command(
     BotCommands.MirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(unzip_mirror, filters=command(
@@ -356,3 +360,5 @@ bot.add_handler(MessageHandler(qb_unzip_leech, filters=command(
     BotCommands.QbUnzipLeechCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(qb_zip_leech, filters=command(
     BotCommands.QbZipLeechCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(cloneNode, filters=command(
+    BotCommands.CloneCommand) & CustomFilters.authorized))

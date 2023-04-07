@@ -173,10 +173,9 @@ async def restart_notification():
                                        disable_notification=True)
         except Exception as e:
             LOGGER.error(e)
-    if DATABASE_URL and STOP_DUPLICATE_TASKS:
-        await DbManger().clear_download_links()
-    if INCOMPLETE_TASK_NOTIFIER and DATABASE_URL:
-        if notifier_dict := await DbManger().get_incomplete_tasks():
+
+    if DATABASE_URL:
+        if INCOMPLETE_TASK_NOTIFIER and (notifier_dict := await DbManger().get_incomplete_tasks()):
             for cid, data in notifier_dict.items():
                 msg = 'Restarted Successfully!' if cid == chat_id else 'Bot Restarted!'
                 for tag, links in data.items():
@@ -188,6 +187,9 @@ async def restart_notification():
                             msg = ''
                 if msg:
                     await send_incompelete_task_message(cid, msg)
+
+        if STOP_DUPLICATE_TASKS:
+            await DbManger().clear_download_links()
 
     if await aiopath.isfile(".restartmsg"):
         try:
