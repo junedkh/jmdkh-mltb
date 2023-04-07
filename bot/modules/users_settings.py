@@ -18,8 +18,8 @@ from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 
 from bot import (DATABASE_URL, IS_PREMIUM_USER, MAX_SPLIT_SIZE, bot,
                  config_dict, user_data)
-from bot.helper.ext_utils.bot_utils import (new_thread, sync_to_async,
-                                            update_user_ldata)
+from bot.helper.ext_utils.bot_utils import (get_readable_file_size, new_thread,
+                                            sync_to_async, update_user_ldata)
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
