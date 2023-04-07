@@ -1,14 +1,16 @@
-from os import path as ospath
-from aiofiles.os import remove as aioremove, path as aiopath, mkdir
-from time import time
-from PIL import Image
-from re import search as re_search
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
+from os import path as ospath
+from re import search as re_search
+from time import time
+
+from aiofiles.os import mkdir
+from aiofiles.os import path as aiopath
+from aiofiles.os import remove as aioremove
+from PIL import Image
 
 from bot import LOGGER, MAX_SPLIT_SIZE, config_dict, user_data
-from bot.helper.ext_utils.bot_utils import cmd_exec
-from bot.helper.ext_utils.bot_utils import sync_to_async
+from bot.helper.ext_utils.bot_utils import cmd_exec, sync_to_async
 from bot.helper.ext_utils.fs_utils import ARCH_EXT, get_mime_type
 
 

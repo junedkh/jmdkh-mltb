@@ -11,12 +11,12 @@ for original authorship. """
 from base64 import standard_b64encode
 from http.cookiejar import MozillaCookieJar
 from json import loads
-from math import floor, pow
 from os import path
 from re import findall, match, search, sub
 from time import sleep
 from urllib.parse import quote, unquote, urlparse
 from uuid import uuid4
+
 from bs4 import BeautifulSoup
 from cloudscraper import create_scraper
 from lk21 import Bypass

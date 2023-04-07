@@ -10,7 +10,6 @@ from aiofiles.os import listdir, makedirs
 from aiofiles.os import path as aiopath
 from aiofiles.os import remove as aioremove
 from aioshutil import move
-from requests import utils as rutils
 
 from bot import (DATABASE_URL, DOWNLOAD_DIR, LOGGER, MAX_SPLIT_SIZE,
                  SHORTENERES, Interval, aria2, config_dict, download_dict,
