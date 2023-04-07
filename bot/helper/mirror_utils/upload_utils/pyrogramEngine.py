@@ -26,6 +26,7 @@ from bot.helper.ext_utils.fs_utils import (clean_unwanted, get_base_name,
                                            is_archive)
 from bot.helper.ext_utils.leech_utils import (get_document_type,
                                               get_media_info, take_ss)
+from bot.helper.telegram_helper.button_build import ButtonMaker
 
 LOGGER = getLogger(__name__)
 getLogger("pyrogram").setLevel(ERROR)
@@ -282,7 +283,10 @@ class TgUploader:
                 reply_to_message_id=self.__sent_DMmsg.id
             )
         except Exception as err:
-            LOGGER.error(f"Error while sending dm {err.__class__.__name__}")
+            if isinstance(err, RPCError):
+                LOGGER.error(f"Error while sending dm {err.NAME}: {err.MESSAGE}")
+            else:
+                LOGGER.error(f"Error while sending dm {err.__class__.__name__}")
             self.__sent_DMmsg = None
 
     @retry(wait=wait_exponential(multiplier=2, min=4, max=8), stop=stop_after_attempt(3),
