@@ -22,7 +22,7 @@ async def start_clone(link, listener):
     if config_dict['STOP_DUPLICATE'] and not listener.select:
         smsg, button = await stop_duplicate_check(name, listener)
         if smsg:
-            await sendMessage(listener.message, msg, button)
+            await sendMessage(listener.message, smsg, button)
             await delete_links(listener.message)
             return
     if limit_exceeded := await limit_checker(size, listener):
