@@ -295,7 +295,7 @@ class GoogleDriveHelper:
         if not config_dict['IS_TEAM_DRIVE']:
             self.__set_permission(file_id)
         LOGGER.info(
-            f'Created G-Drive Folder:\nName: {file.get("name")}\nID: {file_id}')
+            f'Created G-Drive Folder:\nName: {file.get("name")}')
         return file_id
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
