@@ -120,11 +120,11 @@ async def set_yt_quality(client, message, pre_event):
         await DbManger().update_user_data(user_id)
 
 
-async def set_perfix(client, message, pre_event):
+async def set_prefix(client, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     value = message.text
-    if len(re_sub('<.*?>', '', value)) < 15:
+    if len(re_sub('<.*?>', '', value)) <= 15:
         update_user_ldata(user_id, 'lprefix', value)
         await message.delete()
         if DATABASE_URL:
@@ -292,7 +292,7 @@ This will give output of:
 Check all available formatting options <a href="https://core.telegram.org/bots/api#formatting-options">HERE</a>.
         '''
         await editMessage(message, rmsg, buttons.build_menu(1))
-        pfunc = partial(set_perfix, pre_event=query)
+        pfunc = partial(set_prefix, pre_event=query)
         await event_handler(client, query, pfunc)
     elif data[2] == 'rlpre':
         handler_dict[user_id] = False
