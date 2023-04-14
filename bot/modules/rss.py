@@ -4,12 +4,14 @@ from datetime import datetime, timedelta
 from functools import partial
 from re import split as re_split
 from time import time
+from aiofiles.os import remove 
 
 from aiohttp import ClientSession
 from apscheduler.triggers.interval import IntervalTrigger
 from feedparser import parse as feedparse
 from pyrogram.filters import command, create, regex
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
+from pyrogram.errors import MessageTooLong
 
 from bot import DATABASE_URL, LOGGER, bot, config_dict, rss_dict, scheduler
 from bot.helper.ext_utils.bot_utils import new_thread
@@ -275,7 +277,15 @@ async def rssGet(client, message, pre_event):
                         link = rss_d.entries[item_num]['link']
                     item_info += f"<b>Name: </b><code>{rss_d.entries[item_num]['title'].replace('>', '').replace('<', '')}</code>\n"
                     item_info += f"<b>Link: </b><code>{link}</code>\n\n"
-                await editMessage(msg, item_info)
+                try:
+                    await msg.edit(item_info)
+                except MessageTooLong as e:
+                    LOGGER.warning(f"{e.NAME}: {e.MESSAGE}")
+                    with open("rss.txt", "w+", encoding="utf8") as out:
+                        out.write(item_info)
+                    await message.reply_document(document="rss.txt", quote=True)
+                    await msg.delete()
+                    await remove("rss.txt")
             except IndexError as e:
                 LOGGER.error(str(e))
                 await editMessage(msg, "Parse depth exceeded. Try again with a lower value.")
