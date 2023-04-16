@@ -28,6 +28,7 @@ class _BotCommands:
         self.YtdlZipLeechCommand = [
             f'ytdlzipleech{CMD_SUFFIX}', f'yzl{CMD_SUFFIX}']
         self.CloneCommand = f'clone{CMD_SUFFIX}'
+        self.CountCommand = f'count{CMD_SUFFIX}'
         self.DeleteCommand = f'del{CMD_SUFFIX}'
         self.CancelMirror = f'cancel{CMD_SUFFIX}'
         self.CancelAllCommand = [f'cancelall{CMD_SUFFIX}', 'cancelallbot']

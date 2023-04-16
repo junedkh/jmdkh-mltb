@@ -28,10 +28,10 @@ from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.message_utils import (editMessage, sendFile,
                                                    sendMessage)
 from .modules import (anonymous, authorize, bot_settings, cancel_mirror,
-                      category_select, clone, eval, gd_delete, gd_list,
-                      leech_del, mirror_leech, rmdb, rss, save_message, shell,
-                      status, torrent_search, torrent_select, users_settings,
-                      ytdlp)
+                      category_select, clone, eval, gd_count, gd_delete,
+                      gd_list, leech_del, mirror_leech, rmdb, rss,
+                      save_message, shell, status, torrent_search,
+                      torrent_select, users_settings, ytdlp)
 
 start_aria2_listener()
 
@@ -121,6 +121,7 @@ NOTE: Try each command without any argument to see more detalis.
 /{BotCommands.YtdlLeechCommand[0]} or /{BotCommands.YtdlLeechCommand[1]}: Leech yt-dlp supported link.
 /{BotCommands.YtdlZipLeechCommand[0]} or /{BotCommands.YtdlZipLeechCommand[1]}: Leech yt-dlp supported link as zip.
 /{BotCommands.CloneCommand} [drive_url]: Copy file/folder to Google Drive.
+/{BotCommands.CountCommand} [drive_url]: Count file/folder of Google Drive.
 /{BotCommands.DeleteCommand} [drive_url]: Delete file/folder from Google Drive (Only Owner & Sudo).
 /leech{BotCommands.DeleteCommand} [telegram_link]: Delete replies from telegram (Only Owner & Sudo).
 /{BotCommands.UserSetCommand} [query]: Users settings.
