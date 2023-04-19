@@ -282,6 +282,7 @@ async def clone(client, message):
     if (dmMode := config_dict['DM_MODE']) and message.chat.type == message.chat.type.SUPERGROUP:
         dmMessage = await sendDmMessage(message, dmMode, False)
         if dmMessage == 'BotNotStarted':
+            await delete_links(message)
             return
     else:
         dmMessage = None
