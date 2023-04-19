@@ -146,7 +146,7 @@ CLONE_HELP_MESSAGE = """Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link 
 <code>/{cmd}</code> gdrivelink
 
 <b>Upload Custom Drive</b>
-<code>/{cmd}</code> <b>id:</b> <code>drive_folder_link</code> or <code>drive_id</code> <b>index:</b> <code>https://anything.in/0:</code> link or by replying to link
+<code>/{cmd}</code> link or by replying to link <b>id:</b> <code>drive_folder_link</code> or <code>drive_id</code> <b>index:</b> <code>https://anything.in/0:</code>
 drive_id must be folder id and index must be url else it will not accept
 
 <b>Rclone:</b>
