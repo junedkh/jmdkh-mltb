@@ -136,7 +136,7 @@ async def rcloneNode(client, message, rcf, listener):
 
 
 async def gdcloneNode(message, link, listener):
-    if is_share_link(link):
+    if not is_gdrive_link(link) and is_share_link(link):
         process_msg = await sendMessage(message, f"Processing: <code>{link}</code>")
         try:
             link = await sync_to_async(direct_link_generator, link)
@@ -272,10 +272,12 @@ async def clone(client, message):
     if not message.from_user:
         message.from_user = await anno_checker(message)
     if not message.from_user:
+        await delete_links(message)
         return
     if not await isAdmin(message):
         raw_url = await stop_duplicate_tasks(message, link)
         if raw_url == 'duplicate_tasks':
+            await delete_links(message)
             return
         if await none_admin_utils(message, tag, False):
             return
@@ -298,7 +300,7 @@ async def clone(client, message):
             await delete_links(message)
             return
         listener = MirrorLeechListener(message, tag=tag, isClone=True, drive_id=drive_id,
-                                    index_link=index_link, dmMessage=dmMessage, logMessage=logMessage, raw_url=raw_url)
+                                       index_link=index_link, dmMessage=dmMessage, logMessage=logMessage, raw_url=raw_url)
         await rcloneNode(client, message, link, listener)
     else:
         if not drive_id and len(categories) > 1:
@@ -312,7 +314,7 @@ async def clone(client, message):
             await delete_links(message)
             return
         listener = MirrorLeechListener(message, tag=tag, isClone=True, drive_id=drive_id,
-                                    index_link=index_link, dmMessage=dmMessage, logMessage=logMessage, raw_url=raw_url)
+                                       index_link=index_link, dmMessage=dmMessage, logMessage=logMessage, raw_url=raw_url)
         await gdcloneNode(message, link, listener)
 
 
