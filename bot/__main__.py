@@ -81,7 +81,7 @@ async def start(client, message):
         return await sendMessage(message, 'Token refreshed successfully!')
     elif config_dict['DM_MODE']:
         start_string = 'Bot Started.\n' \
-            'Now I will send your files or links here.\n'
+            'Now I will send your files and links here.\n'
     else:
         start_string = '🌹 Welcome To One Of A Modified Anasty Mirror Bot\n' \
             'This bot can Mirror all your links To Google Drive!\n' \

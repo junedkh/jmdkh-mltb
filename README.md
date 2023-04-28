@@ -156,7 +156,7 @@ In each single file there is a major change inspire from base code by my friend 
 - Mega limits
 - Torrent limits
 - Direct download limits
-- YTDLP limits
+- Yt-dlp limits
 - Google drive limits
 - User task limits
 - Ratelimiter
@@ -170,7 +170,7 @@ In each single file there is a major change inspire from base code by my friend 
 - Enable/Disable drive links
 - Enable/Disable leech function
 - Mirror/Clone log chat
-- Token needed on every request until time out
+- Token system for shortners
 
 
 ### Extra
@@ -179,11 +179,6 @@ In each single file there is a major change inspire from base code by my friend 
 # How to deploy?
 
 ## Prerequisites
-
-- Tutorial Video from A to Z:
-  - Thanks to [Wiszky](https://github.com/vishnoe115)
-
- <p><a href="https://youtu.be/IUmq1paCiHI"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
 ### 1. Installing requirements
 
@@ -199,7 +194,7 @@ git clone https://github.com/junedkh/jmdkh-mltb mirrorbot/ && cd mirrorbot
 sudo apt install python3 python3-pip
 ```
 
-Install Docker by following the [official Docker docs](https://docs.docker.com/engine/install/debian/)
+Install Docker by following the [Official docker docs](https://docs.docker.com/engine/install/#server).
 
 - For Arch and it's derivatives:
 
@@ -342,8 +337,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `STOP_DUPLICATE_TASKS`: To enable stop duplicate task across multiple bots. `Bool`
   - **Note**: All bot must have added same database link.
 - `DISABLE_DRIVE_LINK`: To disable google drive link button in case you need it. `Bool`
-- `TOKEN_TIMEOUT`: Token timeout for each group member. Default is `21600` (six hours)
-  - **Note**: Token will embed with urlshorteners.
+- `TOKEN_TIMEOUT`: Token timeout for each group member in sec. Default is `21600` (six hours) `Int`
+  - **Note**: This token system is linked with url shortners, users will have to go through ads to use bot commands (if `shorteners.txt` added, Read more about shortners.txt [Here](https://github.com/junedkh/jmdkh-mltb#multi-shortener) ).
 
 ### Extra Features
 
@@ -351,7 +346,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
   - **Note**: You can set commands manually according to your needs few commands are available [here](#bot-commands-to-be-set-in-botfatherhttpstmebotfather)
 - `DISABLE_LEECH`: It will disable leech functionality. Default is `False`. `Bool`
 - `DM_MODE`: If then bot will send Mirrored/Leeched files in user's DM. Default is `off`. `Str`
-  - **Note**: if value is `Mirror` it will send only mirrored files in DM. if value is `Leech` so it will send leeched files in DM. if value is `all` it will send Mirrored/Leeched files in DM
+  - **Note**: if value is `mirror` it will send only mirrored files in DM. if value is `leech` so it will send leeched files in DM. if value is `all` it will send Mirrored/Leeched files in DM
 - `DELETE_LINKS`: It will delete links on download start. Default is `False`. `Bool`
 - `LOG_CHAT_ID`: Fill chat_id of the group/channel. It will send mirror/clone links in the log chat. `Int`
   - **Note**: Bot should be added in the log chat as admin.
