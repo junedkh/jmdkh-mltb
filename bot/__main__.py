@@ -12,9 +12,10 @@ from psutil import (boot_time, cpu_count, cpu_percent, disk_usage,
                     net_io_counters, swap_memory, virtual_memory)
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
-
+from uuid import uuid4
 from bot import (DATABASE_URL, INCOMPLETE_TASK_NOTIFIER, LOGGER,
                  STOP_DUPLICATE_TASKS, Interval, QbInterval, bot, botStartTime,
+                 user_data,
                  config_dict, scheduler)
 from bot.helper.listeners.aria2_listener import start_aria2_listener
 
@@ -66,7 +67,19 @@ async def stats(client, message):
 
 
 async def start(client, message):
-    if config_dict['DM_MODE']:
+    if len(message.command) > 1:
+        userid = message.from_user.id
+        input_token = message.command[1]
+        if userid not in user_data:
+            return await sendMessage(message, 'Who are you?')
+        data = user_data[userid]
+        if 'token' not in data or data['token'] != input_token:
+            return await sendMessage(message, 'This is a token already expired')
+        data['token'] = str(uuid4())
+        data['time'] = time()
+        user_data[userid].update(data)
+        return await sendMessage(message, 'Token refreshed successfully!')
+    elif config_dict['DM_MODE']:
         start_string = 'Bot Started.\n' \
             'Now I will send your files or links here.\n'
     else:

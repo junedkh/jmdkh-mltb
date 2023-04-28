@@ -43,6 +43,7 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'RSS_DELAY': 900,
                   'STATUS_UPDATE_INTERVAL': 10,
                   'SEARCH_LIMIT': 0,
+                  'TOKEN_TIMEOUT': 3600,
                   'UPSTREAM_BRANCH': 'master'}
 
 
@@ -113,7 +114,6 @@ async def load_config():
                 x = x.lstrip('.')
             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
 
-
     MEGA_EMAIL = environ.get('MEGA_EMAIL', '')
     MEGA_PASSWORD = environ.get('MEGA_PASSWORD', '')
     if len(MEGA_EMAIL) == 0 or len(MEGA_PASSWORD) == 0:
@@ -168,15 +168,15 @@ async def load_config():
     else:
         AUTO_DELETE_MESSAGE_DURATION = int(AUTO_DELETE_MESSAGE_DURATION)
 
-    YT_DLP_QUALITY = environ.get('YT_DLP_QUALITY', '')
-    if len(YT_DLP_QUALITY) == 0:
-        YT_DLP_QUALITY = ''
+    YT_DLP_OPTIONS = environ.get('YT_DLP_OPTIONS', '')
+    if len(YT_DLP_OPTIONS) == 0:
+        YT_DLP_OPTIONS = ''
 
     SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
     SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
 
-    DUMP_CHAT = environ.get('DUMP_CHAT', '')
-    DUMP_CHAT = '' if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
+    DUMP_CHAT_ID = environ.get('DUMP_CHAT_ID', '')
+    DUMP_CHAT_ID = '' if len(DUMP_CHAT_ID) == 0 else int(DUMP_CHAT_ID)
 
     STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
     STATUS_LIMIT = 8 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
@@ -233,9 +233,6 @@ async def load_config():
     STOP_DUPLICATE = environ.get('STOP_DUPLICATE', '')
     STOP_DUPLICATE = STOP_DUPLICATE.lower() == 'true'
 
-    VIEW_LINK = environ.get('VIEW_LINK', '')
-    VIEW_LINK = VIEW_LINK.lower() == 'true'
-
     IS_TEAM_DRIVE = environ.get('IS_TEAM_DRIVE', '')
     IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == 'true'
 
@@ -288,8 +285,13 @@ async def load_config():
     if len(UPSTREAM_BRANCH) == 0:
         UPSTREAM_BRANCH = 'master'
 
-    LOG_CHAT = environ.get('LOG_CHAT', '')
-    LOG_CHAT = '' if len(LOG_CHAT) == 0 else int(LOG_CHAT)
+    LOG_CHAT_ID = environ.get('LOG_CHAT_ID', '')
+    if LOG_CHAT_ID.startswith('-100'):
+        LOG_CHAT_ID = int(LOG_CHAT_ID)
+    elif LOG_CHAT_ID.startswith('@'):
+        LOG_CHAT_ID = LOG_CHAT_ID.removeprefix('@')
+    else:
+        LOG_CHAT_ID = ''
 
     USER_MAX_TASKS = environ.get('USER_MAX_TASKS', '')
     USER_MAX_TASKS = '' if len(USER_MAX_TASKS) == 0 else int(USER_MAX_TASKS)
@@ -354,6 +356,12 @@ async def load_config():
     FSUB_IDS = environ.get('FSUB_IDS', '')
     if len(FSUB_IDS) == 0:
         FSUB_IDS = ''
+
+    TOKEN_TIMEOUT = environ.get('TOKEN_TIMEOUT', '')
+    if TOKEN_TIMEOUT.isdigit():
+        TOKEN_TIMEOUT = int(TOKEN_TIMEOUT)
+    else:
+        TOKEN_TIMEOUT = 3600
 
     list_drives.clear()
     categories.clear()
@@ -436,7 +444,7 @@ async def load_config():
         "DATABASE_URL": DATABASE_URL,
         "DEFAULT_UPLOAD": DEFAULT_UPLOAD,
         "DOWNLOAD_DIR": DOWNLOAD_DIR,
-        "DUMP_CHAT": DUMP_CHAT,
+        "DUMP_CHAT_ID": DUMP_CHAT_ID,
         "EQUAL_SPLITS": EQUAL_SPLITS,
         "EXTENSION_FILTER": EXTENSION_FILTER,
         "GDRIVE_ID": GDRIVE_ID,
@@ -475,12 +483,11 @@ async def load_config():
         "UPTOBOX_TOKEN": UPTOBOX_TOKEN,
         "USER_SESSION_STRING": USER_SESSION_STRING,
         "USE_SERVICE_ACCOUNTS": USE_SERVICE_ACCOUNTS,
-        "VIEW_LINK": VIEW_LINK,
         "WEB_PINCODE": WEB_PINCODE,
-        "YT_DLP_QUALITY": YT_DLP_QUALITY,
+        "YT_DLP_OPTIONS": YT_DLP_OPTIONS,
         "USER_MAX_TASKS": USER_MAX_TASKS,
         "FSUB_IDS": FSUB_IDS,
-        "LOG_CHAT": LOG_CHAT,
+        "LOG_CHAT_ID": LOG_CHAT_ID,
         "STORAGE_THRESHOLD": STORAGE_THRESHOLD,
         "TORRENT_LIMIT": TORRENT_LIMIT,
         "DIRECT_LIMIT": DIRECT_LIMIT,
@@ -498,6 +505,7 @@ async def load_config():
         "REQUEST_LIMITS": REQUEST_LIMITS,
         "DM_MODE": DM_MODE,
         "DELETE_LINKS": DELETE_LINKS,
+        "TOKEN_TIMEOUT": TOKEN_TIMEOUT
     }
     temp_dict = OrderedDict(sorted(temp_dict.items()))
     config_dict.update(temp_dict)
@@ -610,7 +618,7 @@ async def edit_variable(client, message, pre_message, key):
     elif key == 'DOWNLOAD_DIR':
         if not value.endswith('/'):
             value += '/'
-    elif key in ['DUMP_CHAT', 'RSS_CHAT_ID', 'LOG_CHAT']:
+    elif key in ['DUMP_CHAT_ID', 'RSS_CHAT_ID', 'LOG_CHAT_ID']:
         value = int(value)
     elif key == 'STATUS_UPDATE_INTERVAL':
         value = int(value)
@@ -753,12 +761,12 @@ async def update_private_file(client, message, pre_message):
             if GDRIVE_ID := config_dict['GDRIVE_ID']:
                 categories['Root'] = {"drive_id": GDRIVE_ID,
                                       "index_link": config_dict['INDEX_URL']}
-        elif file_name == ['list_drives.txt', 'list_drives']:
+        elif file_name in ['list_drives.txt', 'list_drives']:
             list_drives.clear()
             if GDRIVE_ID := config_dict['GDRIVE_ID']:
                 list_drives['Main'] = {"drive_id": GDRIVE_ID,
                                        "index_link": config_dict['INDEX_URL']}
-        elif file_name == ['shorteners.txt', 'shorteners']:
+        elif file_name in ['shorteners.txt', 'shorteners']:
             SHORTENERES.clear()
             SHORTENER_APIS.clear()
         await message.delete()
@@ -1039,7 +1047,7 @@ async def edit_bot_settings(client, query):
         await event_handler(client, query, pfunc, rfunc)
     elif data[1] == 'editaria' and STATE == 'view':
         value = aria2_options[data[2]]
-        if len(value) > 200:
+        if len(str(value)) > 200:
             await query.answer()
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"

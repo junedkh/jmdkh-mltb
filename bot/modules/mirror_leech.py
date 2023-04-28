@@ -31,8 +31,9 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (anno_checker,
                                                       delete_links,
                                                       editMessage, isAdmin,
+                                                      isBot_canDm,
                                                       open_category_btns,
-                                                      sendDmMessage,
+                                                      request_limiter,
                                                       sendLogMessage,
                                                       sendMessage)
 
@@ -89,7 +90,8 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
             if len(message_args) > index:
                 x = message_args[index].strip()
                 if not x.startswith(('n:', 'pswd:', 'up:', 'rcf:', 'id:', 'index:')):
-                    link = re_split(r' pswd: | n: | up: | rcf: | id: | index: ', x)[0].strip()
+                    link = re_split(r' pswd: | n: | up: | rcf: | id: | index: ', x)[
+                        0].strip()
 
         if len(folder_name) > 0:
             seed = False
@@ -190,23 +192,36 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
     if not message.from_user:
         await delete_links(message)
         return
+    error_msg = []
+    error_button = None
     if not await isAdmin(message):
+        if await request_limiter(message):
+            await delete_links(message)
+            return
         raw_url = await stop_duplicate_tasks(message, link, file_)
         if raw_url == 'duplicate_tasks':
             await delete_links(message)
             return
-        if await none_admin_utils(message, tag, isLeech):
-            return
+        none_admin_msg, error_button = await none_admin_utils(message, isLeech)
+        if none_admin_msg:
+            error_msg.extend(none_admin_msg)
     if (dmMode := config_dict['DM_MODE']) and message.chat.type == message.chat.type.SUPERGROUP:
-        if isLeech and IS_PREMIUM_USER and not config_dict['DUMP_CHAT']:
-            await delete_links(message)
-            return await sendMessage(message, 'DM_MODE and User Session need DUMP_CHAT')
-        dmMessage = await sendDmMessage(message, dmMode, isLeech)
-        if dmMessage == 'BotNotStarted':
-            await delete_links(message)
-            return
+        if isLeech and IS_PREMIUM_USER and not config_dict['DUMP_CHAT_ID']:
+            error_msg.append('DM_MODE and User Session need DUMP_CHAT_ID')
+        dmMessage, error_button = await isBot_canDm(message, dmMode, isLeech, error_button)
+        if dmMessage is not None and dmMessage != 'BotStarted':
+            error_msg.append(dmMessage)
     else:
         dmMessage = None
+    if error_msg:
+        final_msg = f'Hey, <b>{tag}</b>,\n'
+        for __i, __msg in enumerate(error_msg, 1):
+            final_msg += f'\n<b>{__i}</b>: {__msg}\n'
+        if error_button is not None:
+            error_button = error_button.build_menu(2)
+        await delete_links(message)
+        await sendMessage(message, final_msg, error_button)
+        return
     logMessage = await sendLogMessage(message, link, tag)
 
     if link:

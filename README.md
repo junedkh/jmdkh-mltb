@@ -1,15 +1,20 @@
 This is a Telegram Bot written in Python for mirroring files on the Internet to your Google Drive or Telegram. Based on [python-aria-mirror-bot](https://github.com/lzzy12/python-aria-mirror-bot)
 
-# Features:
+# Features
 
 ## By [anasty17](https://github.com/anasty17)
+
 In each single file there is a major change from base code, it's almost totaly different. Here some of features and fixes that I remember.
+
 ### qBittorrent
+
 - Qbittorrent support
 - Select files from Torrent before and while downloading
 - Seed torrents to specific ratio and time
 - Edit Global Options while bot running from bot settings
+
 ### Aria2c
+
 - Select files from Torrent before and while downloading
 - Seed torrents to specific ratio and time
 - Netrc support
@@ -17,16 +22,21 @@ In each single file there is a major change from base code, it's almost totaly d
 - Improve aria.sh
 - Fix all download listener functions and status
 - Edit Global Options while bot running from bot settings
+
 ### Leech
+
 - Leech support
 - Splitting
 - Thumbnail for each user
+- Leech filename prefix for each user.
 - Set upload as document or as media for each user
 - 4GB file upload with premium account also available in DM feature
 - Upload all files to specific superGroup/channel.
 - Leech Split size and equal split size settings for each user
 - Ability to leech splitted file parts in media group. Setting for each user
+
 ### Google
+
 - Stop duplicates for all tasks except yt-dlp tasks
 - Download from Google Drive
 - Counting Google Drive files/folders
@@ -34,7 +44,9 @@ In each single file there is a major change from base code, it's almost totaly d
 - Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method). Based on [Sreeraj](https://github.com/SVR666) searchX-bot.
 - Use Token.pickle if file not found with Service Account, for all Gdrive functions
 - Random Service Account for each task
+
 ### Status
+
 - Clone Status
 - Extract Status
 - Archive Status
@@ -44,42 +56,59 @@ In each single file there is a major change from base code, it's almost totaly d
 - Cancel all buttons for choosing specific tasks status to cancel
 - Fix flooding issues
 - Fix overall upload and download speed
+
 ### Yt-dlp
+
 - Switch from youtube-dl to yt-dlp and fix all conflicts
 - Yt-dlp quality buttons
 - Ability to use specific yt-dlp option for each task
-- Custom default video quality for each user
+- Custom default yt-dlp options for each user
 - Fix download progress
+- Embed original thumbnail and add it for leech
+- All supported audio formats
+
 ### Database
+
 - Mongo Database support
 - Store bot settings
 - Store user settings including thumbnails and rclone config in database
 - Store private files
 - Store RSS data
 - Store incompleted task messages
+
 ### Torrents Search
+
 - Torrent search support
 - Search on torrents with Torrent Search API
 - Search on torrents with variable plugins using qBittorrent search engine
+
 ### Archives
+
 - Zip instead of tar
 - Using 7-zip tool to extract all supported types
 - Extract rar, zip and 7z within folder or splits with or without password
 - Zip file/folder with or without password
+
 ### RSS
+
 - Rss feed. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
 - Filters added
 - Edit any feed while running: pause, resume, edit command and edit filters
 - Rss for each user with tag
 - Sudo settings to control users feeds
 - All functions have been improved using buttons from one command.
+
 ### Rclone
-- Download and Upload using rclone
+
+- Download and Upload using rclone with and without service accounts
 - Ability to choose config, remote and path from list with buttons
-- Ability to set rclone flags
+- Ability to set rclone flags for each task or globally from config
 - Rclone.conf for each user
+- Clone server-side
 - Rclone serve for combine remote to use it as index from all remotes
+
 ### Overall
+
 - Docker image support for linux `amd64, arm64/v8, arm/v7`
 - Switch from sync to async
 - SWitch from python-telegram-bot to pyrogram
@@ -91,12 +120,13 @@ In each single file there is a major change from base code, it's almost totaly d
 - Custom name for all links except torrents. For files you should add extension except yt-dlp links
 - Extensions Filter for the files to be uploaded/cloned
 - View Link button. Extra button to open index link in broswer instead of direct download for file
-- Queueing System
+- Queueing System for all tasks
 - Ability to zip/unzip multi links in same directory. Mostly helpful in unziping tg file parts
 - Almost all repository functions have been improved and many other details can't mention all of them
 - Many bugs have been fixed
 
 ## From Base and other Repositories
+
 - Mirror direct download links, Torrent, Mega.nz and Telegram files to Google Drive
 - Copy files from someone's Drive to your Drive
 - Download/Upload progress, Speeds and ETAs
@@ -140,6 +170,7 @@ In each single file there is a major change inspire from base code by my friend 
 - Enable/Disable drive links
 - Enable/Disable leech function
 - Mirror/Clone log chat
+- Token needed on every request until time out
 
 
 ### Extra
@@ -151,25 +182,33 @@ In each single file there is a major change inspire from base code by my friend 
 
 - Tutorial Video from A to Z:
   - Thanks to [Wiszky](https://github.com/vishnoe115)
+
  <p><a href="https://youtu.be/IUmq1paCiHI"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
 ### 1. Installing requirements
 
 - Clone this repo:
+
 ```
 git clone https://github.com/junedkh/jmdkh-mltb mirrorbot/ && cd mirrorbot
 ```
+
 - For Debian based distros
+
 ```
 sudo apt install python3 python3-pip
 ```
+
 Install Docker by following the [official Docker docs](https://docs.docker.com/engine/install/debian/)
 
 - For Arch and it's derivatives:
+
 ```
 sudo pacman -S docker python
 ```
+
 - Install dependencies for running setup scripts:
+
 ```
 pip3 install -r requirements-cli.txt
 ```
@@ -181,18 +220,21 @@ pip3 install -r requirements-cli.txt
 ```
 cp config_sample.env config.env
 ```
+
 - Remove the first line saying:
+
 ```
 _____REMOVE_THIS_LINE_____=True
 ```
+
 Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: All values must be filled between quotes, even if it's `Int`, `Bool` or `List`.
 
 **1. Required Fields**
 
 - `BOT_TOKEN`: The Telegram Bot Token that you got from [@BotFather](https://t.me/BotFather). `Str`
 - `OWNER_ID`: The Telegram User ID (not username) of the Owner of the bot. `Int`
-- `TELEGRAM_API`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org. `Int`
-- `TELEGRAM_HASH`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org. `Str`
+- `TELEGRAM_API`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from <https://my.telegram.org>. `Int`
+- `TELEGRAM_HASH`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from <https://my.telegram.org>. `Str`
 
 **2. Optional Fields**
 
@@ -209,14 +251,15 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `EXTENSION_FILTER`: File extensions that won't upload/clone. Separate them by space. `Str`
 - `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and superGroup. Default is `False`. `Bool`
 - `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account). `str`
-- `YT_DLP_QUALITY`: Default yt-dlp quality. Check all possible formats [HERE](https://github.com/yt-dlp/yt-dlp#filtering-formats). `str`
+- `YT_DLP_OPTIONS`: Default yt-dlp options. Check all possible options [HERE](https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184) or use this [script](https://t.me/mltb_official/177) to convert cli arguments to api options. Format: key:value|key:value|key:value. Add `^` before integer or float, some numbers must be numeric and some string. `str`
+  - Example: "format:bv*+mergeall[vcodec=none]|nocheckcertificate:True"
+- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work see [Using Service Accounts](#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
 
-### GDrirve Tools
+### GDrive Tools
 
 - `GDRIVE_ID`: This is the Folder/TeamDrive ID of the Google Drive OR `root` to which you want to upload all the mirrors using google-api-python-client. `Str`
 - `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive using google-api-python-client. Default is `False`. `Bool`
-- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
-- `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index. `Str`
+- `INDEX_URL`: Refer to <https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index>. `Str`
 - `STOP_DUPLICATE`: Bot will check file/folder name in Drive incase uploading to `GDRIVE_ID`. If it's present in Drive then downloading or cloning will be stopped. (**NOTE**: Item will be checked using name and not hash, so this feature is not perfect yet). Default is `False`. `Bool`
 
 ### Rclone
@@ -241,14 +284,14 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
 - `MEDIA_GROUP`: View Uploaded splitted file parts in media group. Default is `False`. `Bool`.
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
-- `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot id or your id!
+- `DUMP_CHAT_ID`: Chat ID to where leeched files would be uploaded. `Int`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot id or your id!
 
 ### qBittorrent/Aria2c
 
 - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds. `Int`
 - `BASE_URL`: Valid BASE URL where the bot is deployed to use torrent web files selection. Format of URL should be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this format `http://myip:port` (`http` and not `https`). `Str`
 - `BASE_URL_PORT`: Which is the **BASE_URL** Port. Default is `80`. `Int`
-- `WEB_PINCODE`: If empty or `False` means no more pincode required before selecting torrent files from web. `Bool`
+- `WEB_PINCODE`: Whether to ask for pincode before selecting files from torrent in web or not. Default is `False`. `Bool`.
   - **Qbittorrent NOTE**: If your facing ram issues then set limit for `MaxConnections`, decrease `AsyncIOThreadsCount`, set limit of `DiskWriteCacheSize` to `32` and decrease `MemoryWorkingSetLimit` from qbittorrent.conf or bsetting command.
 
 ### RSS
@@ -259,18 +302,14 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ### MEGA
 
-- `MEGA_EMAIL`: E-Mail ID used to sign up on mega.nz for using premium account. `Str`
+- `MEGA_EMAIL`: E-Mail used to sign-in on mega.nz for using premium account. `Str`
 - `MEGA_PASSWORD`: Password for mega.nz account. `Str`
 
 ### Queue System
 
-- `QUEUE_ALL`: Number of parallel tasks of downloads from (mega, telegram, yt-dlp, gdrive) + all uploads. For example if 20 task added and `QUEUE_ALL` is `8`, then the summation of uploading and downloading tasks are 8 and the rest in queue. `Int`. **NOTE**: if you want to fill `QUEUE_DOWNLOAD` or `QUEUE_UPLOAD`, then `QUEUE_ALL` value must be greater than or equal to the greatest one and less than or equal to summation of `QUEUE_UPLOAD` and `QUEUE_DOWNLOAD`.
-- `QUEUE_DOWNLOAD`: Number of parallel downloading tasks from mega, telegram, yt-dlp and gdrive. `Int`
+- `QUEUE_ALL`: Number of parallel tasks of downloads and uploads. For example if 20 task added and `QUEUE_ALL` is `8`, then the summation of uploading and downloading tasks are 8 and the rest in queue. `Int`. **NOTE**: if you want to fill `QUEUE_DOWNLOAD` or `QUEUE_UPLOAD`, then `QUEUE_ALL` value must be greater than or equal to the greatest one and less than or equal to summation of `QUEUE_UPLOAD` and `QUEUE_DOWNLOAD`.
+- `QUEUE_DOWNLOAD`: Number of all parallel downloading tasks. `Int`
 - `QUEUE_UPLOAD`: Number of all parallel uploading tasks. `Int`
-
-### Buttons
-
-- `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`. Compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. Default is `False`. `Bool`
 
 ### Torrent Search
 
@@ -303,6 +342,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `STOP_DUPLICATE_TASKS`: To enable stop duplicate task across multiple bots. `Bool`
   - **Note**: All bot must have added same database link.
 - `DISABLE_DRIVE_LINK`: To disable google drive link button in case you need it. `Bool`
+- `TOKEN_TIMEOUT`: Token timeout for each group member. Default is `21600` (six hours)
+  - **Note**: Token will embed with urlshorteners.
 
 ### Extra Features
 
@@ -312,37 +353,15 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `DM_MODE`: If then bot will send Mirrored/Leeched files in user's DM. Default is `off`. `Str`
   - **Note**: if value is `Mirror` it will send only mirrored files in DM. if value is `Leech` so it will send leeched files in DM. if value is `all` it will send Mirrored/Leeched files in DM
 - `DELETE_LINKS`: It will delete links on download start. Default is `False`. `Bool`
-- `LOG_CHAT`: Fill chat_id of the group/channel. It will send mirror/clone links in the log chat. `Int`
+- `LOG_CHAT_ID`: Fill chat_id of the group/channel. It will send mirror/clone links in the log chat. `Int`
   - **Note**: Bot should be added in the log chat as admin.
 
 ------
 
-### 3. Getting Google OAuth API credential file and token.pickle
-
-**NOTES**
-- Old authentication changed, now we can't use bot or replit to generate token.pickle. You need OS with a local browser. For example `Termux`.
-- Windows users should install python3 and pip. You can find how to install and use them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
-- You can ONLY open the generated link from `generate_drive_token.py` in local browser.
-
-1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
-2. Go to the OAuth Consent tab, fill it, and save.
-3. Go to the Credentials tab and click Create Credentials -> OAuth Client ID
-4. Choose Desktop and Create.
-5. Publish your OAuth consent screen App to prevent **token.pickle** from expire
-6. Use the download button to download your credentials.
-7. Move that file to the root of mirrorbot, and rename it to **credentials.json**
-8. Visit [Google API page](https://console.developers.google.com/apis/library)
-9. Search for Google Drive Api and enable it
-10. Finally, run the script to generate **token.pickle** file for Google Drive:
-```
-pip3 install google-api-python-client google-auth-httplib2 google-auth-oauthlib
-python3 generate_drive_token.py
-```
-------
-
-### 4. Build And Run the Docker Image
+### 3. Build And Run the Docker Image
 
 Make sure you still mount the app folder and installed the docker from official documentation.
+
 - There are two methods to build and run the docker:
   1. Using official docker commands.
   2. Using docker-compose. (Recommended)
@@ -352,21 +371,29 @@ Make sure you still mount the app folder and installed the docker from official 
 #### Build And Run The Docker Image Using Official Docker Commands
 
 - Start Docker daemon (SKIP if already running, mostly you don't need to do this):
+
 ```
 sudo dockerd
 ```
+
 - Build Docker image:
+
 ```
 sudo docker build . -t mltb
 ```
+
 - Run the image:
+
 ```
 sudo docker run -p 80:80 -p 8080:8080 mltb
 ```
+
 - To stop the running image:
+
 ```
 sudo docker ps
 ```
+
 ```
 sudo docker stop id
 ```
@@ -378,30 +405,43 @@ sudo docker stop id
 **NOTE**: If you want to use ports other than 80 and 8080 for torrent file selection and rclone serve respectively, change it in [docker-compose.yml](docker-compose.yml) also.
 
 - Install docker-compose
+
 ```
 sudo apt install docker-compose
 ```
+
 - Build and run Docker image or to view current running image:
+
 ```
 sudo docker-compose up
 ```
+
 - After editing files with nano for example (nano start.sh):
+
 ```
 sudo docker-compose up --build
 ```
+
 - To stop the running image:
+
 ```
 sudo docker-compose stop
 ```
+
 - To run the image:
+
 ```
 sudo docker-compose start
 ```
+
 - To get latest log from already running image (after mounting the folder):
+
 ```
 sudo docker-compose up
 ```
+
 - Tutorial video from Tortoolkit repo for docker-compose and checking ports
+
 <p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
 ------
@@ -409,16 +449,21 @@ sudo docker-compose up
 #### Docker Notes
 
 **IMPORTANT NOTES**:
+
 1. Set `BASE_URL_PORT` and `RCLONE_SERVE_PORT` variables to any port you want to use. Default is `80` and `8080` respectively.
 2. You should stop the running image before deleting the container and you should delete the container before the image.
 3. To delete the container (this will not affect on the image):
+
 ```
 sudo docker container prune
 ```
+
 4. To delete the images:
+
 ```
 sudo docker image prune -a
 ```
+
 5. Check the number of processing units of your machine with `nproc` cmd and times it by 4, then edit `AsyncIOThreadsCount` in qBittorrent.conf.
 
 ------
@@ -441,6 +486,7 @@ qbleech - or /ql Leech torrent using qBittorrent
 qbzipleech - or /qzl Leech torrent using qb and upload as zip
 qbunzipleech - or /quzl Leech torrent using qb and extract
 clone - Copy file/folder to Drive
+count - Count file/folder from Drive
 ytdl - or /y Mirror yt-dlp supported link
 ytdlzip - or /yz Mirror yt-dlp supported link as zip
 ytdlleech - or /yl Leech through yt-dlp supported link
@@ -454,8 +500,43 @@ search - Search for torrents with API
 cancel - Cancel a task
 cancelall - Cancel all tasks
 stats - Bot Usage Stats
+ping - Ping the Bot
 help - All cmds with description
 ```
+
+------
+
+## Getting Google OAuth API credential file and token.pickle
+
+**NOTES**
+
+- Old authentication changed, now we can't use bot or replit to generate token.pickle. You need OS with a local browser. For example `Termux`.
+- Windows users should install python3 and pip. You can find how to install and use them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
+- You can ONLY open the generated link from `generate_drive_token.py` in local browser.
+
+1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
+2. Go to the OAuth Consent tab, fill it, and save.
+3. Go to the Credentials tab and click Create Credentials -> OAuth Client ID
+4. Choose Desktop and Create.
+5. Publish your OAuth consent screen App to prevent **token.pickle** from expire
+6. Use the download button to download your credentials.
+7. Move that file to the root of mirrorbot, and rename it to **credentials.json**
+8. Visit [Google API page](https://console.developers.google.com/apis/library)
+9. Search for Google Drive Api and enable it
+10. Finally, run the script to generate **token.pickle** file for Google Drive:
+
+```
+pip3 install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+python3 generate_drive_token.py
+```
+
+------
+
+## Getting rclone.conf
+
+1. Install rclone from [Official Site](https://rclone.org/install/)
+2. Create new remote(s) using `rclone config` command.
+3. Copy rclone.conf from .config/rclone/rclone.conf to repo folder
 
 ------
 
@@ -464,8 +545,10 @@ help - All cmds with description
 - `RCLONE_PATH` is like `GDRIVE_ID` a default path for mirror. In additional to those variables `DEFAULT_UPLOAD` to choose the default tool whether it's rclone or google-api-python-client.
 - If `DEFAULT_UPLOAD` = 'rc' then you must fill `RCLONE_PATH` with path as default one or with `rcl` to select destination path on each new task.
 - If `DEFAULT_UPLOAD` = 'gd' then you must fill `GDRIVE_ID` with folder/TD id.
+- rclone.conf can be added before deploy like token.pickle to repo folder root or use bsetting to upload it as private file.
 - If rclone.conf uploaded from usetting or added in `rclone/{user_id}.conf` then `RCLONE_PATH` must start with `mrcc:`.
 - Whenever you want to write path manually to use user rclone.conf that added from usetting then you must add the `mrcc:` at the beginning.
+- So in short, up: has 4 possible values which is: gd(Upload to GDRIVE_ID), rc(Upload to RCLONE_PATH), rcl(Select Rclone Path) and rclone_path(remote:path(owner rclone.conf) or mrcc:remote:path(user rclone.conf))
 
 ------
 
@@ -503,74 +586,98 @@ help - All cmds with description
 >**NOTE**: Using Service Accounts is only recommended while uploading to a Team Drive.
 
 ### 1. Generate Service Accounts. [What is Service Account?](https://cloud.google.com/iam/docs/service-accounts)
+
 Let us create only the Service Accounts that we need.
 
 **Warning**: Abuse of this feature is not the aim of this project and we do **NOT** recommend that you make a lot of projects, just one project and 100 SAs allow you plenty of use, its also possible that over abuse might get your projects banned by Google.
 
 >**NOTE**: If you have created SAs in past from this script, you can also just re download the keys by running:
+
 ```
 python3 gen_sa_accounts.py --download-keys $PROJECTID
 ```
+
 >**NOTE:** 1 Service Account can upload/copy around 750 GB a day, 1 project can make 100 Service Accounts so you can upload 75 TB a day.
 
 >**NOTE:** All people can copy `2TB/DAY` from each file creator (uploader account), so if you got error `userRateLimitExceeded` that doesn't mean your limit exceeded but file creator limit have been exceeded which is `2TB/DAY`.
 
 #### Two methods to create service accounts
+
 Choose one of these methods
 
 ##### 1. Create Service Accounts in existed Project (Recommended Method)
+
 - List your projects ids
+
 ```
 python3 gen_sa_accounts.py --list-projects
 ```
+
 - Enable services automatically by this command
+
 ```
 python3 gen_sa_accounts.py --enable-services $PROJECTID
 ```
+
 - Create Sevice Accounts to current project
+
 ```
 python3 gen_sa_accounts.py --create-sas $PROJECTID
 ```
+
 - Download Sevice Accounts as accounts folder
+
 ```
 python3 gen_sa_accounts.py --download-keys $PROJECTID
 ```
 
 ##### 2. Create Service Accounts in New Project
+
 ```
 python3 gen_sa_accounts.py --quick-setup 1 --new-only
 ```
+
 A folder named accounts will be created which will contain keys for the Service Accounts.
 
 ### 2. Add Service Accounts
 
 #### Two methods to add service accounts
+
 Choose one of these methods
 
 ##### 1. Add Them To Google Group then to Team Drive (Recommended)
 
 - Mount accounts folder
+
 ```
 cd accounts
 ```
+
 - Grab emails form all accounts to emails.txt file that would be created in accounts folder
 - `For Windows using PowerShell`
+
 ```
 $emails = Get-ChildItem .\**.json |Get-Content -Raw |ConvertFrom-Json |Select -ExpandProperty client_email >>emails.txt
 ```
+
 - `For Linux`
+
 ```
 grep -oPh '"client_email": "\K[^"]+' *.json > emails.txt
 ```
+
 - Unmount acounts folder
+
 ```
 cd ..
 ```
+
 Then add emails from emails.txt to Google Group, after that add this Google Group to your Shared Drive and promote it to manager and delete email.txt file from accounts folder
 
 ##### 2. Add Them To Team Drive Directly
 
 - Run:
+
 ```
 python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 ```
@@ -589,13 +696,16 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 ------
 
 ## Multi Drive List
+
 To use list from multi TD/folder. Run driveid.py in your terminal and follow it. It will generate **list_drives.txt** file or u can simply create `list_drives.txt` file in working directory and fill it, check below format:
+
 ```
 DriveName folderID/tdID or `root` IndexLink(if available)
 DriveName folderID/tdID or `root` IndexLink(if available)
 ```
 
 Example:
+
 ```
 TD1 root https://example.dev
 TD2 0AO1JDB1t3i5jUk9PVA https://example.dev
@@ -648,6 +758,7 @@ Master_❤️ https://github.com/anasty17
 Updates https://t.me/JMDKH_Team
 ```
 - **Note**: If you want to add space in button name use `_` for add space
+
 -----
 
 ## Yt-dlp and Aria2c Authentication Using .netrc File
@@ -657,21 +768,27 @@ For using your premium accounts in yt-dlp or for protected Index Links, create .
 **Note**: Create .netrc and not netrc, this file will be hidden, so view hidden files to edit it after creation.
 
 Format:
+
 ```
 machine host login username password my_password
 ```
+
 Example:
+
 ```
 machine instagram login anas.tayyar password mypassword
 ```
+
 **Instagram Note**: You must login even if you want to download public posts and after first try you must confirm that this was you logged in from different ip(you can confirm from phone app).
 
 **Youtube Note**: For `youtube` authentication use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
 
 Using Aria2c you can also use built in feature from bot with or without username. Here example for index link without username.
+
 ```
 machine example.workers.dev password index_password
 ```
+
 Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts of different hosts can be added each separated by a new line.
 
 -----

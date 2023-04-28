@@ -11,11 +11,10 @@ from aiofiles.os import path as aiopath
 from aiofiles.os import remove as aioremove
 from aioshutil import move
 
-from bot import (DATABASE_URL, DOWNLOAD_DIR, LOGGER, MAX_SPLIT_SIZE,
-                 SHORTENERES, Interval, aria2, config_dict, download_dict,
-                 download_dict_lock, non_queued_dl, non_queued_up,
-                 queue_dict_lock, queued_dl, queued_up, status_reply_dict_lock,
-                 user_data)
+from bot import (DATABASE_URL, DOWNLOAD_DIR, LOGGER, MAX_SPLIT_SIZE, Interval,
+                 aria2, config_dict, download_dict, download_dict_lock,
+                 non_queued_dl, non_queued_up, queue_dict_lock, queued_dl,
+                 queued_up, status_reply_dict_lock, user_data)
 from bot.helper.ext_utils.bot_utils import (extra_btns, get_readable_file_size,
                                             get_readable_time, sync_to_async)
 from bot.helper.ext_utils.db_handler import DbManger
@@ -25,7 +24,6 @@ from bot.helper.ext_utils.fs_utils import (clean_download, clean_target,
                                            is_archive, is_archive_split,
                                            is_first_archive_split)
 from bot.helper.ext_utils.leech_utils import split_file
-from bot.helper.ext_utils.shortener import short_url
 from bot.helper.ext_utils.task_manager import start_from_queued
 from bot.helper.mirror_utils.rclone_utils.transfer import RcloneTransferHelper
 from bot.helper.mirror_utils.status_utils.extract_status import ExtractStatus
@@ -40,6 +38,7 @@ from bot.helper.mirror_utils.upload_utils.pyrogramEngine import TgUploader
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import (delete_all_messages,
                                                       delete_links,
+                                                      send_to_chat,
                                                       sendMessage,
                                                       update_all_messages)
 
@@ -121,6 +120,8 @@ class MirrorLeechListener:
             self.extra_details['source'] = f"<i>{source}</i>"
 
     async def onDownloadStart(self):
+        if self.dmMessage == 'BotStarted':
+            self.dmMessage = await send_to_chat(self.message._client, self.message.from_user.id, self.message.link)
         if DATABASE_URL and config_dict['STOP_DUPLICATE_TASKS'] and self.raw_url:
             await DbManger().add_download_url(self.raw_url, self.tag)
         if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
@@ -365,9 +366,9 @@ class MirrorLeechListener:
             await DbManger().remove_download(self.raw_url)
         if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             await DbManger().rm_complete_task(self.message.link)
+        msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{get_readable_file_size(size)}"
         LOGGER.info(f'Task Done: {name}')
         if self.isLeech:
-            msg = f'<b>Name</b>: <code>{escape(name)}</code>\n\n<b>Size</b>: {get_readable_file_size(size)}'
             msg += f'\n<b>Total Files</b>: {folders}'
             msg += f"\n<b>Elapsed</b>: {get_readable_time(time() - self.extra_details['startTime'])}"
             if mime_type != 0:
@@ -378,7 +379,7 @@ class MirrorLeechListener:
                 await sendMessage(self.message, msg)
                 if self.logMessage:
                     await sendMessage(self.logMessage, msg)
-            elif self.dmMessage and not config_dict['DUMP_CHAT']:
+            elif self.dmMessage and not config_dict['DUMP_CHAT_ID']:
                 await sendMessage(self.dmMessage, msg)
                 msg += '<b>Files has been sent in your DM.</b>'
                 await sendMessage(self.message, msg)
@@ -411,10 +412,6 @@ class MirrorLeechListener:
                 await start_from_queued()
                 return
         else:
-            if SHORTENERES:
-                msg = f'<b>Name</b>: <code>.{escape(name).replace(" ", "-").replace(".", ",")}</code>\n\n<b>Size</b>: {get_readable_file_size(size)}'
-            else:
-                msg = f'<b>Name</b>: <code>{escape(name)}</code>\n\n<b>Size</b>: {get_readable_file_size(size)}'
             msg += f'\n\n<b>Type: </b>{mime_type}'
             if mime_type == "Folder":
                 msg += f'\n<b>SubFolders: </b>{folders}'
@@ -427,7 +424,6 @@ class MirrorLeechListener:
                 buttons = ButtonMaker()
                 if link:
                     if not config_dict['DISABLE_DRIVE_LINK']:
-                        link = await sync_to_async(short_url, link)
                         buttons.ubutton("🔐 Drive Link", link)
                 else:
                     msg += f'\n\nPath: <code>{rclonePath}</code>'
@@ -437,7 +433,6 @@ class MirrorLeechListener:
                     share_url = f'{RCLONE_SERVE_URL}/{remote}/{url_path}'
                     if mime_type == "Folder":
                         share_url += '/'
-                    share_url = await sync_to_async(short_url, share_url)
                     buttons.ubutton("🔗 Rclone Link", share_url)
                 elif not rclonePath:
                     INDEX_URL = self.index_link if self.drive_id else config_dict['INDEX_URL']
@@ -446,14 +441,11 @@ class MirrorLeechListener:
                         share_url = f'{INDEX_URL}/{url_path}'
                         if mime_type == "Folder":
                             share_url += '/'
-                            share_url = await sync_to_async(short_url, share_url)
                             buttons.ubutton("📁 Index Link", share_url)
                         else:
-                            share_url = await sync_to_async(short_url, share_url)
                             buttons.ubutton("⚡ Index Link", share_url)
-                            if config_dict['VIEW_LINK']:
+                            if mime_type.startswith(('image', 'video', 'audio')):
                                 share_urls = f'{INDEX_URL}/{url_path}?a=view'
-                                share_urls = await sync_to_async(short_url, share_urls)
                                 buttons.ubutton("🌐 View Link", share_urls)
                 buttons = extra_btns(buttons)
                 if self.dmMessage:
@@ -466,7 +458,6 @@ class MirrorLeechListener:
                     await sendMessage(self.message, msg, buttons.build_menu(2))
                 if self.logMessage:
                     if link and config_dict['DISABLE_DRIVE_LINK']:
-                        link = await sync_to_async(short_url, link)
                         buttons.ubutton("🔐 Drive Link", link, 'header')
                     await sendMessage(self.logMessage, msg, buttons.build_menu(2))
             else:
