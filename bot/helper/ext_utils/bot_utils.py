@@ -302,8 +302,8 @@ def checking_access(user_id, button=None):
         user_data[user_id].update(data)
         if button is None:
             button = ButtonMaker()
-        button.ubutton('Get access', short_url(f'https://t.me/{bot_name}?start={token}'))
-        return 'Token is expired.', button
+        button.ubutton('Refresh Token', short_url(f'https://t.me/{bot_name}?start={token}'))
+        return 'Token is expired, refresh your token and try again.', button
     return None, button
 
 
