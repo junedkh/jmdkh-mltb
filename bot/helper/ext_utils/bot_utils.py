@@ -290,6 +290,8 @@ async def check_user_tasks(user_id, maxtask):
 
 
 def checking_access(user_id, button=None):
+    if config_dict['TOKEN_TIMEOUT'] == 0:
+        return None, button
     user_data.setdefault(user_id, {})
     data = user_data[user_id]
     expire = data.get('time')
