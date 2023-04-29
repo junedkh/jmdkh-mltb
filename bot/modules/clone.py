@@ -9,7 +9,7 @@ from aiofiles.os import path as aiopath
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
 
-from bot import (LOGGER, bot, categories, config_dict, download_dict,
+from bot import (LOGGER, bot, categories_dict, config_dict, download_dict,
                  download_dict_lock)
 from bot.helper.ext_utils.bot_utils import (cmd_exec, get_telegraph_list,
                                             is_gdrive_link, is_rclone_path,
@@ -334,7 +334,7 @@ async def clone(client, message):
                                        index_link=index_link, dmMessage=dmMessage, logMessage=logMessage, raw_url=raw_url)
         await rcloneNode(client, message, link, dst_path, rcf, listener)
     else:
-        if not drive_id and len(categories) > 1:
+        if not drive_id and len(categories_dict) > 1:
             drive_id, index_link = await open_category_btns(message)
         if drive_id and not await sync_to_async(GoogleDriveHelper().getFolderData, drive_id):
             await sendMessage(message, "Google Drive id validation failed!!")

@@ -7,7 +7,7 @@ from pyrogram.errors import (FloodWait, PeerIdInvalid, RPCError,
                              UserNotParticipant)
 from pyrogram.types import ChatPermissions
 
-from bot import (LOGGER, Interval, bot, bot_name, btn_listener, categories,
+from bot import (LOGGER, Interval, bot, bot_name, cached_dict, categories_dict,
                  config_dict, download_dict_lock, status_reply_dict,
                  status_reply_dict_lock, user)
 from bot.helper.ext_utils.bot_utils import (get_readable_message, setInterval,
@@ -291,15 +291,15 @@ async def anno_checker(message):
     buttons.ibutton('Verify', f'verify admin {msg_id}')
     buttons.ibutton('Cancel', f'verify no {msg_id}')
     user = None
-    btn_listener[msg_id] = user
+    cached_dict[msg_id] = user
     await sendMessage(message, f'{message.sender_chat.type.name} Verification\nIf you hit Verify! Your username and id will expose in bot logs!', buttons.build_menu(2))
     start_time = time()
     while time() - start_time <= 7:
         await sleep(0.5)
-        if btn_listener[msg_id]:
+        if cached_dict[msg_id]:
             break
-    user = btn_listener[msg_id]
-    del btn_listener[msg_id]
+    user = cached_dict[msg_id]
+    del cached_dict[msg_id]
     return user
 
 
@@ -307,19 +307,19 @@ async def open_category_btns(message):
     user_id = message.from_user.id
     msg_id = message.id
     buttons = ButtonMaker()
-    for _name in categories.keys():
+    for _name in categories_dict.keys():
         buttons.ibutton(f'{_name}', f'scat {user_id} {msg_id} {_name}')
     prompt = await sendMessage(message, '<b>Select the category where you want to upload</b>', buttons.build_menu(2))
-    btn_listener[msg_id] = [None, None]
+    cached_dict[msg_id] = [None, None]
     start_time = time()
     while time() - start_time <= 30:
         await sleep(0.5)
-        if btn_listener[msg_id][0]:
+        if cached_dict[msg_id][0]:
             break
-    drive_id = btn_listener[msg_id][0]
-    index_link = btn_listener[msg_id][1]
+    drive_id = cached_dict[msg_id][0]
+    index_link = cached_dict[msg_id][1]
     await deleteMessage(prompt)
-    del btn_listener[msg_id]
+    del cached_dict[msg_id]
     return drive_id, index_link
 
 

@@ -8,7 +8,7 @@ from aiofiles.os import path as aiopath
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
 
-from bot import IS_PREMIUM_USER, LOGGER, bot, categories, config_dict
+from bot import IS_PREMIUM_USER, LOGGER, bot, categories_dict, config_dict
 from bot.helper.ext_utils.bot_utils import (get_content_type, is_gdrive_link,
                                             is_magnet, is_mega_link,
                                             is_rclone_path, is_url, new_task,
@@ -251,7 +251,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
             up = config_dict['RCLONE_PATH']
         if up is None and config_dict['DEFAULT_UPLOAD'] == 'gd':
             up = 'gd'
-            if not drive_id and len(categories) > 1:
+            if not drive_id and len(categories_dict) > 1:
                 drive_id, index_link = await open_category_btns(message)
             if drive_id and not await sync_to_async(GoogleDriveHelper().getFolderData, drive_id):
                 return await sendMessage(message, "Google Drive id validation failed!!")

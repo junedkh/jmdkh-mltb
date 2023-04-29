@@ -10,7 +10,7 @@ from pyrogram.filters import command, regex, user
 from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 from yt_dlp import YoutubeDL
 
-from bot import (DOWNLOAD_DIR, IS_PREMIUM_USER, LOGGER, bot, config_dict,
+from bot import (DOWNLOAD_DIR, IS_PREMIUM_USER, LOGGER, bot, config_dict, categories_dict,
                  user_data)
 from bot.helper.ext_utils.bot_utils import (get_readable_file_size,
                                             get_readable_time, is_gdrive_link,
@@ -414,7 +414,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
             up = config_dict['RCLONE_PATH']
         if up is None and config_dict['DEFAULT_UPLOAD'] == 'gd':
             up = 'gd'
-            if not drive_id and len(categories) > 1:
+            if not drive_id and len(categories_dict) > 1:
                 drive_id, index_link = await open_category_btns(message)
             if drive_id and not await sync_to_async(GoogleDriveHelper().getFolderData, drive_id):
                 return await sendMessage(message, "Google Drive id validation failed!!")
@@ -446,7 +446,8 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     if 'mdisk.me' in link:
         name, link = await _mdisk(link, name)
 
-    options = {'usenetrc': True, 'cookiefile': 'cookies.txt', 'playlist_items': '0'}
+    options = {'usenetrc': True,
+               'cookiefile': 'cookies.txt', 'playlist_items': '0'}
     if opt:
         yt_opt = opt.split('|')
         for ytopt in yt_opt:

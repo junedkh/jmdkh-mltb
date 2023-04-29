@@ -19,7 +19,7 @@ from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from tenacity import (RetryError, retry, retry_if_exception_type,
                       stop_after_attempt, wait_exponential)
 
-from bot import GLOBAL_EXTENSION_FILTER, config_dict, list_drives
+from bot import GLOBAL_EXTENSION_FILTER, config_dict, list_drives_dict
 from bot.helper.ext_utils.bot_utils import (async_to_sync,
                                             get_readable_file_size,
                                             setInterval)
@@ -560,11 +560,11 @@ class GoogleDriveHelper:
         contents_no = 0
         telegraph_content = []
         Title = False
-        if len(list_drives) > 1:
+        if len(list_drives_dict) > 1:
             token_service = self.__alt_authorize()
             if token_service is not None:
                 self.__service = token_service
-        for drive_name, drive_dict in list_drives.items():
+        for drive_name, drive_dict in list_drives_dict.items():
             dir_id = drive_dict['drive_id']
             index_url = drive_dict['index_link']
             isRecur = False if isRecursive and len(
