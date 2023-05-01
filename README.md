@@ -338,7 +338,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
   - **Note**: All bot must have added same database link.
 - `DISABLE_DRIVE_LINK`: To disable google drive link button in case you need it. `Bool`
 - `TOKEN_TIMEOUT`: Token timeout for each group member in sec. `Int`
-  - **Note**: This token system is linked with url shortners, users will have to go through ads to use bot commands (if `shorteners.txt` added, Read more about shortners.txt [Here](https://github.com/junedkh/jmdkh-mltb#multi-shortener) ).
+  - **Note**: This token system is linked with url shortners, users will have to go through ads to use bot commands (if `shorteners.txt` added, Read more about shorteners.txt [Here](https://github.com/junedkh/jmdkh-mltb#multi-shortener) ).
 
 ### Extra Features
 
