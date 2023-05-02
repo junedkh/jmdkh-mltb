@@ -43,8 +43,7 @@ async def stats(client, message):
     memory = virtual_memory()
     net_io = net_io_counters()
     if await aiopath.exists('.git'):
-        last_commit = await cmd_exec("git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'", True)
-        last_commit = last_commit[0]
+        last_commit = (await cmd_exec("git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'", True))[0]
     else:
         last_commit = 'No UPSTREAM_REPO'
     stats = f'<b>Commit Date</b>: {last_commit}\n\n'\
@@ -78,7 +77,7 @@ async def start(client, message):
         data['token'] = str(uuid4())
         data['time'] = time()
         user_data[userid].update(data)
-        return await sendMessage(message, 'Token refreshed successfully!')
+        return await sendMessage(message, Token refreshed successfully!\n\n<b>Valid for:</b> {config_dict["TOKEN_TIMEOUT"]}s')
     elif config_dict['DM_MODE']:
         start_string = 'Bot Started.\n' \
             'Now I will send your files and links here.\n'
