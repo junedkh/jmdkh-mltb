@@ -37,7 +37,7 @@ from .modules import (anonymous, authorize, bot_settings, cancel_mirror,
 start_aria2_listener()
 
 
-async def stats(client, message):
+async def stats(_, message):
     total, used, free, disk = disk_usage('/')
     swap = swap_memory()
     memory = virtual_memory()
@@ -66,7 +66,7 @@ async def stats(client, message):
     await sendMessage(message, stats)
 
 
-async def start(client, message):
+async def start(_, message):
     if len(message.command) > 1:
         userid = message.from_user.id
         input_token = message.command[1]
@@ -89,7 +89,7 @@ async def start(client, message):
     await sendMessage(message, start_string)
 
 
-async def restart(client, message):
+async def restart(_, message):
     restart_message = await sendMessage(message, "Restarting...")
     if scheduler.running:
         scheduler.shutdown(wait=False)
@@ -105,14 +105,14 @@ async def restart(client, message):
     osexecl(executable, executable, "-m", "bot")
 
 
-async def ping(client, message):
+async def ping(_, message):
     start_time = int(round(time() * 1000))
     reply = await sendMessage(message, "Starting Ping")
     end_time = int(round(time() * 1000))
     await editMessage(reply, f'{end_time - start_time} ms')
 
 
-async def log(client, message):
+async def log(_, message):
     await sendFile(message, 'log.txt')
 
 help_string = f'''
@@ -164,7 +164,7 @@ NOTE: Try each command without any argument to see more detalis.
 '''
 
 
-async def bot_help(client, message):
+async def bot_help(_, message):
     await sendMessage(message, help_string)
 
 

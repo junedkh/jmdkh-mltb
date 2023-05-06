@@ -48,7 +48,6 @@ async def cancel_mirror(client, message):
 cancel_listener = {}
 
 
-@new_task
 async def cancel_all(status, info, listOfTasks):
     user_id = info[0]
     msg = info[1]
@@ -72,7 +71,6 @@ async def cancel_all(status, info, listOfTasks):
         await editMessage(msg, _msg+new_msg)
 
 
-@new_task
 async def cancell_all_buttons(client, message):
     async with download_dict_lock:
         count = len(download_dict)
@@ -127,7 +125,7 @@ async def cancell_all_buttons(client, message):
 
 
 @new_task
-async def cancel_all_update(client, query):
+async def cancel_all_update(_, query):
     data = query.data.split()
     user_id = query.from_user.id
     data = query.data.split()
