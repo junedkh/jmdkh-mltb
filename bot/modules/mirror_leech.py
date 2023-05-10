@@ -191,12 +191,8 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
             reply_to.voice or reply_to.video_note or reply_to.sticker or reply_to.animation or None
         if sender_chat := reply_to.sender_chat:
             tag = sender_chat.title
-        elif not reply_to.from_user.is_bot:
-            if username := reply_to.from_user.username:
-                tag = f"@{username}"
-            else:
-                tag = reply_to.from_user.mention
-
+        elif (re_user := reply_to.from_user) and not re_user.is_bot:
+            tag = f"@{username}" if (username := re_user.username) else re_user.mention
         if len(link) == 0 or not is_url(link) and not is_magnet(link):
             if file_ is None:
                 reply_text = reply_to.text.split('\n', 1)[0].strip()
