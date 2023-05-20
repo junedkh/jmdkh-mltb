@@ -416,8 +416,11 @@ class MirrorLeechListener:
             if mime_type == "Folder":
                 msg += f'\n<b>SubFolders: </b>{folders}'
                 msg += f'\n<b>Files: </b>{files}'
-                drive_id = GoogleDriveHelper.getIdFromUrl(link)
-                msg += f"\n\n<b>Folder id</b>: <code>{drive_id}</code>"
+                try:
+                    drive_id = GoogleDriveHelper.getIdFromUrl(link)
+                    msg += f"\n\n<b>Folder id</b>: <code>{drive_id}</code>"
+                except:
+                    pass
             msg += f'\n\n<b>#cc</b>: {self.tag} | <b>Elapsed</b>: {get_readable_time(time() - self.extra_details["startTime"])}'
             msg += f"\n\n<b>Upload</b>: {self.extra_details['mode']}"
             if link or rclonePath and config_dict['RCLONE_SERVE_URL']:
