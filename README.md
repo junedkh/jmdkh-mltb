@@ -124,6 +124,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - View Link button. Extra button to open index link in broswer instead of direct download for file
 - Queueing System for all tasks
 - Ability to zip/unzip multi links in same directory. Mostly helpful in unziping tg file parts
+- Bulk download from telegram txt file or text message contains links seperated by new line
 - Almost all repository functions have been improved and many other details can't mention all of them
 - Many bugs have been fixed
 
@@ -799,14 +800,11 @@ Binance ID:
 ```
 52187862
 ```
-[!["Buy for Anas"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/anasty17)
 
 USDT Address: `TEzjjfkxLKQqndpsdpkA7jgiX7QQCL5p4f` Network: `TRC20`
 
 BTC Addrese: `17dkvxjqdc3yiaTs6dpjUB1TjV3tD7ScWe`
 
 ETH Address: `0xf798a8a1c72d593e16d8f3bb619ebd1a093c7309`
-
-UPI: `mltb-official@ybl`,`mltb-official@ibl`,`mltb-official@axl`
 
 -----
