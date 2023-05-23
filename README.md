@@ -793,6 +793,12 @@ Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts o
 
 <p> If you feel like showing your appreciation for this project by Anas, then how about buying me a coffee. for Anas</p>
 
+[!["Buy Me A Coffee"](https://storage.ko-fi.com/cdn/kofi2.png)](https://ko-fi.com/anasty17)
+
+Binance ID:
+```
+52187862
+```
 [!["Buy for Anas"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/anasty17)
 
 USDT Address: `TEzjjfkxLKQqndpsdpkA7jgiX7QQCL5p4f` Network: `TRC20`

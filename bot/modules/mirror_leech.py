@@ -37,10 +37,11 @@ from bot.helper.telegram_helper.message_utils import (anno_checker, delete_links
                                                       request_limiter,
                                                       sendLogMessage,
                                                       sendMessage)
+from bot.helper.ext_utils.bulk_links import extract_bulk_links
 
 
 @new_task
-async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir={}):
+async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir={}, bulk=[]):
     mesg = message.text.split('\n')
     message_args = mesg[0].split(maxsplit=1)
     ratio = None
@@ -53,13 +54,16 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
     reply_to = None
     file_ = None
     session = ''
+    is_bulk = False
+    index = 1
+    bulk_start = 0
+    bulk_end = 0
     raw_url = None
     drive_id = None
     index_link = None
     auth = ''
 
     if len(message_args) > 1:
-        index = 1
         args = mesg[0].split(maxsplit=5)
         args.pop(0)
         for x in args:
@@ -80,6 +84,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
             elif x.isdigit():
                 multi = int(x)
                 mi = index
+                index += 1
             elif x.startswith('m:'):
                 marg = x.split('m:', 1)
                 if len(marg) > 1:
@@ -87,9 +92,21 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
                     if not sameDir:
                         sameDir = set()
                     sameDir.add(message.id)
+            elif x == 'b':
+                is_bulk = True
+                bi = index
+                index += 1
+            elif x.startswith('b:'):
+                is_bulk = True
+                bi = index
+                index += 1
+                dargs = x.split(':')
+                bulk_start = dargs[1] or 0
+                if len(dargs) == 3:
+                    bulk_end = dargs[2] or 0
             else:
                 break
-        if multi == 0:
+        if multi == 0 or len(bulk) != 0:
             message_args = mesg[0].split(maxsplit=index)
             if len(message_args) > index:
                 x = message_args[index].strip()
@@ -102,15 +119,42 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
             ratio = None
             seed_time = None
 
+    if is_bulk:
+        bulk = await extract_bulk_links(message, bulk_start, bulk_end)
+        if len(bulk) == 0:
+            await sendMessage(message, 'Reply to text file or to tg message that have links seperated by new line!')
+            return
+        b_msg = message.text.split(maxsplit=bi)
+        b_msg[bi] = f'{len(bulk)}'
+        b_msg.insert(index, bulk[0].replace('\\n', '\n'))
+        b_msg = " ".join(b_msg)
+        nextmsg = await sendMessage(message, b_msg)
+        nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
+        nextmsg.from_user = message.from_user
+        _mirror_leech(client, nextmsg, isZip, extract,
+                      isQbit, isLeech, sameDir, bulk)
+        return
+
+    if len(bulk) != 0:
+        del bulk[0]
+
     @new_task
     async def __run_multi():
         if multi <= 1:
             return
         await sleep(4)
-        nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
         msg = message.text.split(maxsplit=mi+1)
         msg[mi] = f"{multi - 1}"
-        nextmsg = await sendMessage(nextmsg, " ".join(msg))
+        if len(bulk) != 0:
+            msg[index] = bulk[0]
+            msg = " ".join(msg)
+            nextmsg = await sendMessage(message, msg)
+        else:
+            msg = message.text.split(maxsplit=mi+1)
+            msg[mi] = f"{multi - 1}"
+            nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
+            nextmsg = await sendMessage(nextmsg, " ".join(msg))
+
         nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
         if len(folder_name) > 0:
             sameDir.add(nextmsg.id)
@@ -119,7 +163,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
             nextmsg.sender_chat = message.sender_chat
         await sleep(4)
         _mirror_leech(client, nextmsg, isZip, extract,
-                      isQbit, isLeech, sameDir)
+                      isQbit, isLeech, sameDir, bulk)
 
     __run_multi()
 
@@ -175,8 +219,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
         except Exception as e:
             await sendMessage(message, f'ERROR: {e}')
             return
-    elif message.reply_to_message:
-        reply_to = message.reply_to_message
+    elif len(link) == 0 and (reply_to := message.reply_to_message):
         if reply_to.text is not None:
             reply_text = reply_to.text.split('\n', 1)[0].strip()
             if reply_text and is_telegram_link(reply_text):
@@ -187,13 +230,9 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
                     return
 
     if reply_to:
-        file_ = reply_to.document or reply_to.photo or reply_to.video or reply_to.audio or \
-            reply_to.voice or reply_to.video_note or reply_to.sticker or reply_to.animation or None
-        if sender_chat := reply_to.sender_chat:
-            tag = sender_chat.title
-        elif (re_user := reply_to.from_user) and not re_user.is_bot:
-            tag = f"@{username}" if (username := re_user.username) else re_user.mention
-        if len(link) == 0 or not is_url(link) and not is_magnet(link):
+        if reply_to.media:
+            file_ = getattr(reply_to, reply_to.media.value)
+        if not is_url(link) and not is_magnet(link):
             if file_ is None:
                 reply_text = reply_to.text.split('\n', 1)[0].strip()
                 if is_url(reply_text) or is_magnet(reply_text):
