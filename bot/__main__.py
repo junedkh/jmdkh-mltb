@@ -4,6 +4,7 @@ from os import execl as osexecl
 from signal import SIGINT, signal
 from sys import executable
 from time import time
+from uuid import uuid4
 
 from aiofiles import open as aiopen
 from aiofiles.os import path as aiopath
@@ -12,11 +13,10 @@ from psutil import (boot_time, cpu_count, cpu_percent, disk_usage,
                     net_io_counters, swap_memory, virtual_memory)
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
-from uuid import uuid4
+
 from bot import (DATABASE_URL, INCOMPLETE_TASK_NOTIFIER, LOGGER,
                  STOP_DUPLICATE_TASKS, Interval, QbInterval, bot, botStartTime,
-                 user_data,
-                 config_dict, scheduler)
+                 config_dict, scheduler, user_data)
 from bot.helper.listeners.aria2_listener import start_aria2_listener
 
 from .helper.ext_utils.bot_utils import (cmd_exec, get_readable_file_size,
@@ -33,8 +33,6 @@ from .modules import (anonymous, authorize, bot_settings, cancel_mirror,
                       gd_list, leech_del, mirror_leech, rmdb, rss,
                       save_message, shell, status, torrent_search,
                       torrent_select, users_settings, ytdlp)
-
-start_aria2_listener()
 
 
 async def stats(_, message):
@@ -214,6 +212,7 @@ async def restart_notification():
 
 async def main():
     await gather(start_cleanup(), torrent_search.initiate_search_tools(), restart_notification(), set_commands(bot))
+    await sync_to_async(start_aria2_listener, wait=False)
 
     bot.add_handler(MessageHandler(
         start, filters=command(BotCommands.StartCommand)))

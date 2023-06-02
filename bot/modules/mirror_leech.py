@@ -146,7 +146,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
     async def __run_multi():
         if multi <= 1:
             return
-        await sleep(4)
+        await sleep(5)
         msg = message.text.split(maxsplit=index)
         msg[mi] = f"{multi - 1}"
         if len(bulk) != 0:
@@ -164,7 +164,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
         nextmsg.from_user = message.from_user
         if message.sender_chat:
             nextmsg.sender_chat = message.sender_chat
-        await sleep(4)
+        await sleep(5)
         _mirror_leech(client, nextmsg, isZip, extract,
                       isQbit, isLeech, sameDir, bulk)
 
@@ -328,6 +328,9 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
             if not await aiopath.exists(config_path):
                 await sendMessage(message, f"Rclone Config: {config_path} not Exists!")
                 return
+        if up != 'gd' and not is_rclone_path(up):
+            await sendMessage(message, 'Wrong Rclone Upload Destination!')
+            return
 
     if link == 'rcl':
         link = await RcloneList(client, message).get_rclone_path('rcd')

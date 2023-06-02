@@ -336,12 +336,12 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir=None, bulk=
     async def __run_multi():
         if multi <= 1:
             return
-        await sleep(4)
+        await sleep(5)
         ymsg = mssg.split(maxsplit=index)
         ymsg[mi] = f'{multi - 1}'
         if len(bulk) != 0:
             ymsg[index] = bulk[0]
-            nextmsg = await sendMessage(message, " ".join(msg))
+            nextmsg = await sendMessage(message, " ".join(ymsg))
         else:
             nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
             nextmsg = await sendMessage(nextmsg, ' '.join(ymsg))
@@ -351,7 +351,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir=None, bulk=
         nextmsg.from_user = message.from_user
         if message.sender_chat:
             nextmsg.sender_chat = message.sender_chat
-        await sleep(4)
+        await sleep(5)
         _ytdl(client, nextmsg, isZip, isLeech, sameDir, bulk)
 
     path = f'{DOWNLOAD_DIR}{message.id}{folder_name}'
@@ -467,6 +467,9 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir=None, bulk=
             if not await aiopath.exists(config_path):
                 await sendMessage(message, f'Rclone Config: {config_path} not Exists!')
                 return
+        if up != 'gd' and not is_rclone_path(up):
+            await sendMessage(message, 'Wrong Rclone Upload Destination!')
+            return
 
     if up == 'rcl' and not isLeech:
         up = await RcloneList(client, message).get_rclone_path('rcu')
