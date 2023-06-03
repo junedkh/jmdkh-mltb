@@ -331,7 +331,7 @@ async def load_config():
     STOP_DUPLICATE_TASKS = STOP_DUPLICATE_TASKS.lower() == 'true'
 
     if not STOP_DUPLICATE_TASKS and DATABASE_URL:
-        DbManger().clear_download_links()
+        await DbManger().clear_download_links()
 
     DISABLE_LEECH = environ.get('DISABLE_LEECH', '')
     DISABLE_LEECH = DISABLE_LEECH.lower() == 'true'
