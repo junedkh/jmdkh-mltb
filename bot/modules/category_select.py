@@ -3,9 +3,10 @@ from pyrogram.handlers import CallbackQueryHandler, MessageHandler
 
 from bot import (bot, cached_dict, categories_dict, download_dict,
                  download_dict_lock)
-from bot.helper.ext_utils.bot_utils import (MirrorStatus, getDownloadByGid,
-                                            is_gdrive_link, is_url, new_task,
-                                            sync_to_async)
+from bot.helper.ext_utils.bot_utils import (MirrorStatus, arg_parser,
+                                            getDownloadByGid, is_gdrive_link,
+                                            new_task, sync_to_async)
+from bot.helper.ext_utils.help_messages import CATEGORY_HELP_MESSAGE
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -24,36 +25,26 @@ async def change_category(client, message):
     user_id = message.from_user.id
     if not await isAdmin(message, user_id) and await request_limiter(message):
         return
-    mesg = message.text.split('\n')
-    message_args = mesg[0].split(maxsplit=1)
-    index = 1
-    drive_id = None
-    index_link = None
+
+    text = message.text.split('\n')
+    input_list = text[0].split(' ')
+
+    arg_base = {'link': '', '-id': '', '-index': ''}
+
+    args = arg_parser(input_list[1:], arg_base)
+
+    drive_id = args['-id']
+    index_link = args['-index']
+
+    if drive_id and is_gdrive_link(drive_id):
+        drive_id = GoogleDriveHelper.getIdFromUrl(drive_id)
+
     dl = None
-    gid = None
-    if len(message_args) > 1:
-        args = mesg[0].split(maxsplit=2)
-        for x in args:
-            x = x.strip()
-            if x.startswith('id:'):
-                index += 1
-                drive_id = x.split(':', 1)
-                if len(drive_id) > 1:
-                    drive_id = drive_id[1]
-                    if is_gdrive_link(drive_id):
-                        drive_id = GoogleDriveHelper.getIdFromUrl(drive_id)
-            elif x.startswith('index:'):
-                index += 1
-                index_link = x.split(':', 1)
-                if len(index_link) > 1 and is_url(index_link[1]):
-                    index_link = index_link[1]
-        message_args = mesg[0].split(maxsplit=index)
-        if len(message_args) > index:
-            gid = message_args[index].strip()
-            dl = await getDownloadByGid(gid)
-            if not dl:
-                await sendMessage(message, f"GID: <code>{gid}</code> Not Found.")
-                return
+    if gid := args['link']:
+        dl = await getDownloadByGid(gid)
+        if not dl:
+            await sendMessage(message, f"GID: <code>{gid}</code> Not Found.")
+            return
     if reply_to := message.reply_to_message:
         async with download_dict_lock:
             dl = download_dict.get(reply_to.id, None)
@@ -61,16 +52,7 @@ async def change_category(client, message):
             await sendMessage(message, "This is not an active task!")
             return
     if not dl:
-        msg = """
-Reply to an active /{cmd} which was used to start the download or add gid along with {cmd}
-This command mainly for change category incase you decided to change category from already added download.
-But you can always use /{mir} with to select category before download start.
-
-<b>Upload Custom Drive</b>
-<code>/{cmd}</code> <b>id:</b><code>drive_folder_link</code> or <code>drive_id</code> <b>index:</b><code>https://anything.in/0:</code> gid or by replying to active download
-drive_id must be folder id and index must be url else it will not accept
-""".format_map({'cmd': BotCommands.CategorySelect,'mir': BotCommands.MirrorCommand[0]})
-        await sendMessage(message, msg)
+        await sendMessage(message, CATEGORY_HELP_MESSAGE.format(cmd=BotCommands.CategorySelect, mir=BotCommands.MirrorCommand[0]))
         return
     if not await CustomFilters.sudo(client, message) and dl.message.from_user.id != user_id:
         await sendMessage(message, "This task is not for you!")
@@ -86,19 +68,20 @@ drive_id must be folder id and index must be url else it will not accept
             return await sendMessage(message, "Time out")
         msg = '<b>Task has been Updated Successfully!</b>'
         if drive_id:
-            if not (folder_name:= await sync_to_async(GoogleDriveHelper().getFolderData, drive_id)):
+            if not (folder_name := await sync_to_async(GoogleDriveHelper().getFolderData, drive_id)):
                 return await sendMessage(message, "Google Drive id validation failed!!")
             if listener.drive_id and listener.drive_id == drive_id:
-                msg +=f'\n\n<b>Folder name</b> : {folder_name} Already selected'
+                msg += f'\n\n<b>Folder name</b> : {folder_name} Already selected'
             else:
-                msg +=f'\n\n<b>Folder name</b> : {folder_name}'
+                msg += f'\n\n<b>Folder name</b> : {folder_name}'
             listener.drive_id = drive_id
         if index_link:
             listener.index_link = index_link
-            msg +=f'\n\n<b>Index Link</b> : <code>{index_link}</code>'
+            msg += f'\n\n<b>Index Link</b> : <code>{index_link}</code>'
         return await sendMessage(message, msg)
     else:
         await sendMessage(message, "Can not change Category for this task!")
+
 
 @new_task
 async def confirm_category(client, query):
@@ -112,7 +95,8 @@ async def confirm_category(client, query):
     await query.answer()
     cached_dict[msg_id][0] = categories_dict[data[3]].get('drive_id')
     cached_dict[msg_id][1] = categories_dict[data[3]].get('index_link')
-        
 
-bot.add_handler(MessageHandler(change_category, filters=command(BotCommands.CategorySelect) & CustomFilters.authorized))
+
+bot.add_handler(MessageHandler(change_category, filters=command(
+    BotCommands.CategorySelect) & CustomFilters.authorized))
 bot.add_handler(CallbackQueryHandler(confirm_category, filters=regex("^scat")))

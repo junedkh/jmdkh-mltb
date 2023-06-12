@@ -4,13 +4,12 @@ from base64 import b64encode
 from re import match as re_match
 from asyncio import sleep
 from aiofiles.os import path as aiopath
-from argparse import ArgumentParser
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
 
 from bot import (IS_PREMIUM_USER, LOGGER, bot, categories_dict,
                  config_dict)
-from bot.helper.ext_utils.bot_utils import (get_content_type, is_gdrive_link,
+from bot.helper.ext_utils.bot_utils import (arg_parser, get_content_type, is_gdrive_link,
                                             is_magnet, is_mega_link,
                                             is_rclone_path, is_telegram_link,
                                             is_url, new_task, sync_to_async)
@@ -43,28 +42,29 @@ from bot.helper.ext_utils.bulk_links import extract_bulk_links
 @new_task
 async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=None, bulk=[]):
     text = message.text.split('\n')
-    input_list = text[0].split()
+    input_list = text[0].split(' ')
 
-    try:
-        args = parser.parse_args(input_list[1:])
-    except:
-        await sendMessage(message, MIRROR_HELP_MESSAGE.format(cmd = message.command[0]))
-        return
+    arg_base = {'link': '', '-i': 0, '-m': '', '-d': False, '-j': False, '-s': False, '-b': False,
+                '-n': '', '-e': False, '-z': False, '-up': '', '-rcf': '', '-au': '', '-ap': '',
+                '-id': '', '-index': ''}
 
-    select = args.select
-    multi = args.multi
-    seed = args.seed
-    isBulk = args.bulk
-    folder_name = " ".join(args.sameDir)
-    name = " ".join(args.newName)
-    up = " ".join(args.upload)
-    rcf = " ".join(args.rcloneFlags)
-    link = " ".join(args.link)
-    compress = args.zipPswd
-    extract = args.extractPswd
-    join = args.join
-    drive_id = args.drive_id
-    index_link = args.index_link
+    args = arg_parser(input_list[1:], arg_base)
+
+    multi = int(args['-i']) if args['-i'] and args['-i'].isdigit() else 0
+
+    select = args['-s']
+    seed = args['-d']
+    isBulk = args['-b']
+    folder_name = args['-m']
+    name = args['-n']
+    up = args['-up']
+    rcf = args['-rcf']
+    link = args['link']
+    compress = args['-z']
+    extract = args['-e']
+    join = args['-j']
+    drive_id = args['-id']
+    index_link = args['-index']
     bulk_start = 0
     bulk_end = 0
     ratio = None
@@ -75,31 +75,22 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
     raw_url = None
     auth = ''
 
-    if isinstance(multi, list):
-        multi = multi[0]
-
-    if compress is not None:
-        compress = " ".join(compress)
-    if extract is not None:
-        extract = " ".join(extract)
-
-    if seed:
+    if not isinstance(seed, bool):
         dargs = seed.split(':')
         ratio = dargs[0] or None
         if len(dargs) == 2:
             seed_time = dargs[1] or None
         seed = True
-    elif seed is None:
-        seed = True
 
-    if isBulk:
+    if not isinstance(isBulk, bool):
         dargs = isBulk.split(':')
         bulk_start = dargs[0] or None
         if len(dargs) == 2:
             bulk_end = dargs[1] or None
         isBulk = True
-    elif isBulk is None:
-        isBulk = True
+
+    if drive_id and is_gdrive_link(drive_id):
+        drive_id = GoogleDriveHelper.getIdFromUrl(drive_id)
 
     if folder_name and not isBulk:
         seed = False
@@ -330,33 +321,12 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
     elif isQbit:
         await add_qb_torrent(link, path, listener, ratio, seed_time)
     else:
-        ussr = " ".join(args.auth_user)
-        pssw = " ".join(args.auth_pswd)
+        ussr = args['-au']
+        pssw = args['-ap']
         if ussr or pssw:
             auth = f"{ussr}:{pssw}"
             auth = f"authorization: Basic {b64encode(auth.encode()).decode('ascii')}"
         await add_aria2c_download(link, path, listener, name, auth, ratio, seed_time)
-
-
-parser = ArgumentParser(
-    description='Mirror-Leech args usage:', argument_default='')
-
-parser.add_argument('link', nargs='*')
-parser.add_argument('-s', action='store_true', default=False, dest='select')
-parser.add_argument('-d', nargs='?', default=False, dest='seed')
-parser.add_argument('-m', nargs='+', dest='sameDir')
-parser.add_argument('-i', nargs='+', default=0, dest='multi', type=int)
-parser.add_argument('-b', nargs='?', default=False, dest='bulk')
-parser.add_argument('-n', nargs='+', dest='newName')
-parser.add_argument('-e', nargs='*', default=None, dest='extractPswd')
-parser.add_argument('-id', nargs='*', default=None, dest='drive_id')
-parser.add_argument('-index', nargs='*', default=None, dest='index_link')
-parser.add_argument('-z', nargs='*', default=None, dest='zipPswd')
-parser.add_argument('-j', action='store_true', default=False, dest='join')
-parser.add_argument('-up', nargs='+', dest='upload')
-parser.add_argument('-rcf', nargs='+', dest='rcloneFlags')
-parser.add_argument('-au', nargs='+', dest='auth_user')
-parser.add_argument('-ap', nargs='+', dest='auth_pswd')
 
 
 async def mirror(client, message):

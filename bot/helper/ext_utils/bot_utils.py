@@ -243,6 +243,7 @@ def is_gdrive_link(url):
 def is_telegram_link(url):
     return url.startswith(('https://t.me/', 'tg://openmessage?user_id='))
 
+
 def is_share_link(url: str):
     if 'gdtot' in url:
         regex = r'(https?:\/\/.+\.gdtot\..+\/file\/\d+)'
@@ -261,6 +262,37 @@ def is_rclone_path(path):
 
 def get_mega_link_type(url):
     return "folder" if "folder" in url or "/#F!" in url else "file"
+
+
+def arg_parser(items, arg_base):
+    if not items:
+        return arg_base
+    t = len(items)
+    i = 0
+    while i + 1 <= t:
+        part = items[i]
+        if part in arg_base:
+            if part in ['-s', '-j']:
+                arg_base[part] = True
+            elif t == i + 1:
+                if part in ['-b', '-e', '-z', '-s', '-j', '-d']:
+                    arg_base[part] = True
+            else:
+                sub_list = []
+                for j in range(i+1, t):
+                    item = items[j]
+                    if item in arg_base:
+                        if part in ['-b', '-e', '-z', '-s', '-j', '-d']:
+                            arg_base[part] = True
+                        break
+                    sub_list.append(item)
+                    i += 1
+                if sub_list:
+                    arg_base[part] = " ".join(sub_list)
+        i += 1
+    if items[0] not in arg_base:
+        arg_base['link'] = items[0]
+    return arg_base
 
 
 async def get_content_type(url):
@@ -295,16 +327,19 @@ def checking_access(user_id, button=None):
     user_data.setdefault(user_id, {})
     data = user_data[user_id]
     expire = data.get('time')
-    isExpired = (expire is None or expire is not None and (time() - expire) > config_dict['TOKEN_TIMEOUT'])
+    isExpired = (expire is None or expire is not None and (
+        time() - expire) > config_dict['TOKEN_TIMEOUT'])
     if isExpired:
-        token = data['token'] if expire is None and 'token' in data else str(uuid4())
+        token = data['token'] if expire is None and 'token' in data else str(
+            uuid4())
         if expire is not None:
             del data['time']
         data['token'] = token
         user_data[user_id].update(data)
         if button is None:
             button = ButtonMaker()
-        button.ubutton('Refresh Token', short_url(f'https://t.me/{bot_name}?start={token}'))
+        button.ubutton('Refresh Token', short_url(
+            f'https://t.me/{bot_name}?start={token}'))
         return 'Token is expired, refresh your token and try again.', button
     return None, button
 
